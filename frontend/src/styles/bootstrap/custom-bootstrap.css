@@ -1,0 +1,12 @@
+:root {
+  --bs-primary: #0d6efd; /* Primary color */
+  --bs-secondary: #6c757d;
+  --bs-success: #198754;
+  --bs-danger: #dc3545;
+
+  --bs-body-bg: #f8f9fa;
+  --bs-body-color: #212529;
+
+  --bs-border-radius: 0.5rem;
+  --bs-font-sans-serif: "Inter", system-ui, sans-serif;
+}
