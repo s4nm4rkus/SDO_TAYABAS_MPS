@@ -1,7 +1,6 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { verifyToken } = require("../middlewares/authMiddleware");
 
 exports.register = async (req, res) => {
   const { username, password, role } = req.body;
