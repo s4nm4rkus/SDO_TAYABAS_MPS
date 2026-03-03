@@ -1,67 +1,106 @@
-import LoginButton from "../../common/buttons/LoginButton";
-
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { LogIn } from "lucide-react";
 import LogoSDO from "../../../assets/images/header logo/logo_sdo_tayabas.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
 function Header() {
-  return (
-    <header className="w-full bg-transparent">
-      {/* Header Title Section */}
-      <div className="text-center py-4">
-        <h1
-          className="text-textHeader-color text-4xl md:text-7xl font-black m-0 p-0 text-shadow"
-          style={{ WebkitTextStroke: "1px white" }}
-        >
-          SDOTAYABASMPS
-        </h1>
-        <p
-          className="text-textHeader-color text-lg md:text-3xl tracking-widest font-bold m-0 p-0 text-shadow"
-          style={{ WebkitTextStroke: ".5px white" }}
-        >
-          Learning Outcomes Assessment
-        </p>
-      </div>
+  const navigate = useNavigate();
+  const [scrolled, setScrolled] = useState(false);
 
-      {/* Inner Header Wrapper */}
-      <div className="flex flex-col md:flex-col lg:flex-row items-center justify-between bg-innerHeader-bg w-full">
-        {/* Logos */}
-        <div className="flex p-4 md:p-6 space-x-4">
-          <div className="lg:w-logo-md lg:h-logo-md md:w-logo-sm md:h-logo-sm h-logo-sm w-logo-sm mt-.5 flex items-center justify-center rounded">
-            <img src={LogoSDO} alt="SDO Tayabas Logo" className="mt-3" />
-          </div>
-          <div className="lg:w-logo-mlg lg:h-logo-mlg md:w-logo-md md:h-logo-md w-logo-md h-logo-md flex items-center justify-center rounded">
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        .header-bar {
+          transition: all 0.4s ease;
+        }
+        .header-scrolled {
+          background: #0097b2;
+          box-shadow: 0 4px 30px rgba(0,151,178,0.3);
+        }
+        .header-top {
+          background: rgba(255,255,255,0.15);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(0,151,178,0.2);
+        }
+      `}</style>
+
+      <header className="w-full fixed top-0 z-50">
+        <div
+          className={`header-bar flex flex-col lg:flex-row items-center justify-between w-full px-6 py-3 ${scrolled ? "header-scrolled" : "header-top"}`}
+        >
+          {/* Logos */}
+          <div className="flex items-center gap-4 p-2 lg:w-80">
+            <img
+              src={LogoSDO}
+              alt="SDO Tayabas"
+              className="h-logo-sm w-logo-sm lg:h-logo-md lg:w-logo-md object-contain mt-1"
+            />
             <img
               src={LogoBagongPil}
-              alt="SDO Tayabas Logo"
-              className="logo-sdo"
+              alt="Bagong Pilipinas"
+              className="h-logo-mlg w-logo-mlg object-contain"
+            />
+            <img
+              src={LogoDeped}
+              alt="DepEd"
+              className="h-logo-mlg w-logo-xl lg:h-logo-lg lg:w-logo-xl object-contain"
             />
           </div>
 
-          <div className="lg:w-logo-xl lg:h-logo-lg md:w-logo-lg md:h-logo-mlg w-logo-mlg h-logo-mlg flex items-center justify-center rounded text-shadow">
-            <img src={LogoDeped} alt="SDO Tayabas Logo" className="logo-sdo" />
+          {/* Center Text */}
+          <div className="text-center flex-1 py-2 lg:py-0">
+            <p
+              className={`text-base font-light leading-tight transition-all duration-300 ${scrolled ? "text-white/85" : "text-[#242424]"}`}
+            >
+              Republic of the Philippines
+            </p>
+            <p
+              className={`text-xl md:text-2xl font-bold leading-tight tracking-wide transition-all duration-300 ${scrolled ? "text-white" : "text-[#242424]"}`}
+            >
+              DEPARTMENT OF EDUCATION
+            </p>
+            <p
+              className={`text-base font-light leading-tight transition-all duration-300 ${scrolled ? "text-white/85" : "text-[#242424]"}`}
+            >
+              City Schools Division of the City of Tayabas
+            </p>
+          </div>
+
+          {/* Login Button */}
+          <div className="p-4 lg:p-6 lg:w-80 flex justify-end">
+            <button
+              onClick={() => navigate("/login")}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
+              style={
+                scrolled
+                  ? {
+                      background: "white",
+                      color: "#242424",
+                      border: "2px solid transparent",
+                    }
+                  : {
+                      background: "transparent",
+                      color: "#242424",
+                      border: "2px solid #242424",
+                    }
+              }
+            >
+              <LogIn size={16} />
+              Login
+            </button>
           </div>
         </div>
-
-        {/* Main Header Text */}
-        <div className="text-center flex-1 py-2 md:py-4 lg:mr-12 md:mr-0 mr-0">
-          <p className="text-white text-lg md:text-xl  font-light leading-tight">
-            Republic of the Philippines
-          </p>
-          <p className="text-white text-xl md:text-[1.8rem] font-semibold leading-tight">
-            DEPARTMENT OF EDUCATION
-          </p>
-          <p className="text-white text-lg md:text-xl font-light leading-tight">
-            City Schools Division of the City of Tayabas
-          </p>
-        </div>
-
-        {/* Button */}
-        <div className="p-4 md:p-8 lg:mr-24 md:mr-0 mr-0 ">
-          <LoginButton>Login</LoginButton>
-        </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }
 

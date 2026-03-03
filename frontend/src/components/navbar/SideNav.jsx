@@ -1,20 +1,21 @@
 // src/components/navbar/SideNav.jsx
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth"; // your hook
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 import { HiMenuAlt3 } from "react-icons/hi";
 import { MdOutlineDashboard } from "react-icons/md";
 import { RiSettings4Line } from "react-icons/ri";
 import { TbReportAnalytics } from "react-icons/tb";
 import { AiOutlineUser, AiOutlineHeart } from "react-icons/ai";
-import { FiMessageSquare, FiFolder, FiShoppingCart } from "react-icons/fi";
+import { FiMessageSquare, FiFolder } from "react-icons/fi";
 
 const SideNav = () => {
   const [open, setOpen] = useState(true);
-  const { user } = useAuth(); // get current logged-in user
+  const [tooltip, setTooltip] = useState({ visible: false, name: "", y: 0 });
+  const { user } = useAuth();
+  const location = useLocation();
 
-  // Role-specific menus
   const allMenus = {
     admin: [
       { name: "Dashboard", link: "/admin", icon: MdOutlineDashboard },
@@ -24,15 +25,11 @@ const SideNav = () => {
         link: "/admin/school",
         icon: TbReportAnalytics,
       },
-      {
-        name: "User Management",
-        link: "/admin/users",
-        icon: RiSettings4Line,
-      },
+      { name: "User Management", link: "/admin/users", icon: RiSettings4Line },
       {
         name: "Monitoring & Reports",
         link: "/admin/reports",
-        icon: RiSettings4Line,
+        icon: TbReportAnalytics,
       },
       { name: "Logout", link: "/logout", icon: MdOutlineDashboard },
     ],
@@ -45,16 +42,17 @@ const SideNav = () => {
     ],
   };
 
-  // Select menus based on role
   const menus = user?.role ? allMenus[user.role] : [];
+  const isActive = (link) => location.pathname === link;
 
   return (
-    <section className="flex gap-6">
+    <section className="flex">
       <div
-        className={`bg-[#0e0e0e] min-h-screen ${
+        className={`bg-[#0e0e0e] sticky top-0 h-screen ${
           open ? "w-72" : "w-20"
         } duration-500 text-gray-100 px-5`}
       >
+        {/* Toggle Button */}
         <div className="py-3 flex justify-end">
           <HiMenuAlt3
             size={32}
@@ -62,25 +60,60 @@ const SideNav = () => {
             onClick={() => setOpen(!open)}
           />
         </div>
-        <div className="mt-4 flex flex-col gap-4 relative">
+
+        {/* Menu Items */}
+        <div className="mt-4 flex flex-col gap-2 h-[calc(100vh-80px)] overflow-y-auto">
           {menus?.map((menu, i) => (
-            <Link
-              to={menu.link}
+            <div
               key={i}
-              className="group flex items-center text-[16px] gap-4 font-medium p-2 hover:bg-gray-800 rounded-md"
+              className="relative"
+              onMouseEnter={(e) => {
+                if (!open) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setTooltip({
+                    visible: true,
+                    name: menu.name,
+                    y: rect.top + rect.height / 2,
+                  });
+                }
+              }}
+              onMouseLeave={() =>
+                setTooltip({ visible: false, name: "", y: 0 })
+              }
             >
-              <div>{React.createElement(menu.icon, { size: "24" })}</div>
-              <h2
-                className={`whitespace-pre duration-500 ${
-                  !open && "overflow-hidden"
+              <Link
+                to={menu.link}
+                className={`flex items-center text-[16px] gap-4 font-medium p-2 rounded-md transition-colors duration-200 ${
+                  isActive(menu.link)
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-gray-800 text-gray-300"
                 }`}
               >
-                {menu.name}
-              </h2>
-            </Link>
+                <div className="flex-shrink-0">
+                  {React.createElement(menu.icon, { size: "24" })}
+                </div>
+                <h2
+                  className={`whitespace-pre duration-500 ${
+                    !open && "opacity-0 overflow-hidden w-0"
+                  }`}
+                >
+                  {menu.name}
+                </h2>
+              </Link>
+            </div>
           ))}
         </div>
       </div>
+
+      {/* Fixed Tooltip — rendered outside the nav */}
+      {!open && tooltip.visible && (
+        <div
+          className="fixed z-[9999] bg-gray-800 text-white text-xs rounded-md px-3 py-1.5 whitespace-nowrap shadow-lg pointer-events-none"
+          style={{ top: tooltip.y, left: 88, transform: "translateY(-50%)" }}
+        >
+          {tooltip.name}
+        </div>
+      )}
     </section>
   );
 };

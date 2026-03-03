@@ -11,65 +11,65 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/clusters";
+const API = "http://localhost:5000/api/subjects";
 const ITEMS_PER_PAGE = 10;
 
-const ClusterTable = () => {
-  const [clusters, setClusters] = useState([]);
+const SubjectTable = () => {
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState(null);
-  const [form, setForm] = useState({ cluster_name: "", cluster_code: "" });
+  const [form, setForm] = useState({ subject_name: "", subject_code: "" });
   const [confirm, setConfirm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState("id");
+  const [sortField, setSortField] = useState("subject_name");
   const [sortOrder, setSortOrder] = useState("asc");
 
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchClusters = async () => {
+  const fetchSubjects = async () => {
     try {
-      const res = await axios.get(API);
-      setClusters(res.data);
+      const res = await axios.get(API, { headers });
+      setSubjects(res.data);
     } catch {
-      setClusters([]);
+      setSubjects([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchClusters();
+    fetchSubjects();
   }, []);
 
   const closeModal = () => {
     setModal(null);
     setSelected(null);
-    setForm({ cluster_name: "", cluster_code: "" });
+    setForm({ subject_name: "", subject_code: "" });
     setConfirm(false);
   };
 
-  const openEdit = (cluster) => {
-    setSelected(cluster);
+  const openEdit = (subject) => {
+    setSelected(subject);
     setForm({
-      cluster_name: cluster.cluster_name,
-      cluster_code: cluster.cluster_code,
+      subject_name: subject.subject_name,
+      subject_code: subject.subject_code,
     });
     setModal("edit");
   };
 
-  const openDelete = (cluster) => {
-    setSelected(cluster);
+  const openDelete = (subject) => {
+    setSelected(subject);
     setModal("delete");
   };
 
   const handleAdd = async () => {
-    if (!form.cluster_name || !form.cluster_code)
+    if (!form.subject_name || !form.subject_code)
       return alert("All fields are required.");
     try {
       await axios.post(API, form, { headers });
-      await fetchClusters();
+      await fetchSubjects();
       closeModal();
     } catch (err) {
       alert(err.response?.data?.message || "Something went wrong.");
@@ -77,11 +77,11 @@ const ClusterTable = () => {
   };
 
   const handleEdit = async () => {
-    if (!form.cluster_name || !form.cluster_code)
+    if (!form.subject_name || !form.subject_code)
       return alert("All fields are required.");
     try {
       await axios.put(`${API}/${selected.id}`, form, { headers });
-      await fetchClusters();
+      await fetchSubjects();
       closeModal();
     } catch (err) {
       alert(err.response?.data?.message || "Something went wrong.");
@@ -91,7 +91,7 @@ const ClusterTable = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${API}/${selected.id}`, { headers });
-      await fetchClusters();
+      await fetchSubjects();
       closeModal();
     } catch (err) {
       alert(err.response?.data?.message || "Something went wrong.");
@@ -108,18 +108,18 @@ const ClusterTable = () => {
     setCurrentPage(1);
   };
 
-  const sortedClusters = useMemo(() => {
-    return [...clusters].sort((a, b) => {
+  const sortedSubjects = useMemo(() => {
+    return [...subjects].sort((a, b) => {
       const valA = a[sortField]?.toString().toLowerCase() ?? "";
       const valB = b[sortField]?.toString().toLowerCase() ?? "";
       if (valA < valB) return sortOrder === "asc" ? -1 : 1;
       if (valA > valB) return sortOrder === "asc" ? 1 : -1;
       return 0;
     });
-  }, [clusters, sortField, sortOrder]);
+  }, [subjects, sortField, sortOrder]);
 
-  const totalPages = Math.ceil(sortedClusters.length / ITEMS_PER_PAGE);
-  const paginated = sortedClusters.slice(
+  const totalPages = Math.ceil(sortedSubjects.length / ITEMS_PER_PAGE);
+  const paginated = sortedSubjects.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE,
   );
@@ -151,9 +151,9 @@ const ClusterTable = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-700">Clusters</h2>
+          <h2 className="text-lg font-semibold text-gray-700">Subjects</h2>
           <p className="text-xs text-gray-400">
-            {clusters.length} total records
+            {subjects.length} total records
           </p>
         </div>
         <button
@@ -161,7 +161,7 @@ const ClusterTable = () => {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
         >
           <PlusCircle size={16} />
-          Add Cluster
+          Add Subject
         </button>
       </div>
 
@@ -171,8 +171,8 @@ const ClusterTable = () => {
           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
               <th className="px-4 py-3">#</th>
-              <SortableTh field="cluster_name" label="Cluster Name" />
-              <SortableTh field="cluster_code" label="Cluster Code" />
+              <SortableTh field="subject_name" label="Subject Name" />
+              <SortableTh field="subject_code" label="Subject Code" />
               <th className="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
@@ -189,35 +189,35 @@ const ClusterTable = () => {
             ) : paginated.length === 0 ? (
               <tr>
                 <td colSpan={4} className="text-center py-6 text-gray-400">
-                  No clusters found.
+                  No subjects found.
                 </td>
               </tr>
             ) : (
-              paginated.map((cluster, index) => (
+              paginated.map((subject, index) => (
                 <tr
-                  key={cluster.id}
+                  key={subject.id}
                   className="border-t hover:bg-gray-50 transition"
                 >
                   <td className="px-4 py-3 text-gray-400 text-xs">
                     {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-800">
-                    {cluster.cluster_name}
+                    {subject.subject_name}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {cluster.cluster_code}
+                    {subject.subject_code}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex justify-center gap-2">
                       <button
-                        onClick={() => openEdit(cluster)}
+                        onClick={() => openEdit(subject)}
                         className="p-1.5 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
                         title="Edit"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
-                        onClick={() => openDelete(cluster)}
+                        onClick={() => openDelete(subject)}
                         className="p-1.5 rounded bg-red-50 text-red-500 hover:bg-red-100 transition"
                         title="Delete"
                       >
@@ -237,8 +237,8 @@ const ClusterTable = () => {
         <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
           <p>
             Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-            {Math.min(currentPage * ITEMS_PER_PAGE, clusters.length)} of{" "}
-            {clusters.length}
+            {Math.min(currentPage * ITEMS_PER_PAGE, subjects.length)} of{" "}
+            {subjects.length}
           </p>
           <div className="flex items-center gap-1">
             <button
@@ -267,7 +267,11 @@ const ClusterTable = () => {
                   <button
                     key={p}
                     onClick={() => setCurrentPage(p)}
-                    className={`px-3 py-1 rounded border text-sm transition ${currentPage === p ? "bg-blue-600 text-white border-blue-600" : "hover:bg-gray-100"}`}
+                    className={`px-3 py-1 rounded border text-sm transition ${
+                      currentPage === p
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "hover:bg-gray-100"
+                    }`}
                   >
                     {p}
                   </button>
@@ -286,11 +290,11 @@ const ClusterTable = () => {
 
       {/* Add Modal */}
       {modal === "add" && (
-        <ModalWrapper title="Add New Cluster" onClose={closeModal}>
+        <ModalWrapper title="Add New Subject" onClose={closeModal}>
           <p className="text-sm text-gray-500 mb-4">
-            Fill in the details for the new cluster.
+            Fill in the details for the new subject.
           </p>
-          <ClusterForm form={form} setForm={setForm} />
+          <SubjectForm form={form} setForm={setForm} />
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={closeModal}
@@ -302,7 +306,7 @@ const ClusterTable = () => {
               onClick={handleAdd}
               className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
             >
-              Add Cluster
+              Add Subject
             </button>
           </div>
         </ModalWrapper>
@@ -310,11 +314,11 @@ const ClusterTable = () => {
 
       {/* Edit Modal */}
       {modal === "edit" && (
-        <ModalWrapper title="Edit Cluster" onClose={closeModal}>
+        <ModalWrapper title="Edit Subject" onClose={closeModal}>
           <p className="text-sm text-gray-500 mb-4">
-            Update the details for this cluster.
+            Update the details for this subject.
           </p>
-          <ClusterForm form={form} setForm={setForm} />
+          <SubjectForm form={form} setForm={setForm} />
           {!confirm ? (
             <div className="flex justify-end gap-2 mt-4">
               <button
@@ -356,12 +360,15 @@ const ClusterTable = () => {
 
       {/* Delete Modal */}
       {modal === "delete" && (
-        <ModalWrapper title="Delete Cluster" onClose={closeModal}>
+        <ModalWrapper title="Delete Subject" onClose={closeModal}>
           <p className="text-sm text-gray-500 mb-2">
             You are about to permanently delete:
           </p>
-          <p className="font-semibold text-gray-800 mb-4">
-            {selected?.cluster_name}
+          <p className="font-semibold text-gray-800 mb-1">
+            {selected?.subject_name}
+          </p>
+          <p className="text-xs text-gray-400 mb-4">
+            Code: {selected?.subject_code}
           </p>
           <p className="text-sm text-red-500 mb-4">
             This action cannot be undone.
@@ -386,25 +393,25 @@ const ClusterTable = () => {
   );
 };
 
-const ClusterForm = ({ form, setForm }) => (
+const SubjectForm = ({ form, setForm }) => (
   <div className="flex flex-col gap-3">
     <div>
-      <label className="text-xs text-gray-500 mb-1 block">Cluster Name</label>
+      <label className="text-xs text-gray-500 mb-1 block">Subject Name</label>
       <input
         type="text"
-        placeholder="e.g. Cluster 1"
-        value={form.cluster_name}
-        onChange={(e) => setForm({ ...form, cluster_name: e.target.value })}
+        placeholder="e.g. Mathematics"
+        value={form.subject_name}
+        onChange={(e) => setForm({ ...form, subject_name: e.target.value })}
         className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
     </div>
     <div>
-      <label className="text-xs text-gray-500 mb-1 block">Cluster Code</label>
+      <label className="text-xs text-gray-500 mb-1 block">Subject Code</label>
       <input
         type="text"
-        placeholder="e.g. CLS-001"
-        value={form.cluster_code}
-        onChange={(e) => setForm({ ...form, cluster_code: e.target.value })}
+        placeholder="e.g. MATH"
+        value={form.subject_code}
+        onChange={(e) => setForm({ ...form, subject_code: e.target.value })}
         className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
       />
     </div>
@@ -425,4 +432,4 @@ const ModalWrapper = ({ title, onClose, children }) => (
   </div>
 );
 
-export default ClusterTable;
+export default SubjectTable;

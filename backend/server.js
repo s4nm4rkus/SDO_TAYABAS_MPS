@@ -6,6 +6,9 @@ const schoolYearRoutes = require("./routes/admin/schoolYearRoutes");
 const schoolRoutes = require("./routes/admin/schoolRoutes");
 const clusterRoutes = require("./routes/admin/clusterRoutes");
 const gradingPeriodRoutes = require("./routes/admin/gradingPeriodRoutes");
+const subjectRoutes = require("./routes/admin/subjectRoutes");
+const gradeLevelRoutes = require("./routes/admin/gradeLevelRoutes");
+const userRoutes = require("./routes/admin/userRoutes");
 
 const app = express();
 app.use(cors());
@@ -23,6 +26,9 @@ app.use("/api/school-years", schoolYearRoutes);
 app.use("/api/schools", schoolRoutes);
 app.use("/api/clusters", clusterRoutes);
 app.use("/api/grading-periods", gradingPeriodRoutes);
+app.use("/api/subjects", subjectRoutes);
+app.use("/api/grade-levels", gradeLevelRoutes);
+app.use("/api/users", userRoutes);
 
 // Teacher routes
 app.use("/api/teacher", require("./routes/teacherRoutes"));

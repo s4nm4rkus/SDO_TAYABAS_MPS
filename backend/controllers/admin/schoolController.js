@@ -70,3 +70,52 @@ exports.deleteSchool = (req, res) => {
     res.json({ message: "School deleted successfully" });
   });
 };
+
+// Get schools by cluster_id (including unassigned where cluster_id is NULL or 0)
+exports.getSchoolsByCluster = (req, res) => {
+  const { cluster_id } = req.params;
+
+  const query =
+    cluster_id === "unassigned"
+      ? `SELECT s.*, c.cluster_name 
+         FROM schools s
+         LEFT JOIN clusters c ON s.cluster_id = c.id
+         WHERE s.cluster_id IS NULL OR s.cluster_id = 0`
+      : `SELECT s.*, c.cluster_name 
+         FROM schools s
+         LEFT JOIN clusters c ON s.cluster_id = c.id
+         WHERE s.cluster_id = ?`;
+
+  const params = cluster_id === "unassigned" ? [] : [cluster_id];
+
+  db.query(query, params, (err, results) => {
+    if (err) return res.status(500).json({ message: "DB error", error: err });
+    res.json(results);
+  });
+};
+
+// Get clusters with school count
+exports.getClustersWithCount = (req, res) => {
+  db.query(
+    `SELECT c.*, COUNT(s.id) as school_count
+     FROM clusters c
+     LEFT JOIN schools s ON s.cluster_id = c.id
+     GROUP BY c.id
+     ORDER BY c.cluster_name ASC`,
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "DB error", error: err });
+      res.json(results);
+    },
+  );
+};
+
+// Get unassigned schools count
+exports.getUnassignedCount = (req, res) => {
+  db.query(
+    `SELECT COUNT(*) as count FROM schools WHERE cluster_id IS NULL OR cluster_id = 0`,
+    (err, results) => {
+      if (err) return res.status(500).json({ message: "DB error", error: err });
+      res.json(results[0]);
+    },
+  );
+};

@@ -8,10 +8,19 @@ const {
   addSchool,
   updateSchool,
   deleteSchool,
+  getSchoolsByCluster,
+  getClustersWithCount,
+  getUnassignedCount,
 } = require("../../controllers/admin/schoolController");
-
 // Public
 router.get("/", getAllSchools);
+
+// These MUST come before /:id
+router.get("/clusters-with-count", verifyToken, getClustersWithCount);
+router.get("/unassigned-count", verifyToken, getUnassignedCount);
+router.get("/by-cluster/:cluster_id", verifyToken, getSchoolsByCluster);
+
+// This must come LAST
 router.get("/:id", getSchoolById);
 
 // Admin only
