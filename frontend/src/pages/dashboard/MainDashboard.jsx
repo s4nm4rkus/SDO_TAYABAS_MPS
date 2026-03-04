@@ -1,6 +1,9 @@
 import SDOFbPage from "../../assets/images/sdo_fbpage.png";
+import useMainDashboardStats from "../../hooks/useMainDashboardStats";
 
 const MainDashboard = () => {
+  const { clusterCount, schoolCount, loading } = useMainDashboardStats();
+
   return (
     <>
       <style>{`
@@ -134,8 +137,8 @@ const MainDashboard = () => {
             {/* Description */}
             <p className="fade-up-d3 text-gray-500 text-base md:text-lg max-w-lg leading-relaxed mb-10">
               A comprehensive monitoring system for tracking and evaluating Mean
-              Percentage Scores across all schools in the City of Tayabas,
-              Quezon.
+              Percentage Scores across all schools in the Division of Tayabas
+              City.
             </p>
 
             {/* Stat Cards */}
@@ -143,14 +146,14 @@ const MainDashboard = () => {
               {[
                 {
                   label: "Clusters",
-                  value: "9",
+                  value: loading ? "..." : clusterCount,
                   color: "#ffffff",
                   bg: "linear-gradient(135deg, #0097b2, #00b4d8)",
                   shadow: "rgba(0,151,178,0.4)",
                 },
                 {
                   label: "Schools",
-                  value: "—",
+                  value: loading ? "..." : schoolCount,
                   color: "#ffffff",
                   bg: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
                   shadow: "rgba(139,92,246,0.4)",

@@ -7,6 +7,7 @@ import {
   ToggleRight,
   CheckCircle,
   X,
+  CalendarDays,
 } from "lucide-react";
 import axios from "axios";
 
@@ -109,45 +110,67 @@ const SchoolYearCard = () => {
   };
 
   return (
-    <div className="relative p-4 bg-textHeader-color rounded-md text-whiteBg shadow-md">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-sm opacity-75">Academic Year</p>
-          {loading ? (
-            <p className="text-lg font-bold animate-pulse">Loading...</p>
-          ) : schoolYear ? (
-            <>
-              <h1 className="text-2xl font-bold">SY {schoolYear.year_label}</h1>
-              <span
-                className={`text-xs font-medium px-2 py-0.5 rounded-full mt-1 inline-block ${
-                  schoolYear.is_active
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-400 text-white"
-                }`}
-              >
-                {schoolYear.is_active ? "Active" : "Inactive"}
-              </span>
-            </>
-          ) : (
-            <p className="text-sm opacity-75">No active school year</p>
-          )}
+    <>
+      <div
+        className="relative flex items-center justify-between px-5 py-4 rounded-2xl shadow-md"
+        style={{
+          background: "linear-gradient(135deg, #0097b2, #004385)",
+          boxShadow: "0 6px 20px rgba(0,151,178,0.3)",
+        }}
+      >
+        {/* Left — Icon + Info */}
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20">
+            <CalendarDays size={20} className="text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-white/70 uppercase tracking-widest font-medium">
+              Academic Year
+            </p>
+            {loading ? (
+              <p className="text-lg font-bold text-white animate-pulse">
+                Loading...
+              </p>
+            ) : schoolYear ? (
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black text-white">
+                  SY {schoolYear.year_label}
+                </h1>
+                <span
+                  className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                    schoolYear.is_active
+                      ? "bg-green-400/30 text-green-200 border border-green-400/40"
+                      : "bg-white/10 text-white/60 border border-white/20"
+                  }`}
+                >
+                  {schoolYear.is_active ? "Active" : "Inactive"}
+                </span>
+              </div>
+            ) : (
+              <p className="text-sm text-white/60">No active school year</p>
+            )}
+          </div>
         </div>
 
+        {/* Right — Menu Button */}
         <div className="relative">
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="p-1 rounded-full hover:bg-white/20 transition"
+            className="p-2 rounded-xl hover:bg-white/20 transition text-white"
           >
-            <MoreVertical size={20} />
+            <MoreVertical size={18} />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-1 w-52 bg-white text-gray-800 rounded-md shadow-lg z-10 overflow-hidden">
+            <div
+              className="absolute right-0 mt-2 w-52 bg-white text-gray-800 rounded-xl shadow-xl z-10 overflow-hidden"
+              style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+            >
               <button
                 onClick={() => setModal("add")}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-cyan-50 transition"
               >
-                <PlusCircle size={16} className="text-blue-500" />
+                <PlusCircle size={15} className="text-cyan-500" />
                 Add New School Year
               </button>
               <button
@@ -155,28 +178,28 @@ const SchoolYearCard = () => {
                   fetchAll();
                   setModal("select");
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-indigo-50 transition"
               >
-                <CheckCircle size={16} className="text-indigo-500" />
+                <CheckCircle size={15} className="text-indigo-500" />
                 Select Active Year
               </button>
               <button
                 onClick={() => setModal("toggle")}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-100 transition"
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-green-50 transition"
               >
                 {schoolYear?.is_active ? (
-                  <ToggleRight size={16} className="text-green-500" />
+                  <ToggleRight size={15} className="text-green-500" />
                 ) : (
-                  <ToggleLeft size={16} className="text-gray-400" />
+                  <ToggleLeft size={15} className="text-gray-400" />
                 )}
                 {schoolYear?.is_active ? "Set as Inactive" : "Set as Active"}
               </button>
-              <hr />
+              <hr className="border-gray-100" />
               <button
                 onClick={() => setModal("delete")}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition"
               >
-                <Trash2 size={16} />
+                <Trash2 size={15} />
                 Delete School Year
               </button>
             </div>
@@ -195,26 +218,31 @@ const SchoolYearCard = () => {
             placeholder="e.g. 2027-2028"
             value={newYear}
             onChange={(e) => setNewYear(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-2 focus:border-transparent"
+            style={{ focusRingColor: "#0097b2" }}
           />
-          <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer text-gray-700">
+          <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer text-gray-600">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
+              className="accent-cyan-500"
             />
             Set as active school year
           </label>
           <div className="flex justify-end gap-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleAdd}
-              className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #0097b2, #004385)",
+              }}
             >
               Add Year
             </button>
@@ -236,15 +264,20 @@ const SchoolYearCard = () => {
                 <button
                   key={year.id}
                   onClick={() => handleSelectYear(year)}
-                  className={`flex justify-between items-center px-4 py-2 rounded border text-sm transition ${
+                  className={`flex justify-between items-center px-4 py-2.5 rounded-xl border text-sm transition ${
                     year.is_active
-                      ? "border-green-500 bg-green-50 text-green-700 font-semibold"
+                      ? "border-cyan-400 bg-cyan-50 text-cyan-700 font-semibold"
                       : "border-gray-200 hover:bg-gray-50 text-gray-700"
                   }`}
                 >
                   <span>SY {year.year_label}</span>
                   {year.is_active && (
-                    <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full text-white"
+                      style={{
+                        background: "linear-gradient(135deg, #0097b2, #004385)",
+                      }}
+                    >
                       Active
                     </span>
                   )}
@@ -255,7 +288,7 @@ const SchoolYearCard = () => {
           <div className="flex justify-end mt-4">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
             >
               Close
             </button>
@@ -266,20 +299,25 @@ const SchoolYearCard = () => {
       {/* Delete Modal */}
       {modal === "delete" && (
         <ModalWrapper title="Delete School Year" onClose={closeModal}>
-          <p className="text-sm text-gray-500 mb-4">
-            Are you sure you want to delete{" "}
-            <strong>SY {schoolYear?.year_label}</strong>? This cannot be undone.
+          <p className="text-sm text-gray-500 mb-2">
+            You are about to permanently delete:
+          </p>
+          <p className="font-semibold text-gray-800 mb-2">
+            SY {schoolYear?.year_label}
+          </p>
+          <p className="text-sm text-red-500 mb-4">
+            This action cannot be undone.
           </p>
           <div className="flex justify-end gap-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700"
+              className="px-4 py-2 text-sm rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
             >
               Delete
             </button>
@@ -298,29 +336,38 @@ const SchoolYearCard = () => {
           <div className="flex justify-end gap-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleToggleActive}
-              className="px-4 py-2 text-sm rounded bg-indigo-600 text-white hover:bg-indigo-700"
+              className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #0097b2, #004385)",
+              }}
             >
               Confirm
             </button>
           </div>
         </ModalWrapper>
       )}
-    </div>
+    </>
   );
 };
 
 const ModalWrapper = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="bg-white text-gray-800 rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
+    <div
+      className="bg-white text-gray-800 rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+      style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+    >
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-base font-semibold">{title}</h2>
-        <button onClick={onClose} className="hover:text-red-500 transition">
+        <h2 className="text-base font-semibold text-[#242424]">{title}</h2>
+        <button
+          onClick={onClose}
+          className="hover:text-red-500 transition text-gray-400"
+        >
           <X size={18} />
         </button>
       </div>
