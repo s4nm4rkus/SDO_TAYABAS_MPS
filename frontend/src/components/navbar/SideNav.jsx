@@ -7,7 +7,7 @@ import { HiMenuAlt3 } from "react-icons/hi";
 import { MdOutlineDashboard } from "react-icons/md";
 import { RiSettings4Line } from "react-icons/ri";
 import { TbReportAnalytics } from "react-icons/tb";
-import { AiOutlineUser, AiOutlineHeart } from "react-icons/ai";
+import { AiOutlineUser, AiOutlineHeart, AiOutlineTeam } from "react-icons/ai";
 import { FiMessageSquare, FiFolder } from "react-icons/fi";
 
 const SideNav = () => {
@@ -33,11 +33,20 @@ const SideNav = () => {
       },
       { name: "Logout", link: "/logout", icon: MdOutlineDashboard },
     ],
+    school_head: [
+      { name: "Dashboard", link: "/school-head", icon: MdOutlineDashboard },
+      { name: "Sections", link: "/school-head/sections", icon: FiFolder },
+      { name: "Teachers", link: "/school-head/teachers", icon: AiOutlineTeam },
+      {
+        name: "Messages",
+        link: "/school-head/messages",
+        icon: FiMessageSquare,
+      },
+      { name: "Logout", link: "/logout", icon: MdOutlineDashboard },
+    ],
     teacher: [
       { name: "Dashboard", link: "/teacher", icon: MdOutlineDashboard },
-      { name: "Messages", link: "/teacher/messages", icon: FiMessageSquare },
-      { name: "Assignments", link: "/teacher/assignments", icon: FiFolder },
-      { name: "Saved", link: "/teacher/saved", icon: AiOutlineHeart },
+      { name: "My Section", link: "/teacher/section", icon: FiFolder },
       { name: "Logout", link: "/logout", icon: MdOutlineDashboard },
     ],
   };

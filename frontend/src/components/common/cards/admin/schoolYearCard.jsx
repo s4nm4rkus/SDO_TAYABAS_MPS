@@ -18,9 +18,12 @@ const SchoolYearCard = () => {
   const [modal, setModal] = useState(null);
   const [schoolYear, setSchoolYear] = useState(null);
   const [allYears, setAllYears] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Add form
   const [newYear, setNewYear] = useState("");
   const [isActive, setIsActive] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [numQuarters, setNumQuarters] = useState(4);
 
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -53,6 +56,7 @@ const SchoolYearCard = () => {
     setModal(null);
     setNewYear("");
     setIsActive(false);
+    setNumQuarters(4);
     setMenuOpen(false);
   };
 
@@ -61,7 +65,7 @@ const SchoolYearCard = () => {
     try {
       await axios.post(
         API,
-        { year_label: newYear, is_active: isActive },
+        { year_label: newYear, is_active: isActive, num_quarters: numQuarters },
         { headers },
       );
       await fetchActive();
@@ -118,7 +122,7 @@ const SchoolYearCard = () => {
           boxShadow: "0 6px 20px rgba(0,151,178,0.3)",
         }}
       >
-        {/* Left — Icon + Info */}
+        {/* Left */}
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20">
             <CalendarDays size={20} className="text-white" />
@@ -152,7 +156,7 @@ const SchoolYearCard = () => {
           </div>
         </div>
 
-        {/* Right — Menu Button */}
+        {/* Right — Menu */}
         <div className="relative">
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
@@ -210,30 +214,95 @@ const SchoolYearCard = () => {
       {/* Add Modal */}
       {modal === "add" && (
         <ModalWrapper title="Add New School Year" onClose={closeModal}>
-          <p className="text-sm text-gray-500 mb-4">
-            Enter the label for the new academic year.
-          </p>
-          <input
-            type="text"
-            placeholder="e.g. 2027-2028"
-            value={newYear}
-            onChange={(e) => setNewYear(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-2 focus:border-transparent"
-            style={{ focusRingColor: "#0097b2" }}
-          />
-          <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer text-gray-600">
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="accent-cyan-500"
-            />
-            Set as active school year
-          </label>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col gap-4">
+            {/* Year Label */}
+            <div>
+              <label
+                className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+                style={{ color: "#0097b2" }}
+              >
+                Year Label
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 2027-2028"
+                value={newYear}
+                onChange={(e) => setNewYear(e.target.value)}
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+                style={{
+                  background: "rgba(248,248,255,0.8)",
+                  border: "1px solid rgba(0,151,178,0.2)",
+                }}
+              />
+            </div>
+
+            {/* Number of Quarters */}
+            <div>
+              <label
+                className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+                style={{ color: "#0097b2" }}
+              >
+                Number of Quarters
+              </label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => setNumQuarters(q)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition"
+                    style={
+                      numQuarters === q
+                        ? {
+                            background:
+                              "linear-gradient(135deg, #0097b2, #004385)",
+                            color: "white",
+                            boxShadow: "0 4px 12px rgba(0,151,178,0.3)",
+                          }
+                        : {
+                            background: "rgba(248,248,255,0.8)",
+                            border: "1px solid rgba(0,151,178,0.2)",
+                            color: "#242424",
+                          }
+                    }
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+              {/* Preview */}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Array.from({ length: numQuarters }, (_, i) => (
+                  <span
+                    key={i}
+                    className="text-xs px-2.5 py-1 rounded-full"
+                    style={{
+                      background: "rgba(0,151,178,0.08)",
+                      border: "1px solid rgba(0,151,178,0.2)",
+                      color: "#0097b2",
+                    }}
+                  >
+                    Quarter {i + 1}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Set Active */}
+            <label className="flex items-center gap-2 text-sm cursor-pointer text-gray-600">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="accent-cyan-500 w-4 h-4"
+              />
+              Set as active school year
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-5">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
+              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Cancel
             </button>
@@ -244,7 +313,7 @@ const SchoolYearCard = () => {
                 background: "linear-gradient(135deg, #0097b2, #004385)",
               }}
             >
-              Add Year
+              Add School Year
             </button>
           </div>
         </ModalWrapper>
@@ -264,13 +333,22 @@ const SchoolYearCard = () => {
                 <button
                   key={year.id}
                   onClick={() => handleSelectYear(year)}
-                  className={`flex justify-between items-center px-4 py-2.5 rounded-xl border text-sm transition ${
+                  className="flex justify-between items-center px-4 py-2.5 rounded-xl text-sm transition"
+                  style={
                     year.is_active
-                      ? "border-cyan-400 bg-cyan-50 text-cyan-700 font-semibold"
-                      : "border-gray-200 hover:bg-gray-50 text-gray-700"
-                  }`}
+                      ? {
+                          background: "rgba(0,151,178,0.08)",
+                          border: "1px solid rgba(0,151,178,0.3)",
+                          color: "#0097b2",
+                        }
+                      : {
+                          background: "rgba(248,248,255,0.8)",
+                          border: "1px solid rgba(0,0,0,0.08)",
+                          color: "#242424",
+                        }
+                  }
                 >
-                  <span>SY {year.year_label}</span>
+                  <span className="font-semibold">SY {year.year_label}</span>
                   {year.is_active && (
                     <span
                       className="text-xs px-2 py-0.5 rounded-full text-white"
@@ -288,7 +366,7 @@ const SchoolYearCard = () => {
           <div className="flex justify-end mt-4">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
+              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Close
             </button>
@@ -302,22 +380,25 @@ const SchoolYearCard = () => {
           <p className="text-sm text-gray-500 mb-2">
             You are about to permanently delete:
           </p>
-          <p className="font-semibold text-gray-800 mb-2">
+          <p className="font-bold text-[#242424] mb-1">
             SY {schoolYear?.year_label}
           </p>
-          <p className="text-sm text-red-500 mb-4">
+          <p className="text-xs text-gray-400 mb-1">
+            This will also delete all quarters under this school year.
+          </p>
+          <p className="text-sm text-red-500 mb-5 mt-2">
             This action cannot be undone.
           </p>
           <div className="flex justify-end gap-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
+              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-sm rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+              className="px-4 py-2 text-sm rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
             >
               Delete
             </button>
@@ -336,7 +417,7 @@ const SchoolYearCard = () => {
           <div className="flex justify-end gap-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded-xl border hover:bg-gray-50 transition"
+              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Cancel
             </button>
@@ -363,7 +444,7 @@ const ModalWrapper = ({ title, onClose, children }) => (
       style={{ border: "1px solid rgba(0,151,178,0.15)" }}
     >
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-base font-semibold text-[#242424]">{title}</h2>
+        <h2 className="text-base font-black text-[#242424]">{title}</h2>
         <button
           onClick={onClose}
           className="hover:text-red-500 transition text-gray-400"

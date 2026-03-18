@@ -10,6 +10,11 @@ const subjectRoutes = require("./routes/admin/subjectRoutes");
 const gradeLevelRoutes = require("./routes/admin/gradeLevelRoutes");
 const userRoutes = require("./routes/admin/userRoutes");
 
+const sectionRoutes = require("./routes/school-head/sectionRoutes");
+
+const teacherRoutes = require("./routes/teacher/teacherRoutes");
+const studentRoutes = require("./routes/teacher/studentRoutes");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -30,8 +35,12 @@ app.use("/api/subjects", subjectRoutes);
 app.use("/api/grade-levels", gradeLevelRoutes);
 app.use("/api/users", userRoutes);
 
+// Section routes (for school head)
+app.use("/api/sections", sectionRoutes);
+
 // Teacher routes
-app.use("/api/teacher", require("./routes/teacherRoutes"));
+app.use("/api/teacher", teacherRoutes);
+app.use("/api/students", studentRoutes);
 
 // ... add schoolHead, clusterSupervisor similarly
 

@@ -99,7 +99,7 @@ const MainDashboard = () => {
       `}</style>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative mt-28 md:mt-24 lg:mt-0 w-full min-h-screen flex items-center px-6 md:px-16 lg:px-24 py-16 overflow-hidden">
+      <section className="relative mt-28 md:mt-24 lg:mt-16 w-full min-h-screen flex items-center px-6 md:px-16 lg:px-24 py-16 overflow-hidden">
         <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
           <div className="fade-left">

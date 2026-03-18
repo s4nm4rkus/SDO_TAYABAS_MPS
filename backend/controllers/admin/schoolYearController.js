@@ -21,44 +21,49 @@ exports.getActiveSchoolYear = (req, res) => {
   );
 };
 
-// Add new school year
-exports.addSchoolYear = (req, res) => {
-  const { year_label, is_active } = req.body;
+exports.addSchoolYear = async (req, res) => {
+  const { year_label, is_active, num_quarters } = req.body;
 
   if (!year_label)
     return res.status(400).json({ message: "year_label is required" });
 
-  // If new entry is active, deactivate all others first
-  if (is_active) {
-    db.query("UPDATE school_years SET is_active = 0", (err) => {
-      if (err) return res.status(500).json({ message: "DB error", error: err });
+  if (!num_quarters || num_quarters < 1 || num_quarters > 4)
+    return res
+      .status(400)
+      .json({ message: "num_quarters must be between 1 and 4" });
 
-      db.query(
-        "INSERT INTO school_years (year_label, is_active) VALUES (?, ?)",
-        [year_label, 1],
-        (err, result) => {
-          if (err)
-            return res.status(500).json({ message: "DB error", error: err });
-          res.json({
-            message: "School year added successfully",
-            id: result.insertId,
-          });
-        },
-      );
+  try {
+    // Deactivate all if setting active
+    if (is_active) {
+      await db.promise().query("UPDATE school_years SET is_active = 0");
+    }
+
+    // Insert school year
+    const [result] = await db
+      .promise()
+      .query("INSERT INTO school_years (year_label, is_active) VALUES (?, ?)", [
+        year_label,
+        is_active ? 1 : 0,
+      ]);
+
+    const school_year_id = result.insertId;
+
+    // Auto-generate quarters
+    for (let i = 1; i <= num_quarters; i++) {
+      await db
+        .promise()
+        .query(
+          "INSERT INTO grading_periods (period_name, school_year_id, order_num) VALUES (?, ?, ?)",
+          [`Quarter ${i}`, school_year_id, i],
+        );
+    }
+
+    res.json({
+      message: "School year and quarters created successfully.",
+      id: school_year_id,
     });
-  } else {
-    db.query(
-      "INSERT INTO school_years (year_label, is_active) VALUES (?, ?)",
-      [year_label, 0],
-      (err, result) => {
-        if (err)
-          return res.status(500).json({ message: "DB error", error: err });
-        res.json({
-          message: "School year added successfully",
-          id: result.insertId,
-        });
-      },
-    );
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -95,12 +100,17 @@ exports.updateSchoolYear = (req, res) => {
   }
 };
 
-// Delete a school year
-exports.deleteSchoolYear = (req, res) => {
+exports.deleteSchoolYear = async (req, res) => {
   const { id } = req.params;
-
-  db.query("DELETE FROM school_years WHERE id = ?", [id], (err) => {
-    if (err) return res.status(500).json({ message: "DB error", error: err });
-    res.json({ message: "School year deleted successfully" });
-  });
+  try {
+    // Delete quarters first
+    await db
+      .promise()
+      .query("DELETE FROM grading_periods WHERE school_year_id = ?", [id]);
+    // Delete school year
+    await db.promise().query("DELETE FROM school_years WHERE id = ?", [id]);
+    res.json({ message: "School year and its quarters deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };

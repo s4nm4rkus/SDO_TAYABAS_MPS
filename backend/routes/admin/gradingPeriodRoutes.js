@@ -5,8 +5,8 @@ const { authorizeRoles } = require("../../middlewares/roleMiddleware");
 const {
   getAllGradingPeriods,
   getGradingPeriodsByYear,
-  addGradingPeriod,
   updateGradingPeriod,
+  setActiveGradingPeriod,
   deleteGradingPeriod,
 } = require("../../controllers/admin/gradingPeriodController");
 
@@ -15,8 +15,13 @@ router.get("/", getAllGradingPeriods);
 router.get("/by-year/:school_year_id", getGradingPeriodsByYear);
 
 // Admin only
-router.post("/", verifyToken, authorizeRoles("admin"), addGradingPeriod);
 router.put("/:id", verifyToken, authorizeRoles("admin"), updateGradingPeriod);
+router.put(
+  "/:id/set-active",
+  verifyToken,
+  authorizeRoles("admin"),
+  setActiveGradingPeriod,
+);
 router.delete(
   "/:id",
   verifyToken,

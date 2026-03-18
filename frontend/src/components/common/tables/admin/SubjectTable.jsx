@@ -15,6 +15,8 @@ const API = "http://localhost:5000/api/subjects";
 const ITEMS_PER_PAGE = 10;
 
 const SubjectTable = () => {
+  const token = localStorage.getItem("token");
+  const headers = { Authorization: `Bearer ${token}` };
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
@@ -24,9 +26,6 @@ const SubjectTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState("subject_name");
   const [sortOrder, setSortOrder] = useState("asc");
-
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
 
   const fetchSubjects = async () => {
     try {
@@ -41,6 +40,7 @@ const SubjectTable = () => {
 
   useEffect(() => {
     fetchSubjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closeModal = () => {
@@ -57,11 +57,6 @@ const SubjectTable = () => {
       subject_code: subject.subject_code,
     });
     setModal("edit");
-  };
-
-  const openDelete = (subject) => {
-    setSelected(subject);
-    setModal("delete");
   };
 
   const handleAdd = async () => {
@@ -99,9 +94,8 @@ const SubjectTable = () => {
   };
 
   const handleSort = (field) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
+    if (sortField === field) setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    else {
       setSortField(field);
       setSortOrder("asc");
     }
@@ -128,15 +122,15 @@ const SubjectTable = () => {
     if (sortField !== field)
       return <ChevronUp size={13} className="text-gray-300" />;
     return sortOrder === "asc" ? (
-      <ChevronUp size={13} className="text-blue-500" />
+      <ChevronUp size={13} style={{ color: "#0097b2" }} />
     ) : (
-      <ChevronDown size={13} className="text-blue-500" />
+      <ChevronDown size={13} style={{ color: "#0097b2" }} />
     );
   };
 
   const SortableTh = ({ field, label }) => (
     <th
-      className="px-4 py-3 cursor-pointer select-none hover:bg-gray-200 transition"
+      className="px-4 py-3 cursor-pointer select-none hover:bg-gray-50 transition text-xs font-semibold uppercase tracking-wider text-gray-500"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center gap-1">
@@ -147,20 +141,27 @@ const SubjectTable = () => {
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
+    <div
+      className="rounded-2xl"
+      style={{ background: "white", border: "1px solid rgba(0,151,178,0.1)" }}
+    >
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center p-5 border-b border-gray-100">
         <div>
-          <h2 className="text-lg font-semibold text-gray-700">Subjects</h2>
-          <p className="text-xs text-gray-400">
-            {subjects.length} total records
+          <h2 className="text-base font-black text-[#242424]">Subjects</h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {subjects.length} total subjects
           </p>
         </div>
         <button
           onClick={() => setModal("add")}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
+          className="flex items-center gap-2 px-4 py-2 text-white text-sm rounded-xl transition hover:opacity-90"
+          style={{
+            background: "linear-gradient(135deg, #0097b2, #004385)",
+            boxShadow: "0 4px 12px rgba(0,151,178,0.3)",
+          }}
         >
-          <PlusCircle size={16} />
+          <PlusCircle size={15} />
           Add Subject
         </button>
       </div>
@@ -168,12 +169,16 @@ const SubjectTable = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+          <thead style={{ background: "rgba(248,248,255,0.8)" }}>
             <tr>
-              <th className="px-4 py-3">#</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                #
+              </th>
               <SortableTh field="subject_name" label="Subject Name" />
-              <SortableTh field="subject_code" label="Subject Code" />
-              <th className="px-4 py-3 text-center">Actions</th>
+              <SortableTh field="subject_code" label="Code" />
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -181,14 +186,17 @@ const SubjectTable = () => {
               <tr>
                 <td
                   colSpan={4}
-                  className="text-center py-6 text-gray-400 animate-pulse"
+                  className="text-center py-10 text-gray-400 animate-pulse text-sm"
                 >
                   Loading...
                 </td>
               </tr>
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-6 text-gray-400">
+                <td
+                  colSpan={4}
+                  className="text-center py-10 text-gray-400 text-sm"
+                >
                   No subjects found.
                 </td>
               </tr>
@@ -196,32 +204,46 @@ const SubjectTable = () => {
               paginated.map((subject, index) => (
                 <tr
                   key={subject.id}
-                  className="border-t hover:bg-gray-50 transition"
+                  className="border-t border-gray-50 hover:bg-gray-50/50 transition"
                 >
                   <td className="px-4 py-3 text-gray-400 text-xs">
                     {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-800">
+                  <td className="px-4 py-3 font-semibold text-[#242424]">
                     {subject.subject_name}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {subject.subject_code}
+                  <td className="px-4 py-3">
+                    <span
+                      className="text-xs font-bold px-2.5 py-1 rounded-full"
+                      style={{
+                        background: "rgba(0,151,178,0.08)",
+                        border: "1px solid rgba(0,151,178,0.2)",
+                        color: "#0097b2",
+                      }}
+                    >
+                      {subject.subject_code}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex justify-center gap-2">
+                    <div className="flex justify-center gap-1.5">
                       <button
                         onClick={() => openEdit(subject)}
-                        className="p-1.5 rounded bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition"
-                        title="Edit"
+                        className="p-1.5 rounded-lg transition hover:scale-105"
+                        style={{
+                          background: "rgba(0,151,178,0.08)",
+                          color: "#0097b2",
+                        }}
                       >
-                        <Pencil size={15} />
+                        <Pencil size={14} />
                       </button>
                       <button
-                        onClick={() => openDelete(subject)}
-                        className="p-1.5 rounded bg-red-50 text-red-500 hover:bg-red-100 transition"
-                        title="Delete"
+                        onClick={() => {
+                          setSelected(subject);
+                          setModal("delete");
+                        }}
+                        className="p-1.5 rounded-lg bg-red-50 text-red-500 transition hover:scale-105"
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -234,8 +256,8 @@ const SubjectTable = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
-          <p>
+        <div className="flex justify-between items-center px-5 py-4 border-t border-gray-100 text-sm text-gray-500">
+          <p className="text-xs">
             Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
             {Math.min(currentPage * ITEMS_PER_PAGE, subjects.length)} of{" "}
             {subjects.length}
@@ -244,9 +266,9 @@ const SubjectTable = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded border hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={14} />
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(
@@ -267,11 +289,17 @@ const SubjectTable = () => {
                   <button
                     key={p}
                     onClick={() => setCurrentPage(p)}
-                    className={`px-3 py-1 rounded border text-sm transition ${
+                    className="px-3 py-1 rounded-lg border text-xs transition"
+                    style={
                       currentPage === p
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "hover:bg-gray-100"
-                    }`}
+                        ? {
+                            background:
+                              "linear-gradient(135deg, #0097b2, #004385)",
+                            color: "white",
+                            border: "none",
+                          }
+                        : { borderColor: "#e5e7eb" }
+                    }
                   >
                     {p}
                   </button>
@@ -280,9 +308,9 @@ const SubjectTable = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded border hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              <ChevronRight size={15} />
+              <ChevronRight size={14} />
             </button>
           </div>
         </div>
@@ -291,20 +319,20 @@ const SubjectTable = () => {
       {/* Add Modal */}
       {modal === "add" && (
         <ModalWrapper title="Add New Subject" onClose={closeModal}>
-          <p className="text-sm text-gray-500 mb-4">
-            Fill in the details for the new subject.
-          </p>
           <SubjectForm form={form} setForm={setForm} />
-          <div className="flex justify-end gap-2 mt-4">
+          <div className="flex justify-end gap-2 mt-5">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleAdd}
-              className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+              className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #0097b2, #004385)",
+              }}
             >
               Add Subject
             </button>
@@ -315,40 +343,49 @@ const SubjectTable = () => {
       {/* Edit Modal */}
       {modal === "edit" && (
         <ModalWrapper title="Edit Subject" onClose={closeModal}>
-          <p className="text-sm text-gray-500 mb-4">
-            Update the details for this subject.
-          </p>
           <SubjectForm form={form} setForm={setForm} />
           {!confirm ? (
-            <div className="flex justify-end gap-2 mt-4">
+            <div className="flex justify-end gap-2 mt-5">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+                className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => setConfirm(true)}
-                className="px-4 py-2 text-sm rounded bg-indigo-600 text-white hover:bg-indigo-700"
+                className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90"
+                style={{
+                  background: "linear-gradient(135deg, #0097b2, #004385)",
+                }}
               >
                 Save Changes
               </button>
             </div>
           ) : (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded text-sm text-yellow-800">
-              <p className="mb-2 font-medium">
-                Are you sure you want to save these changes?
+            <div
+              className="mt-4 p-3 rounded-xl text-sm"
+              style={{
+                background: "rgba(245,158,11,0.08)",
+                border: "1px solid rgba(245,158,11,0.3)",
+              }}
+            >
+              <p className="mb-2 font-semibold text-yellow-700">
+                Are you sure?
               </p>
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setConfirm(false)}
-                  className="px-3 py-1.5 rounded border text-gray-600 hover:bg-gray-50"
+                  className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition text-xs"
                 >
                   Go Back
                 </button>
                 <button
                   onClick={handleEdit}
-                  className="px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+                  className="px-3 py-1.5 rounded-xl text-white transition hover:opacity-90 text-xs"
+                  style={{
+                    background: "linear-gradient(135deg, #0097b2, #004385)",
+                  }}
                 >
                   Yes, Save
                 </button>
@@ -364,25 +401,32 @@ const SubjectTable = () => {
           <p className="text-sm text-gray-500 mb-2">
             You are about to permanently delete:
           </p>
-          <p className="font-semibold text-gray-800 mb-1">
+          <p className="font-bold text-[#242424] mb-1">
             {selected?.subject_name}
           </p>
-          <p className="text-xs text-gray-400 mb-4">
-            Code: {selected?.subject_code}
-          </p>
-          <p className="text-sm text-red-500 mb-4">
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full mb-4 inline-block"
+            style={{
+              background: "rgba(0,151,178,0.08)",
+              border: "1px solid rgba(0,151,178,0.2)",
+              color: "#0097b2",
+            }}
+          >
+            {selected?.subject_code}
+          </span>
+          <p className="text-sm text-red-500 mb-5 mt-2">
             This action cannot be undone.
           </p>
           <div className="flex justify-end gap-2">
             <button
               onClick={closeModal}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700"
+              className="px-4 py-2 text-sm rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
             >
               Yes, Delete
             </button>
@@ -394,25 +438,43 @@ const SubjectTable = () => {
 };
 
 const SubjectForm = ({ form, setForm }) => (
-  <div className="flex flex-col gap-3">
+  <div className="flex flex-col gap-4">
     <div>
-      <label className="text-xs text-gray-500 mb-1 block">Subject Name</label>
+      <label
+        className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+        style={{ color: "#0097b2" }}
+      >
+        Subject Name
+      </label>
       <input
         type="text"
         placeholder="e.g. Mathematics"
         value={form.subject_name}
         onChange={(e) => setForm({ ...form, subject_name: e.target.value })}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+        style={{
+          background: "rgba(248,248,255,0.8)",
+          border: "1px solid rgba(0,151,178,0.2)",
+        }}
       />
     </div>
     <div>
-      <label className="text-xs text-gray-500 mb-1 block">Subject Code</label>
+      <label
+        className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+        style={{ color: "#0097b2" }}
+      >
+        Subject Code
+      </label>
       <input
         type="text"
         placeholder="e.g. MATH"
         value={form.subject_code}
         onChange={(e) => setForm({ ...form, subject_code: e.target.value })}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+        style={{
+          background: "rgba(248,248,255,0.8)",
+          border: "1px solid rgba(0,151,178,0.2)",
+        }}
       />
     </div>
   </div>
@@ -420,10 +482,16 @@ const SubjectForm = ({ form, setForm }) => (
 
 const ModalWrapper = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="bg-white text-gray-800 rounded-lg shadow-xl w-full max-w-sm mx-4 p-6">
+    <div
+      className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+      style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+    >
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-base font-semibold">{title}</h2>
-        <button onClick={onClose} className="hover:text-red-500 transition">
+        <h2 className="text-base font-black text-[#242424]">{title}</h2>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-red-500 transition"
+        >
           <X size={18} />
         </button>
       </div>

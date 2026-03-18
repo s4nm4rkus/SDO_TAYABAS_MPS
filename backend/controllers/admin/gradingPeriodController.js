@@ -31,40 +31,63 @@ exports.getGradingPeriodsByYear = (req, res) => {
   );
 };
 
-// Add grading period
-exports.addGradingPeriod = (req, res) => {
-  const { period_name, school_year_id, order_num } = req.body;
+// Update grading period name only
+exports.updateGradingPeriod = (req, res) => {
+  const { id } = req.params;
+  const { period_name } = req.body;
 
-  if (!period_name || !school_year_id || !order_num)
-    return res.status(400).json({ message: "All fields are required" });
+  if (!period_name)
+    return res.status(400).json({ message: "Period name is required" });
 
   db.query(
-    "INSERT INTO grading_periods (period_name, school_year_id, order_num) VALUES (?, ?, ?)",
-    [period_name, school_year_id, order_num],
-    (err, result) => {
+    "UPDATE grading_periods SET period_name = ? WHERE id = ?",
+    [period_name, id],
+    (err) => {
       if (err) return res.status(500).json({ message: "DB error", error: err });
-      res.json({
-        message: "Grading period added successfully",
-        id: result.insertId,
-      });
+      res.json({ message: "Grading period updated successfully" });
     },
   );
 };
 
-// Update grading period
-exports.updateGradingPeriod = (req, res) => {
+// Set active grading period
+exports.setActiveGradingPeriod = (req, res) => {
   const { id } = req.params;
-  const { period_name, school_year_id, order_num } = req.body;
 
-  if (!period_name || !school_year_id || !order_num)
-    return res.status(400).json({ message: "All fields are required" });
-
+  // Get school_year_id of this period first
   db.query(
-    "UPDATE grading_periods SET period_name = ?, school_year_id = ?, order_num = ? WHERE id = ?",
-    [period_name, school_year_id, order_num, id],
-    (err) => {
+    "SELECT school_year_id FROM grading_periods WHERE id = ?",
+    [id],
+    (err, results) => {
       if (err) return res.status(500).json({ message: "DB error", error: err });
-      res.json({ message: "Grading period updated successfully" });
+      if (!results.length)
+        return res.status(404).json({ message: "Grading period not found" });
+
+      const { school_year_id } = results[0];
+
+      // Deactivate all periods in same school year
+      db.query(
+        "UPDATE grading_periods SET is_active = 0 WHERE school_year_id = ?",
+        [school_year_id],
+        (err) => {
+          if (err)
+            return res.status(500).json({ message: "DB error", error: err });
+
+          // Set this one active
+          db.query(
+            "UPDATE grading_periods SET is_active = 1 WHERE id = ?",
+            [id],
+            (err) => {
+              if (err)
+                return res
+                  .status(500)
+                  .json({ message: "DB error", error: err });
+              res.json({
+                message: "Active grading period updated successfully",
+              });
+            },
+          );
+        },
+      );
     },
   );
 };

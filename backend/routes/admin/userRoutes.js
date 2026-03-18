@@ -8,7 +8,7 @@ const { authorizeRoles } = require("../../middlewares/roleMiddleware");
 const adminOnly = [verifyToken, authorizeRoles("admin")];
 
 // Create user — reuses register from authController
-router.post("/", ...adminOnly, authController.register);
+router.post("/", ...adminOnly, userController.createUser);
 
 // Get all users
 router.get("/", ...adminOnly, userController.getAllUsers);

@@ -2,20 +2,39 @@ const db = require("../../config/db");
 const bcrypt = require("bcryptjs");
 
 // Get all users
-exports.getAllUsers = (req, res) => {
-  db.query(
-    `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
-      u.school_id, u.cluster_id,
-      s.school_name, c.cluster_name
-     FROM users u
-     LEFT JOIN schools s ON u.school_id = s.id
-     LEFT JOIN clusters c ON u.cluster_id = c.id
-     ORDER BY u.fullname ASC`,
-    (err, results) => {
-      if (err) return res.status(500).json({ message: "DB error", error: err });
-      res.json(results);
-    },
-  );
+exports.getAllUsers = async (req, res) => {
+  try {
+    const [users] = await db.promise().query(
+      `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
+        u.school_id, u.cluster_id,
+        s.school_name, c.cluster_name
+       FROM users u
+       LEFT JOIN schools s ON u.school_id = s.id
+       LEFT JOIN clusters c ON u.cluster_id = c.id
+       ORDER BY u.fullname ASC`,
+    );
+
+    // Fetch all school head assignments at once
+    const [assignments] = await db.promise().query(
+      `SELECT sha.user_id, s.id, s.school_name
+       FROM school_head_assignments sha
+       JOIN schools s ON sha.school_id = s.id`,
+    );
+
+    // Attach schools array to each school head
+    const result = users.map((user) => {
+      if (user.role === "school_head") {
+        user.schools = assignments
+          .filter((a) => a.user_id === user.id)
+          .map((a) => ({ id: a.id, school_name: a.school_name }));
+      }
+      return user;
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Get user by ID
@@ -40,63 +59,96 @@ exports.getUserById = (req, res) => {
 };
 
 // Create user (admin creates on behalf)
-exports.createUser = (req, res) => {
-  const { fullname, username, email, password, role } = req.body;
+exports.createUser = async (req, res) => {
+  const {
+    fullname,
+    username,
+    email,
+    password,
+    role,
+    school_id,
+    cluster_id,
+    school_ids,
+  } = req.body;
 
   if (!fullname || !username || !password || !role)
     return res.status(400).json({ message: "All fields are required" });
 
-  bcrypt.hash(password, 10, (err, hashed) => {
-    if (err)
-      return res.status(500).json({ message: "Hashing error", error: err });
+  try {
+    const hashed = await bcrypt.hash(password, 10);
 
-    db.query(
-      "INSERT INTO users (fullname, username, email, password, role) VALUES (?, ?, ?, ?, ?)",
-      [fullname, username, email, hashed, role],
-      (err, result) => {
-        if (err) {
-          if (err.code === "ER_DUP_ENTRY")
-            return res.status(400).json({ message: "Username already exists" });
-          return res.status(500).json({ message: "DB error", error: err });
-        }
-        res.json({ message: "User created successfully", id: result.insertId });
-      },
-    );
-  });
+    const [result] = await db
+      .promise()
+      .query(
+        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          fullname,
+          username,
+          email || null,
+          hashed,
+          role,
+          school_id || null,
+          cluster_id || null,
+        ],
+      );
+
+    const user_id = result.insertId;
+
+    // If school_head, insert multiple school assignments
+    if (role === "school_head" && school_ids?.length) {
+      for (const sid of school_ids) {
+        await db
+          .promise()
+          .query(
+            "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?, ?)",
+            [user_id, sid],
+          );
+      }
+    }
+
+    res.json({ message: "User created successfully.", id: user_id });
+  } catch (err) {
+    if (err.code === "ER_DUP_ENTRY")
+      return res.status(400).json({ message: "Username already exists." });
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Assign role + school/cluster
-exports.assignUser = (req, res) => {
+exports.assignUser = async (req, res) => {
+  const { role, school_id, cluster_id, school_ids } = req.body;
   const { id } = req.params;
-  const { role, school_id, cluster_id } = req.body;
 
-  // ADD THIS LINE:
-  console.log("Assign request:", { id, role, school_id, cluster_id });
+  try {
+    // Update role, school_id, cluster_id in users table
+    await db
+      .promise()
+      .query(
+        "UPDATE users SET role = ?, school_id = ?, cluster_id = ? WHERE id = ?",
+        [role, school_id || null, cluster_id || null, id],
+      );
 
-  if (!role) return res.status(400).json({ message: "Role is required" });
-
-  let finalSchoolId = null;
-  let finalClusterId = null;
-
-  if (role === "teacher" || role === "school_head") {
-    finalSchoolId = school_id || null;
-  } else if (role === "supervisor") {
-    finalClusterId = cluster_id || null;
-  }
-
-  console.log("Final values:", { role, finalSchoolId, finalClusterId });
-
-  db.query(
-    "UPDATE users SET role = ?, school_id = ?, cluster_id = ? WHERE id = ?",
-    [role, finalSchoolId, finalClusterId, id],
-    (err) => {
-      if (err) {
-        console.log("DB Error:", err); // ADD THIS TOO
-        return res.status(500).json({ message: "DB error", error: err });
+    // If school_head, handle multiple school assignments
+    if (role === "school_head" && school_ids?.length) {
+      // Delete existing assignments
+      await db
+        .promise()
+        .query("DELETE FROM school_head_assignments WHERE user_id = ?", [id]);
+      // Insert new assignments
+      for (const sid of school_ids) {
+        await db
+          .promise()
+          .query(
+            "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?, ?)",
+            [id, sid],
+          );
       }
-      res.json({ message: "User assigned successfully" });
-    },
-  );
+    }
+
+    res.json({ message: "User assigned successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Toggle activate/deactivate
