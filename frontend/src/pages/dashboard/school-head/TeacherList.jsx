@@ -8,21 +8,136 @@ import {
   ChevronUp,
   ChevronDown,
   Search,
+  PlusCircle,
+  X,
+  Eye,
+  EyeOff,
+  Pencil,
 } from "lucide-react";
 import axios from "axios";
 
 const API = "http://localhost:5000/api/sections/teacher-list";
+const CREATE_API = "http://localhost:5000/api/sections/teachers/create";
+const UPDATE_API = "http://localhost:5000/api/sections/teachers";
+const SCHOOLS_API = "http://localhost:5000/api/sections/schools";
+
+// ── Reusable form fields ──
+const FormField = ({
+  label,
+  keyName,
+  type = "text",
+  placeholder,
+  optional,
+  form,
+  setForm,
+}) => (
+  <div>
+    <label
+      className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+      style={{ color: "#0097b2" }}
+    >
+      {label}{" "}
+      {optional && (
+        <span className="text-gray-300 normal-case font-normal">
+          (optional)
+        </span>
+      )}
+    </label>
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={form[keyName]}
+      onChange={(e) => setForm({ ...form, [keyName]: e.target.value })}
+      className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+      style={{
+        background: "rgba(248,248,255,0.8)",
+        border: "1px solid rgba(0,151,178,0.2)",
+      }}
+    />
+  </div>
+);
+
+const PasswordField = ({
+  label,
+  keyName,
+  show,
+  toggle,
+  placeholder,
+  form,
+  setForm,
+}) => (
+  <div>
+    <label
+      className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+      style={{ color: "#0097b2" }}
+    >
+      {label}
+    </label>
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        value={form[keyName]}
+        onChange={(e) => setForm({ ...form, [keyName]: e.target.value })}
+        className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424] pr-10"
+        style={{
+          background: "rgba(248,248,255,0.8)",
+          border: "1px solid rgba(0,151,178,0.2)",
+        }}
+      />
+      <button
+        type="button"
+        onClick={toggle}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      >
+        {show ? <EyeOff size={15} /> : <Eye size={15} />}
+      </button>
+    </div>
+  </div>
+);
 
 const TeacherList = () => {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
+
   const [teachers, setTeachers] = useState([]);
+  const [assignedSchools, setAssignedSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterSchool, setFilterSchool] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortField, setSortField] = useState("fullname");
   const [sortOrder, setSortOrder] = useState("asc");
+
+  // Add modal
+  const [addModal, setAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({
+    fullname: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    school_id: "",
+  });
+  const [addError, setAddError] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [showAddConfirm, setShowAddConfirm] = useState(false);
+
+  // Edit modal
+  const [editModal, setEditModal] = useState(null);
+  const [editForm, setEditForm] = useState({
+    fullname: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    school_id: "",
+  });
+  const [editError, setEditError] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  const [showEditConfirm, setShowEditConfirm] = useState(false);
 
   const fetchTeachers = async () => {
     try {
@@ -35,11 +150,109 @@ const TeacherList = () => {
     }
   };
 
+  const fetchSchools = async () => {
+    try {
+      const res = await axios.get(SCHOOLS_API, { headers });
+      setAssignedSchools(res.data);
+    } catch {
+      setAssignedSchools([]);
+    }
+  };
+
   useEffect(() => {
     fetchTeachers();
+    fetchSchools();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Add handlers ──
+  const openAddModal = () => {
+    setAddForm({
+      fullname: "",
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      school_id:
+        assignedSchools.length === 1 ? String(assignedSchools[0].id) : "",
+    });
+    setAddError("");
+    setShowAddPassword(false);
+    setShowAddConfirm(false);
+    setAddModal(true);
+  };
+
+  const closeAddModal = () => {
+    setAddModal(false);
+    setAddError("");
+  };
+
+  const handleCreate = async () => {
+    const { fullname, username, password, confirmPassword } = addForm;
+    if (!fullname || !username || !password)
+      return setAddError("Full name, username and password are required.");
+    if (password !== confirmPassword)
+      return setAddError("Passwords do not match.");
+    if (password.length < 6)
+      return setAddError("Password must be at least 6 characters.");
+    if (assignedSchools.length > 1 && !addForm.school_id)
+      return setAddError("Please select a school.");
+
+    setAddLoading(true);
+    try {
+      await axios.post(CREATE_API, addForm, { headers });
+      await fetchTeachers();
+      closeAddModal();
+    } catch (err) {
+      setAddError(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  // ── Edit handlers ──
+  const openEditModal = (teacher) => {
+    setEditModal(teacher);
+    setEditForm({
+      fullname: teacher.fullname || "",
+      username: teacher.username || "",
+      email: teacher.email || "",
+      password: "",
+      confirmPassword: "",
+      school_id: String(teacher.school_id || ""),
+    });
+    setEditError("");
+    setShowEditPassword(false);
+    setShowEditConfirm(false);
+  };
+
+  const closeEditModal = () => {
+    setEditModal(null);
+    setEditError("");
+  };
+
+  const handleUpdate = async () => {
+    const { fullname, username, password, confirmPassword } = editForm;
+    if (!fullname || !username)
+      return setEditError("Full name and username are required.");
+    if (password && password !== confirmPassword)
+      return setEditError("Passwords do not match.");
+    if (password && password.length < 6)
+      return setEditError("Password must be at least 6 characters.");
+
+    setEditLoading(true);
+    try {
+      await axios.put(`${UPDATE_API}/${editModal.id}`, editForm, { headers });
+      await fetchTeachers();
+      closeEditModal();
+    } catch (err) {
+      setEditError(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ── Filter + Sort ──
   const schools = useMemo(() => {
     const unique = [
       ...new Map(teachers.map((t) => [t.school_id, t.school_name])).entries(),
@@ -110,20 +323,18 @@ const TeacherList = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#242424]">Teacher List</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Teachers assigned to your school(s) for the active school year
+            Manage teachers assigned to your school(s)
           </p>
         </div>
-
-        {/* Stat Cards */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
           {[
             {
-              label: "Total Teachers",
+              label: "Total",
               value: total,
               icon: <Users size={18} className="text-white" />,
               bg: "linear-gradient(135deg, #0097b2, #004385)",
@@ -146,7 +357,7 @@ const TeacherList = () => {
           ].map((card, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 px-5 py-3 rounded-2xl"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl"
               style={{
                 background: card.bg,
                 boxShadow: `0 6px 18px ${card.shadow}`,
@@ -163,10 +374,21 @@ const TeacherList = () => {
               </div>
             </div>
           ))}
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-4 py-2.5 text-white text-sm rounded-xl transition hover:opacity-90"
+            style={{
+              background: "linear-gradient(135deg, #0097b2, #004385)",
+              boxShadow: "0 4px 12px rgba(0,151,178,0.3)",
+            }}
+          >
+            <PlusCircle size={15} />
+            Add Teacher
+          </button>
         </div>
       </div>
 
-      {/* Divider */}
+      {/* ── Divider ── */}
       <div
         className="h-px w-full rounded-full"
         style={{
@@ -175,7 +397,7 @@ const TeacherList = () => {
         }}
       />
 
-      {/* Filters */}
+      {/* ── Filters ── */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-48">
           <Search
@@ -194,7 +416,6 @@ const TeacherList = () => {
             }}
           />
         </div>
-
         {schools.length > 1 && (
           <select
             value={filterSchool}
@@ -213,7 +434,6 @@ const TeacherList = () => {
             ))}
           </select>
         )}
-
         <div className="flex gap-2">
           {[
             { value: "all", label: "All" },
@@ -244,7 +464,7 @@ const TeacherList = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div
         className="rounded-2xl overflow-hidden"
         style={{ background: "white", border: "1px solid rgba(0,151,178,0.1)" }}
@@ -265,13 +485,16 @@ const TeacherList = () => {
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
                   Status
                 </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center py-10 text-gray-400 animate-pulse text-sm"
                   >
                     Loading teachers...
@@ -279,7 +502,7 @@ const TeacherList = () => {
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
                     <Users size={28} className="mx-auto mb-2 opacity-30" />
                     <p className="text-sm">No teachers found.</p>
                   </td>
@@ -363,13 +586,25 @@ const TeacherList = () => {
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => openEditModal(teacher)}
+                        className="p-1.5 rounded-lg transition hover:scale-105"
+                        style={{
+                          background: "rgba(0,151,178,0.08)",
+                          color: "#0097b2",
+                        }}
+                        title="Edit Teacher"
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-
         {!loading && filtered.length > 0 && (
           <div className="px-5 py-3 border-t border-gray-100">
             <p className="text-xs text-gray-400">
@@ -378,6 +613,320 @@ const TeacherList = () => {
           </div>
         )}
       </div>
+
+      {/* ── Add Teacher Modal ── */}
+      {addModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h2 className="text-base font-black text-[#242424]">
+                  Add Teacher
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Create a teacher account for your school
+                </p>
+              </div>
+              <button
+                onClick={closeAddModal}
+                className="text-gray-400 hover:text-red-500 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {addError && (
+              <div
+                className="mb-4 p-3 rounded-xl text-sm text-red-600"
+                style={{
+                  background: "rgba(239,68,68,0.06)",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                }}
+              >
+                {addError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              {/* School */}
+              {assignedSchools.length > 1 ? (
+                <div>
+                  <label
+                    className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+                    style={{ color: "#0097b2" }}
+                  >
+                    School
+                  </label>
+                  <select
+                    value={addForm.school_id}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, school_id: e.target.value })
+                    }
+                    className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+                    style={{
+                      background: "rgba(248,248,255,0.8)",
+                      border: "1px solid rgba(0,151,178,0.2)",
+                    }}
+                  >
+                    <option value="">Select School</option>
+                    {assignedSchools.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.school_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                assignedSchools.length === 1 && (
+                  <div
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                    style={{
+                      background: "rgba(0,151,178,0.06)",
+                      border: "1px solid rgba(0,151,178,0.15)",
+                    }}
+                  >
+                    <School size={14} style={{ color: "#0097b2" }} />
+                    <div>
+                      <p className="text-xs text-gray-400">Assigning to</p>
+                      <p className="text-sm font-black text-[#242424]">
+                        {assignedSchools[0].school_name}
+                      </p>
+                    </div>
+                  </div>
+                )
+              )}
+
+              <FormField
+                label="Full Name"
+                keyName="fullname"
+                placeholder="e.g. Juan Dela Cruz"
+                form={addForm}
+                setForm={setAddForm}
+              />
+              <FormField
+                label="Username"
+                keyName="username"
+                placeholder="e.g. juandelacruz"
+                form={addForm}
+                setForm={setAddForm}
+              />
+              <FormField
+                label="Email"
+                keyName="email"
+                type="email"
+                placeholder="e.g. juan@email.com"
+                optional
+                form={addForm}
+                setForm={setAddForm}
+              />
+              <PasswordField
+                label="Password"
+                keyName="password"
+                show={showAddPassword}
+                toggle={() => setShowAddPassword(!showAddPassword)}
+                placeholder="Min. 6 characters"
+                form={addForm}
+                setForm={setAddForm}
+              />
+              <PasswordField
+                label="Confirm Password"
+                keyName="confirmPassword"
+                show={showAddConfirm}
+                toggle={() => setShowAddConfirm(!showAddConfirm)}
+                placeholder="Re-enter password"
+                form={addForm}
+                setForm={setAddForm}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                onClick={closeAddModal}
+                className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={addLoading}
+                className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90 disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #0097b2, #004385)",
+                }}
+              >
+                {addLoading ? "Creating..." : "Create Teacher"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Teacher Modal ── */}
+      {editModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h2 className="text-base font-black text-[#242424]">
+                  Edit Teacher
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Update teacher account information
+                </p>
+              </div>
+              <button
+                onClick={closeEditModal}
+                className="text-gray-400 hover:text-red-500 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Teacher badge */}
+            <div
+              className="flex items-center gap-3 p-3 rounded-xl mb-4"
+              style={{
+                background: "rgba(0,151,178,0.06)",
+                border: "1px solid rgba(0,151,178,0.15)",
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #0097b2, #004385)",
+                }}
+              >
+                {editModal.fullname?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#242424]">
+                  {editModal.fullname}
+                </p>
+                <p className="text-xs text-gray-400">{editModal.school_name}</p>
+              </div>
+            </div>
+
+            {editError && (
+              <div
+                className="mb-4 p-3 rounded-xl text-sm text-red-600"
+                style={{
+                  background: "rgba(239,68,68,0.06)",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                }}
+              >
+                {editError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              {/* School transfer */}
+              {assignedSchools.length > 1 && (
+                <div>
+                  <label
+                    className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+                    style={{ color: "#0097b2" }}
+                  >
+                    School
+                  </label>
+                  <select
+                    value={editForm.school_id}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, school_id: e.target.value })
+                    }
+                    className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+                    style={{
+                      background: "rgba(248,248,255,0.8)",
+                      border: "1px solid rgba(0,151,178,0.2)",
+                    }}
+                  >
+                    {assignedSchools.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.school_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <FormField
+                label="Full Name"
+                keyName="fullname"
+                placeholder="e.g. Juan Dela Cruz"
+                form={editForm}
+                setForm={setEditForm}
+              />
+              <FormField
+                label="Username"
+                keyName="username"
+                placeholder="e.g. juandelacruz"
+                form={editForm}
+                setForm={setEditForm}
+              />
+              <FormField
+                label="Email"
+                keyName="email"
+                type="email"
+                placeholder="e.g. juan@email.com"
+                optional
+                form={editForm}
+                setForm={setEditForm}
+              />
+
+              {/* Password reset */}
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-400 mb-3">
+                  Leave password blank to keep existing password.
+                </p>
+                <div className="flex flex-col gap-4">
+                  <PasswordField
+                    label="New Password"
+                    keyName="password"
+                    show={showEditPassword}
+                    toggle={() => setShowEditPassword(!showEditPassword)}
+                    placeholder="Min. 6 characters"
+                    form={editForm}
+                    setForm={setEditForm}
+                  />
+                  <PasswordField
+                    label="Confirm New Password"
+                    keyName="confirmPassword"
+                    show={showEditConfirm}
+                    toggle={() => setShowEditConfirm(!showEditConfirm)}
+                    placeholder="Re-enter new password"
+                    form={editForm}
+                    setForm={setEditForm}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                onClick={closeEditModal}
+                className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdate}
+                disabled={editLoading}
+                className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90 disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #0097b2, #004385)",
+                }}
+              >
+                {editLoading ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -47,6 +47,8 @@ const SideNav = () => {
     teacher: [
       { name: "Dashboard", link: "/teacher", icon: MdOutlineDashboard },
       { name: "My Section", link: "/teacher/section", icon: FiFolder },
+      { name: "MPS Encoding", link: "/teacher/mps", icon: TbReportAnalytics },
+      { name: "MPS Report", link: "/teacher/report", icon: TbReportAnalytics },
       { name: "Logout", link: "/logout", icon: MdOutlineDashboard },
     ],
   };

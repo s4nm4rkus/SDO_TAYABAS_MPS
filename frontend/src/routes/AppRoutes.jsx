@@ -13,6 +13,8 @@ import MonitoringReports from "../pages/dashboard/admin/MonitoringReports";
 
 import TeacherDashboard from "../pages/dashboard/teacher/TeacherDashboard";
 import MySection from "../pages/dashboard/teacher/MySection";
+import MPSEncoding from "../pages/dashboard/teacher/MPSEncoding";
+import MPSReport from "../pages/dashboard/teacher/MPSReport";
 
 // School Head
 import SchoolHeadDashboard from "../pages/dashboard/school-head/SchoolHeadDashboard";
@@ -34,6 +36,8 @@ const AppRoutes = () => {
           <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
             <Route path="/teacher" element={<TeacherDashboard />} />
             <Route path="/teacher/section" element={<MySection />} />
+            <Route path="/teacher/mps" element={<MPSEncoding />} />
+            <Route path="/teacher/report" element={<MPSReport />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>

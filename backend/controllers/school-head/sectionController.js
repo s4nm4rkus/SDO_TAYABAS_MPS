@@ -47,7 +47,6 @@ exports.getSections = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 // POST create section
 exports.createSection = async (req, res) => {
   try {
@@ -66,11 +65,9 @@ exports.createSection = async (req, res) => {
       if (school_ids.length === 1) {
         target_school_id = school_ids[0];
       } else {
-        return res
-          .status(400)
-          .json({
-            message: "Please specify which school this section belongs to.",
-          });
+        return res.status(400).json({
+          message: "Please specify which school this section belongs to.",
+        });
       }
     } else {
       if (!school_ids.includes(Number(target_school_id)))
@@ -126,6 +123,115 @@ exports.deleteSection = async (req, res) => {
       .query("DELETE FROM sections WHERE id = ?", [req.params.id]);
     res.json({ message: "Section deleted successfully." });
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// POST create teacher account (school head only)
+exports.createTeacher = async (req, res) => {
+  const bcrypt = require("bcryptjs");
+  const { fullname, username, email, password, school_id } = req.body;
+
+  if (!fullname || !username || !password)
+    return res.status(400).json({ message: "All fields are required." });
+
+  try {
+    const school_ids = await getSchoolHeadSchools(req.user.id);
+
+    // Determine which school to assign
+    let target_school_id = school_id;
+    if (!target_school_id) {
+      if (school_ids.length === 1) {
+        target_school_id = school_ids[0];
+      } else {
+        return res
+          .status(400)
+          .json({ message: "Please specify which school." });
+      }
+    } else {
+      if (!school_ids.includes(Number(target_school_id)))
+        return res
+          .status(403)
+          .json({ message: "You are not assigned to this school." });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    await require("../../config/db")
+      .promise()
+      .query(
+        `INSERT INTO users (fullname, username, email, password, role, school_id)
+       VALUES (?, ?, ?, ?, 'teacher', ?)`,
+        [fullname, username, email || null, hashed, target_school_id],
+      );
+
+    res.json({ message: "Teacher account created successfully." });
+  } catch (err) {
+    if (err.code === "ER_DUP_ENTRY")
+      return res.status(400).json({ message: "Username already exists." });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PUT update teacher account
+exports.updateTeacher = async (req, res) => {
+  const bcrypt = require("bcryptjs");
+  const { id } = req.params;
+  const { fullname, username, email, password, school_id } = req.body;
+
+  if (!fullname || !username)
+    return res
+      .status(400)
+      .json({ message: "Full name and username are required." });
+
+  try {
+    const school_ids = await getSchoolHeadSchools(req.user.id);
+
+    // Verify teacher belongs to school head's school
+    const [teacher] = await db
+      .promise()
+      .query(
+        "SELECT id, school_id FROM users WHERE id = ? AND role = 'teacher'",
+        [id],
+      );
+
+    if (!teacher.length)
+      return res.status(404).json({ message: "Teacher not found." });
+
+    if (!school_ids.includes(Number(teacher[0].school_id)))
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to edit this teacher." });
+
+    // Determine target school
+    let target_school_id = school_id || teacher[0].school_id;
+    if (school_id && !school_ids.includes(Number(school_id)))
+      return res
+        .status(403)
+        .json({ message: "You are not assigned to this school." });
+
+    // Update with or without password
+    if (password && password.length >= 6) {
+      const hashed = await bcrypt.hash(password, 10);
+      await db
+        .promise()
+        .query(
+          `UPDATE users SET fullname = ?, username = ?, email = ?, password = ?, school_id = ? WHERE id = ?`,
+          [fullname, username, email || null, hashed, target_school_id, id],
+        );
+    } else {
+      await db
+        .promise()
+        .query(
+          `UPDATE users SET fullname = ?, username = ?, email = ?, school_id = ? WHERE id = ?`,
+          [fullname, username, email || null, target_school_id, id],
+        );
+    }
+
+    res.json({ message: "Teacher updated successfully." });
+  } catch (err) {
+    if (err.code === "ER_DUP_ENTRY")
+      return res.status(400).json({ message: "Username already exists." });
     res.status(500).json({ message: err.message });
   }
 };

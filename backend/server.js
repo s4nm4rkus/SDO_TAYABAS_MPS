@@ -14,6 +14,7 @@ const sectionRoutes = require("./routes/school-head/sectionRoutes");
 
 const teacherRoutes = require("./routes/teacher/teacherRoutes");
 const studentRoutes = require("./routes/teacher/studentRoutes");
+const assessmentRoutes = require("./routes/teacher/assessmentRoutes");
 
 const app = express();
 app.use(cors());
@@ -41,6 +42,7 @@ app.use("/api/sections", sectionRoutes);
 // Teacher routes
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/assessments", assessmentRoutes);
 
 // ... add schoolHead, clusterSupervisor similarly
 
