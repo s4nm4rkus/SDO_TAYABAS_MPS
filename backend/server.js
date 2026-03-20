@@ -11,6 +11,7 @@ const gradeLevelRoutes = require("./routes/admin/gradeLevelRoutes");
 const userRoutes = require("./routes/admin/userRoutes");
 
 const sectionRoutes = require("./routes/school-head/sectionRoutes");
+const mpsReportRoutes = require("./routes/school-head/mpsReportRoutes");
 
 const teacherRoutes = require("./routes/teacher/teacherRoutes");
 const studentRoutes = require("./routes/teacher/studentRoutes");
@@ -38,6 +39,7 @@ app.use("/api/users", userRoutes);
 
 // Section routes (for school head)
 app.use("/api/sections", sectionRoutes);
+app.use("/api/sh-mps", mpsReportRoutes);
 
 // Teacher routes
 app.use("/api/teacher", teacherRoutes);

@@ -15,6 +15,11 @@ router.get(
   sectionController.getSchoolTeacherList,
 );
 router.get("/schools", ...schoolHeadOnly, sectionController.getAssignedSchools);
+router.get(
+  "/dashboard",
+  ...schoolHeadOnly,
+  sectionController.getSchoolHeadDashboard,
+);
 
 // ── POST ──
 router.post("/", ...schoolHeadOnly, sectionController.createSection);

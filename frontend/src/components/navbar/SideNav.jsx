@@ -38,9 +38,9 @@ const SideNav = () => {
       { name: "Sections", link: "/school-head/sections", icon: FiFolder },
       { name: "Teachers", link: "/school-head/teachers", icon: AiOutlineTeam },
       {
-        name: "Messages",
-        link: "/school-head/messages",
-        icon: FiMessageSquare,
+        name: "MPS Report",
+        link: "/school-head/mps-report",
+        icon: TbReportAnalytics,
       },
       { name: "Logout", link: "/logout", icon: MdOutlineDashboard },
     ],

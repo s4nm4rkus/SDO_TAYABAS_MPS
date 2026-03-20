@@ -20,6 +20,7 @@ import MPSReport from "../pages/dashboard/teacher/MPSReport";
 import SchoolHeadDashboard from "../pages/dashboard/school-head/SchoolHeadDashboard";
 import SectionManagement from "../pages/dashboard/school-head/SectionManagement";
 import TeacherList from "../pages/dashboard/school-head/TeacherList";
+import SchoolHeadMPSReport from "../pages/dashboard/school-head/SchoolHeadMPSReport";
 
 const AppRoutes = () => {
   return (
@@ -56,6 +57,10 @@ const AppRoutes = () => {
               element={<SectionManagement />}
             />
             <Route path="/school-head/teachers" element={<TeacherList />} />
+            <Route
+              path="/school-head/mps-report"
+              element={<SchoolHeadMPSReport />}
+            />
           </Route>
         </Route>
       </Route>

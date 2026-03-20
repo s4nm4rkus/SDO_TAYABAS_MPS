@@ -339,3 +339,136 @@ exports.getSchoolTeacherList = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getSchoolHeadDashboard = async (req, res) => {
+  try {
+    const school_year_id = await getActiveYear();
+    const school_ids = await getSchoolHeadSchools(req.user.id);
+
+    // Active quarter
+    const [quarters] = await db.promise().query(
+      `SELECT id, period_name, order_num, is_active
+       FROM grading_periods WHERE school_year_id = ?
+       ORDER BY order_num ASC`,
+      [school_year_id],
+    );
+    const activeQuarter = quarters.find((q) => q.is_active);
+
+    // Schools info
+    const [schools] = await db
+      .promise()
+      .query(`SELECT id, school_name FROM schools WHERE id IN (?)`, [
+        school_ids,
+      ]);
+
+    // Sections
+    const [sections] = await db.promise().query(
+      `SELECT s.id, s.section_name, s.adviser_id, s.grade_level_id,
+        gl.grade_name, sc.school_name
+       FROM sections s
+       LEFT JOIN grade_levels gl ON s.grade_level_id = gl.id
+       LEFT JOIN schools sc ON s.school_id = sc.id
+       WHERE s.school_id IN (?) AND s.school_year_id = ?`,
+      [school_ids, school_year_id],
+    );
+
+    // Teachers
+    const [teachers] = await db.promise().query(
+      `SELECT u.id, u.school_id,
+        CASE WHEN s.id IS NOT NULL THEN 1 ELSE 0 END AS is_assigned
+       FROM users u
+       LEFT JOIN sections s ON s.adviser_id = u.id AND s.school_year_id = ?
+       WHERE u.role = 'teacher' AND u.school_id IN (?) AND u.is_active = 1`,
+      [school_year_id, school_ids],
+    );
+
+    // Students
+    const [students] = await db.promise().query(
+      `SELECT id, gender, section_id FROM students
+       WHERE school_id IN (?) AND school_year_id = ?`,
+      [school_ids, school_year_id],
+    );
+
+    // MPS per grade level for active quarter
+    const gradeMPS = [];
+    if (activeQuarter) {
+      // Get unique grade levels from sections
+      const gradeLevelIds = [...new Set(sections.map((s) => s.grade_level_id))];
+
+      for (const grade_level_id of gradeLevelIds) {
+        const gradeSections = sections.filter(
+          (s) => s.grade_level_id === grade_level_id,
+        );
+        const sectionIds = gradeSections.map((s) => s.id);
+        if (!sectionIds.length) continue;
+
+        // Get all assessment scores for this grade level
+        const [scores] = await db.promise().query(
+          `SELECT acs.score, st.gender, a.total_items
+           FROM assessment_scores acs
+           JOIN assessments a ON acs.assessment_id = a.id
+           JOIN students st ON acs.student_id = st.id
+           WHERE a.section_id IN (?) AND a.grading_period_id = ? AND a.school_year_id = ?`,
+          [sectionIds, activeQuarter.id, school_year_id],
+        );
+
+        if (!scores.length) continue;
+
+        const allScores = scores.map(
+          (s) => (Number(s.score) / Number(s.total_items)) * 100,
+        );
+        const maleScores = scores
+          .filter((s) => s.gender === "Male")
+          .map((s) => (Number(s.score) / Number(s.total_items)) * 100);
+        const femaleScores = scores
+          .filter((s) => s.gender === "Female")
+          .map((s) => (Number(s.score) / Number(s.total_items)) * 100);
+
+        const avg = (arr) =>
+          arr.length
+            ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2)
+            : null;
+        const sd = (arr) => {
+          if (!arr.length) return null;
+          const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+          return Math.sqrt(
+            arr.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / arr.length,
+          ).toFixed(2);
+        };
+
+        gradeMPS.push({
+          grade_level_id,
+          grade_name: gradeSections[0].grade_name,
+          section_count: gradeSections.length,
+          student_count: students.filter((s) =>
+            sectionIds.includes(s.section_id),
+          ).length,
+          class_mps: avg(allScores),
+          class_sd: sd(allScores),
+          male_mps: avg(maleScores),
+          female_mps: avg(femaleScores),
+        });
+      }
+    }
+
+    res.json({
+      schools,
+      active_quarter: activeQuarter || null,
+      quarters,
+      stats: {
+        total_sections: sections.length,
+        assigned_sections: sections.filter((s) => s.adviser_id).length,
+        unassigned_sections: sections.filter((s) => !s.adviser_id).length,
+        total_teachers: teachers.length,
+        assigned_teachers: teachers.filter((t) => t.is_assigned).length,
+        unassigned_teachers: teachers.filter((t) => !t.is_assigned).length,
+        total_students: students.length,
+        male_students: students.filter((s) => s.gender === "Male").length,
+        female_students: students.filter((s) => s.gender === "Female").length,
+      },
+      grade_mps: gradeMPS,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
