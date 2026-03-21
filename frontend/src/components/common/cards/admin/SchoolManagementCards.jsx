@@ -9,6 +9,9 @@ import {
   ChevronRight,
   Plus,
   UserCircle,
+  CheckSquare,
+  Square,
+  Link2,
 } from "lucide-react";
 import axios from "axios";
 
@@ -59,10 +62,12 @@ const emptySchoolRow = () => ({ school_name: "", school_id: "" });
 const SchoolManagementCards = () => {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
+
   const [clusters, setClusters] = useState([]);
   const [unassignedCount, setUnassignedCount] = useState(0);
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [schools, setSchools] = useState([]);
+  const [allClusters, setAllClusters] = useState([]);
   const [loadingClusters, setLoadingClusters] = useState(true);
   const [loadingSchools, setLoadingSchools] = useState(false);
 
@@ -88,6 +93,12 @@ const SchoolManagementCards = () => {
   const [schoolConfirm, setSchoolConfirm] = useState(false);
   const [deleteSchoolModal, setDeleteSchoolModal] = useState(null);
 
+  // Assign schools modal
+  const [assignModal, setAssignModal] = useState(null);
+  const [unassignedSchools, setUnassignedSchools] = useState([]);
+  const [selectedSchoolIds, setSelectedSchoolIds] = useState([]);
+  const [assignLoading, setAssignLoading] = useState(false);
+
   // ── Fetch ──
   const fetchClusters = async () => {
     try {
@@ -95,6 +106,7 @@ const SchoolManagementCards = () => {
         headers,
       });
       setClusters(res.data);
+      setAllClusters(res.data);
     } catch {
       setClusters([]);
     } finally {
@@ -125,6 +137,17 @@ const SchoolManagementCards = () => {
       setSchools([]);
     } finally {
       setLoadingSchools(false);
+    }
+  };
+
+  const fetchUnassignedSchools = async () => {
+    try {
+      const res = await axios.get(`${SCHOOLS_API}/by-cluster/unassigned`, {
+        headers,
+      });
+      setUnassignedSchools(res.data);
+    } catch {
+      setUnassignedSchools([]);
     }
   };
 
@@ -172,12 +195,10 @@ const SchoolManagementCards = () => {
   };
 
   const addSchoolRow = () => setSchoolRows([...schoolRows, emptySchoolRow()]);
-
   const removeSchoolRow = (index) => {
     if (schoolRows.length === 1) return;
     setSchoolRows(schoolRows.filter((_, i) => i !== index));
   };
-
   const updateSchoolRow = (index, field, value) => {
     const updated = [...schoolRows];
     updated[index][field] = value;
@@ -187,11 +208,9 @@ const SchoolManagementCards = () => {
   const handleAddCluster = async () => {
     if (!clusterForm.cluster_name || !clusterForm.cluster_code)
       return alert("Cluster name and code are required.");
-
     const validSchools = schoolRows.filter(
       (s) => s.school_name.trim() && s.school_id.trim(),
     );
-
     try {
       await axios.post(
         CLUSTERS_API,
@@ -235,6 +254,40 @@ const SchoolManagementCards = () => {
     }
   };
 
+  // ── Assign Schools to Cluster ──
+  const openAssignModal = async (e, cluster) => {
+    e.stopPropagation();
+    setAssignModal(cluster);
+    setSelectedSchoolIds([]);
+    await fetchUnassignedSchools();
+  };
+
+  const toggleSchoolSelect = (id) => {
+    setSelectedSchoolIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
+    );
+  };
+
+  const handleAssignSchools = async () => {
+    if (!selectedSchoolIds.length)
+      return alert("Please select at least one school.");
+    setAssignLoading(true);
+    try {
+      await axios.put(
+        `${SCHOOLS_API}/assign-schools/${assignModal.id}`,
+        { school_ids: selectedSchoolIds },
+        { headers },
+      );
+      await refreshAll(selectedCluster?.id);
+      setAssignModal(null);
+      setSelectedSchoolIds([]);
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
   // ── School CRUD ──
   const closeSchoolModal = () => {
     setSchoolModal(null);
@@ -247,7 +300,8 @@ const SchoolManagementCards = () => {
     setSchoolForm({
       school_name: "",
       school_id: "",
-      cluster_id: selectedCluster?.id || "",
+      cluster_id:
+        selectedCluster?.id !== "unassigned" ? selectedCluster?.id || "" : "",
     });
     setSchoolModal("add");
   };
@@ -359,6 +413,20 @@ const SchoolManagementCards = () => {
                 >
                   {/* Actions */}
                   <div className="absolute top-2.5 right-2.5 hidden group-hover:flex gap-1 z-10">
+                    {/* Assign schools button */}
+                    <button
+                      onClick={(e) => openAssignModal(e, cluster)}
+                      className="p-1 rounded-lg transition"
+                      style={{
+                        background: isSelected
+                          ? "rgba(255,255,255,0.25)"
+                          : "rgba(16,185,129,0.08)",
+                        color: isSelected ? "white" : "#10b981",
+                      }}
+                      title="Assign existing schools"
+                    >
+                      <Link2 size={11} />
+                    </button>
                     <button
                       onClick={(e) => openEditCluster(e, cluster)}
                       className="p-1 rounded-lg transition"
@@ -388,7 +456,6 @@ const SchoolManagementCards = () => {
                     </button>
                   </div>
 
-                  {/* Icon */}
                   <div
                     className="w-8 h-8 rounded-xl flex items-center justify-center mb-2"
                     style={{
@@ -403,7 +470,6 @@ const SchoolManagementCards = () => {
                     />
                   </div>
 
-                  {/* Info */}
                   <h3
                     className="text-xs font-black truncate leading-tight"
                     style={{ color: isSelected ? "white" : "#242424" }}
@@ -428,22 +494,25 @@ const SchoolManagementCards = () => {
                       style={{
                         color: isSelected
                           ? "rgba(255,255,255,0.6)"
-                          : "rgba(0,0,0,0.3)",
+                          : cluster.supervisor_name
+                            ? "#0097b2"
+                            : "rgba(0,0,0,0.3)",
                       }}
                     />
                     <p
-                      className="text-xs"
+                      className="text-xs truncate"
                       style={{
                         color: isSelected
                           ? "rgba(255,255,255,0.6)"
-                          : "rgba(0,0,0,0.3)",
+                          : cluster.supervisor_name
+                            ? "#0097b2"
+                            : "rgba(0,0,0,0.3)",
                       }}
                     >
-                      No supervisor
+                      {cluster.supervisor_name || "No supervisor"}
                     </p>
                   </div>
 
-                  {/* School Count */}
                   <div
                     className="h-px w-full my-2"
                     style={{
@@ -574,7 +643,22 @@ const SchoolManagementCards = () => {
                 {schools.length} {schools.length === 1 ? "school" : "schools"}
               </p>
             </div>
-            {selectedCluster.id !== "unassigned" && (
+            <div className="flex gap-2">
+              {/* Assign existing schools button */}
+              {selectedCluster.id !== "unassigned" && (
+                <button
+                  onClick={(e) => openAssignModal(e, selectedCluster)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition hover:opacity-90"
+                  style={{
+                    background: "rgba(16,185,129,0.08)",
+                    color: "#10b981",
+                    border: "1px solid rgba(16,185,129,0.2)",
+                  }}
+                >
+                  <Link2 size={15} />
+                  Assign Schools
+                </button>
+              )}
               <button
                 onClick={openAddSchool}
                 className="flex items-center gap-2 px-4 py-2 text-white text-sm rounded-xl transition hover:opacity-90"
@@ -586,7 +670,7 @@ const SchoolManagementCards = () => {
                 <PlusCircle size={15} />
                 Add School
               </button>
-            )}
+            </div>
           </div>
 
           <div
@@ -612,7 +696,10 @@ const SchoolManagementCards = () => {
               <School size={28} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm">No schools found.</p>
               {selectedCluster.id !== "unassigned" && (
-                <p className="text-xs mt-1">Click "Add School" to add one.</p>
+                <p className="text-xs mt-1">
+                  Click "Add School" to create one or "Assign Schools" to move
+                  existing ones.
+                </p>
               )}
             </div>
           ) : (
@@ -626,7 +713,6 @@ const SchoolManagementCards = () => {
                     border: "1px solid rgba(0,151,178,0.1)",
                   }}
                 >
-                  {/* Actions */}
                   <div className="absolute top-3 right-3 hidden group-hover:flex gap-1">
                     <button
                       onClick={() => openEditSchool(school)}
@@ -679,6 +765,109 @@ const SchoolManagementCards = () => {
         </div>
       )}
 
+      {/* ── Assign Schools Modal ── */}
+      {assignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h2 className="text-base font-black text-[#242424]">
+                  Assign Schools
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Select unassigned schools to add to{" "}
+                  <span className="font-semibold text-[#0097b2]">
+                    {assignModal.cluster_name}
+                  </span>
+                </p>
+              </div>
+              <button
+                onClick={() => setAssignModal(null)}
+                className="text-gray-400 hover:text-red-500 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {unassignedSchools.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <School size={28} className="mx-auto mb-2 opacity-30" />
+                <p className="text-sm">No unassigned schools available.</p>
+                <p className="text-xs mt-1">
+                  All schools are already assigned to a cluster.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2 mb-5 max-h-64 overflow-y-auto">
+                  {unassignedSchools.map((school) => {
+                    const isSelected = selectedSchoolIds.includes(school.id);
+                    return (
+                      <button
+                        key={school.id}
+                        onClick={() => toggleSchoolSelect(school.id)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition"
+                        style={{
+                          background: isSelected
+                            ? "rgba(0,151,178,0.08)"
+                            : "rgba(248,248,255,0.8)",
+                          border: `1px solid ${isSelected ? "rgba(0,151,178,0.3)" : "rgba(0,0,0,0.08)"}`,
+                        }}
+                      >
+                        {isSelected ? (
+                          <CheckSquare size={15} style={{ color: "#0097b2" }} />
+                        ) : (
+                          <Square size={15} className="text-gray-300" />
+                        )}
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-[#242424]">
+                            {school.school_name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {school.school_id}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-xs text-gray-400 mb-4">
+                  {selectedSchoolIds.length} school
+                  {selectedSchoolIds.length !== 1 ? "s" : ""} selected
+                </p>
+              </>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setAssignModal(null)}
+                className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              {unassignedSchools.length > 0 && (
+                <button
+                  onClick={handleAssignSchools}
+                  disabled={assignLoading || !selectedSchoolIds.length}
+                  className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90 disabled:opacity-40"
+                  style={{
+                    background: "linear-gradient(135deg, #0097b2, #004385)",
+                  }}
+                >
+                  {assignLoading
+                    ? "Assigning..."
+                    : `Assign ${selectedSchoolIds.length > 0 ? selectedSchoolIds.length : ""} School${selectedSchoolIds.length !== 1 ? "s" : ""}`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Add Cluster Modal ── */}
       {clusterModal === "add" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -692,7 +881,7 @@ const SchoolManagementCards = () => {
                   Add New Cluster
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Create a cluster and add schools inline
+                  Create a cluster and optionally add new schools inline
                 </p>
               </div>
               <button
@@ -703,7 +892,6 @@ const SchoolManagementCards = () => {
               </button>
             </div>
 
-            {/* Cluster Fields */}
             <div className="flex flex-col gap-4 mb-5">
               <div>
                 <label
@@ -755,7 +943,6 @@ const SchoolManagementCards = () => {
               </div>
             </div>
 
-            {/* Divider */}
             <div
               className="h-px w-full rounded-full mb-4"
               style={{
@@ -764,21 +951,15 @@ const SchoolManagementCards = () => {
               }}
             />
 
-            {/* Schools */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-3">
                 <label
                   className="text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "#0097b2" }}
                 >
-                  Schools
+                  New Schools
                   <span className="ml-1 text-gray-400 normal-case font-normal">
-                    (
-                    {
-                      schoolRows.filter((s) => s.school_name && s.school_id)
-                        .length
-                    }{" "}
-                    ready)
+                    (optional)
                   </span>
                 </label>
                 <button
@@ -793,7 +974,6 @@ const SchoolManagementCards = () => {
                   Add Row
                 </button>
               </div>
-
               <div className="flex flex-col gap-2">
                 {schoolRows.map((row, index) => (
                   <div key={index} className="flex gap-2 items-center">
@@ -1012,7 +1192,7 @@ const SchoolManagementCards = () => {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Tiaong Elementary School"
+                placeholder="e.g. Lalo Elementary School"
                 value={schoolForm.school_name}
                 onChange={(e) =>
                   setSchoolForm({ ...schoolForm, school_name: e.target.value })
@@ -1045,7 +1225,39 @@ const SchoolManagementCards = () => {
                 }}
               />
             </div>
+
+            {/* Cluster assignment */}
+            <div>
+              <label
+                className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+                style={{ color: "#0097b2" }}
+              >
+                Cluster{" "}
+                <span className="text-gray-300 normal-case font-normal">
+                  (optional)
+                </span>
+              </label>
+              <select
+                value={schoolForm.cluster_id}
+                onChange={(e) =>
+                  setSchoolForm({ ...schoolForm, cluster_id: e.target.value })
+                }
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+                style={{
+                  background: "rgba(248,248,255,0.8)",
+                  border: "1px solid rgba(0,151,178,0.2)",
+                }}
+              >
+                <option value="">No cluster (Unassigned)</option>
+                {allClusters.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.cluster_name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+
           {schoolModal === "edit" && !schoolConfirm ? (
             <div className="flex justify-end gap-2">
               <button

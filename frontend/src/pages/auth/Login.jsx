@@ -24,6 +24,7 @@ const Login = () => {
       setUser(userData);
       if (userData.role === "admin") navigate("/admin");
       else if (userData.role === "school_head") navigate("/school-head");
+      else if (userData.role === "supervisor") navigate("/supervisor");
       else navigate("/teacher");
     } catch (err) {
       setError(err.message);

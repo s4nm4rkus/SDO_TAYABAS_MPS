@@ -38,6 +38,19 @@ const SideNav = () => {
         icon: TbReportAnalytics,
       },
     ],
+    supervisor: [
+      { name: "Dashboard", link: "/supervisor", icon: MdOutlineDashboard },
+      {
+        name: "MPS Report",
+        link: "/supervisor/mps-report",
+        icon: TbReportAnalytics,
+      },
+      {
+        name: "School Heads",
+        link: "/supervisor/school-heads",
+        icon: AiOutlineUser,
+      },
+    ],
     school_head: [
       { name: "Dashboard", link: "/school-head", icon: MdOutlineDashboard },
       { name: "Sections", link: "/school-head/sections", icon: FiFolder },

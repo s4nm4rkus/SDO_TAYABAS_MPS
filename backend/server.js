@@ -10,6 +10,8 @@ const subjectRoutes = require("./routes/admin/subjectRoutes");
 const gradeLevelRoutes = require("./routes/admin/gradeLevelRoutes");
 const userRoutes = require("./routes/admin/userRoutes");
 
+const supervisorRoutes = require("./routes/supervisor/supervisorRoutes");
+
 const sectionRoutes = require("./routes/school-head/sectionRoutes");
 const mpsReportRoutes = require("./routes/school-head/mpsReportRoutes");
 
@@ -36,6 +38,9 @@ app.use("/api/grading-periods", gradingPeriodRoutes);
 app.use("/api/subjects", subjectRoutes);
 app.use("/api/grade-levels", gradeLevelRoutes);
 app.use("/api/users", userRoutes);
+
+//supevisor routes
+app.use("/api/supervisor", supervisorRoutes);
 
 // Section routes (for school head)
 app.use("/api/sections", sectionRoutes);

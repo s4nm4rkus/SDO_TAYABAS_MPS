@@ -77,30 +77,40 @@ exports.createUser = async (req, res) => {
   try {
     const hashed = await bcrypt.hash(password, 10);
 
+    // For school_head — use first school from school_ids as school_id
+    const resolvedSchoolId =
+      role === "school_head"
+        ? school_ids?.[0] || school_id || null
+        : role === "teacher"
+          ? school_id || null
+          : null;
+
+    const resolvedClusterId = role === "supervisor" ? cluster_id || null : null;
+
     const [result] = await db
       .promise()
       .query(
-        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id) VALUES (?,?,?,?,?,?,?)",
         [
           fullname,
           username,
           email || null,
           hashed,
           role,
-          school_id || null,
-          cluster_id || null,
+          resolvedSchoolId,
+          resolvedClusterId,
         ],
       );
 
     const user_id = result.insertId;
 
-    // If school_head, insert multiple school assignments
+    // Still insert school_head_assignments for admin display
     if (role === "school_head" && school_ids?.length) {
       for (const sid of school_ids) {
         await db
           .promise()
           .query(
-            "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?, ?)",
+            "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?,?)",
             [user_id, sid],
           );
       }
@@ -120,28 +130,39 @@ exports.assignUser = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Update role, school_id, cluster_id in users table
+    // For school_head — use the first selected school as school_id
+    const resolvedSchoolId =
+      role === "school_head"
+        ? school_ids?.[0] || school_id || null
+        : role === "teacher"
+          ? school_id || null
+          : null;
+
+    const resolvedClusterId = role === "supervisor" ? cluster_id || null : null;
+
     await db
       .promise()
-      .query(
-        "UPDATE users SET role = ?, school_id = ?, cluster_id = ? WHERE id = ?",
-        [role, school_id || null, cluster_id || null, id],
-      );
+      .query("UPDATE users SET role=?, school_id=?, cluster_id=? WHERE id=?", [
+        role,
+        resolvedSchoolId,
+        resolvedClusterId,
+        id,
+      ]);
 
-    // If school_head, handle multiple school assignments
-    if (role === "school_head" && school_ids?.length) {
-      // Delete existing assignments
+    // Still maintain school_head_assignments for backward compat
+    if (role === "school_head") {
       await db
         .promise()
-        .query("DELETE FROM school_head_assignments WHERE user_id = ?", [id]);
-      // Insert new assignments
-      for (const sid of school_ids) {
-        await db
-          .promise()
-          .query(
-            "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?, ?)",
-            [id, sid],
-          );
+        .query("DELETE FROM school_head_assignments WHERE user_id=?", [id]);
+      if (school_ids?.length) {
+        for (const sid of school_ids) {
+          await db
+            .promise()
+            .query(
+              "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?,?)",
+              [id, sid],
+            );
+        }
       }
     }
 

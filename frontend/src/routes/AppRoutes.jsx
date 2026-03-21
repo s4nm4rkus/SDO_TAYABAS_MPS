@@ -16,6 +16,11 @@ import MySection from "../pages/dashboard/teacher/MySection";
 import MPSEncoding from "../pages/dashboard/teacher/MPSEncoding";
 import MPSReport from "../pages/dashboard/teacher/MPSReport";
 
+//Supervisor
+import SupervisorDashboard from "../pages/dashboard/supervisor/SupervisorDashboard";
+import SupervisorMPSReport from "../pages/dashboard/supervisor/SupervisorMPSReport";
+import SupervisorSchoolHeadList from "../pages/dashboard/supervisor/SchoolHeadList";
+
 // School Head
 import SchoolHeadDashboard from "../pages/dashboard/school-head/SchoolHeadDashboard";
 import SectionManagement from "../pages/dashboard/school-head/SectionManagement";
@@ -34,19 +39,32 @@ const AppRoutes = () => {
       {/* ===== PRIVATE AREA ===== */}
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
+          {/* Teacher */}
           <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
             <Route path="/teacher" element={<TeacherDashboard />} />
             <Route path="/teacher/section" element={<MySection />} />
             <Route path="/teacher/mps" element={<MPSEncoding />} />
             <Route path="/teacher/report" element={<MPSReport />} />
           </Route>
-
+          {/* Administrator */}
           <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="admin/acad" element={<AcademicSetup />} />
             <Route path="/admin/school" element={<SchoolManagement />} />
             <Route path="/admin/users" element={<UserManagement />} />
             <Route path="/admin/reports" element={<MonitoringReports />} />
+          </Route>
+          {/* Supervisor */}
+          <Route element={<ProtectedRoute allowedRoles={["supervisor"]} />}>
+            <Route path="/supervisor" element={<SupervisorDashboard />} />
+            <Route
+              path="/supervisor/mps-report"
+              element={<SupervisorMPSReport />}
+            />
+            <Route
+              path="/supervisor/school-heads"
+              element={<SupervisorSchoolHeadList />}
+            />
           </Route>
 
           {/* School Head */}

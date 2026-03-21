@@ -11,19 +11,27 @@ const {
   getSchoolsByCluster,
   getClustersWithCount,
   getUnassignedCount,
+  assignSchoolsToCluster, // ← add this
 } = require("../../controllers/admin/schoolController");
+
 // Public
 router.get("/", getAllSchools);
 
-// These MUST come before /:id
+// Specific routes BEFORE dynamic /:id
 router.get("/clusters-with-count", verifyToken, getClustersWithCount);
 router.get("/unassigned-count", verifyToken, getUnassignedCount);
 router.get("/by-cluster/:cluster_id", verifyToken, getSchoolsByCluster);
 
-// This must come LAST
-router.get("/:id", getSchoolById);
+// Specific PUT before dynamic /:id
+router.put(
+  "/assign-schools/:cluster_id",
+  verifyToken,
+  authorizeRoles("admin"),
+  assignSchoolsToCluster,
+); // ← moved prefix first
 
-// Admin only
+// Dynamic routes LAST
+router.get("/:id", getSchoolById);
 router.post("/", verifyToken, authorizeRoles("admin"), addSchool);
 router.put("/:id", verifyToken, authorizeRoles("admin"), updateSchool);
 router.delete("/:id", verifyToken, authorizeRoles("admin"), deleteSchool);

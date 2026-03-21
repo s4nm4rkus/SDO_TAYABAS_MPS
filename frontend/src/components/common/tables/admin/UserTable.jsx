@@ -23,9 +23,6 @@ const SCHOOLS_API = "http://localhost:5000/api/schools";
 const CLUSTERS_API = "http://localhost:5000/api/clusters";
 const ITEMS_PER_PAGE = 10;
 
-const token = localStorage.getItem("token");
-const headers = { Authorization: `Bearer ${token}` };
-
 const roleBadge = {
   admin: {
     bg: "rgba(239,68,68,0.08)",
@@ -168,17 +165,6 @@ const SchoolAssignment = ({ user }) => {
 
 // Assignment fields inside modal
 const AssignmentFields = ({ form, setForm, schools, clusters }) => {
-  const toggleSchool = (id) => {
-    const sid = String(id);
-    const current = form.school_ids || [];
-    setForm({
-      ...form,
-      school_ids: current.includes(sid)
-        ? current.filter((s) => s !== sid)
-        : [...current, sid],
-    });
-  };
-
   if (form.role === "teacher")
     return (
       <div>
@@ -214,37 +200,30 @@ const AssignmentFields = ({ form, setForm, schools, clusters }) => {
           className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
           style={{ color: "#0097b2" }}
         >
-          Assign Schools
-          <span className="ml-1 text-gray-400 normal-case font-normal">
-            ({(form.school_ids || []).length} selected)
-          </span>
+          Assign to School
         </label>
-        <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-1">
-          {schools.map((s) => {
-            const isSelected = (form.school_ids || []).includes(String(s.id));
-            return (
-              <button
-                key={s.id}
-                onClick={() => toggleSchool(s.id)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-left text-sm transition"
-                style={{
-                  background: isSelected
-                    ? "rgba(0,151,178,0.08)"
-                    : "rgba(248,248,255,0.8)",
-                  border: `1px solid ${isSelected ? "rgba(0,151,178,0.3)" : "rgba(0,0,0,0.08)"}`,
-                  color: isSelected ? "#0097b2" : "#242424",
-                }}
-              >
-                {isSelected ? (
-                  <CheckSquare size={14} style={{ color: "#0097b2" }} />
-                ) : (
-                  <Square size={14} className="text-gray-300" />
-                )}
-                <span className="flex-1 truncate">{s.school_name}</span>
-              </button>
-            );
-          })}
-        </div>
+        <select
+          value={form.school_ids?.[0] || form.school_id || ""}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              school_id: e.target.value,
+              school_ids: e.target.value ? [e.target.value] : [],
+            })
+          }
+          className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+          style={{
+            background: "rgba(248,248,255,0.8)",
+            border: "1px solid rgba(0,151,178,0.2)",
+          }}
+        >
+          <option value="">Select School</option>
+          {schools.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.school_name}
+            </option>
+          ))}
+        </select>
       </div>
     );
 
@@ -280,6 +259,8 @@ const AssignmentFields = ({ form, setForm, schools, clusters }) => {
 };
 
 const UserTable = () => {
+  const token = localStorage.getItem("token");
+  const headers = { Authorization: `Bearer ${token}` };
   const [users, setUsers] = useState([]);
   const [schools, setSchools] = useState([]);
   const [clusters, setClusters] = useState([]);
@@ -353,6 +334,7 @@ const UserTable = () => {
     fetchUsers();
     fetchSchools();
     fetchClusters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Add
@@ -391,9 +373,10 @@ const UserTable = () => {
       return setAddError("Please assign a school.");
     if (
       role === "school_head" &&
-      (!addForm.school_ids || !addForm.school_ids.length)
+      !addForm.school_ids?.[0] &&
+      !addForm.school_id
     )
-      return setAddError("Please assign at least one school.");
+      return setAddError("Please assign a school.");
     if (role === "supervisor" && !addForm.cluster_id)
       return setAddError("Please assign a cluster.");
 
@@ -431,11 +414,8 @@ const UserTable = () => {
     if (!data.role) return alert("Please select a role.");
     if (data.role === "teacher" && !data.school_id)
       return alert("Please select a school.");
-    if (
-      data.role === "school_head" &&
-      (!data.school_ids || !data.school_ids.length)
-    )
-      return alert("Please select at least one school.");
+    if (data.role === "school_head" && !data.school_ids?.[0] && !data.school_id)
+      return alert("Please select a school.");
     if (data.role === "supervisor" && !data.cluster_id)
       return alert("Please select a cluster.");
 

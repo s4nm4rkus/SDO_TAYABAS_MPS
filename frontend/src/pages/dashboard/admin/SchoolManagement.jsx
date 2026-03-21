@@ -1,13 +1,12 @@
 import SchoolManagementCards from "../../../components/common/cards/admin/SchoolManagementCards";
 import useMainDashboardStats from "../../../hooks/useMainDashboardStats";
-import { Building2, School } from "lucide-react";
+import { Building2, School, AlertCircle } from "lucide-react";
 
 const SchoolManagement = () => {
   const { clusterCount, schoolCount, loading } = useMainDashboardStats();
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-[#242424]">
@@ -17,8 +16,6 @@ const SchoolManagement = () => {
             Manage clusters and schools across Tayabas City Division
           </p>
         </div>
-
-        {/* Stat Cards */}
         <div className="flex gap-3">
           {[
             {
@@ -58,7 +55,6 @@ const SchoolManagement = () => {
         </div>
       </div>
 
-      {/* Divider */}
       <div
         className="h-px w-full rounded-full"
         style={{
@@ -67,7 +63,6 @@ const SchoolManagement = () => {
         }}
       />
 
-      {/* Cards */}
       <SchoolManagementCards />
     </div>
   );
