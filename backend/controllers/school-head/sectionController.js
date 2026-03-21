@@ -472,3 +472,64 @@ exports.getSchoolHeadDashboard = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// DELETE teacher account
+exports.deleteTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const school_ids = await getSchoolHeadSchools(req.user.id);
+
+    const [teacher] = await db
+      .promise()
+      .query(
+        "SELECT id, school_id FROM users WHERE id = ? AND role = 'teacher'",
+        [id],
+      );
+
+    if (!teacher.length)
+      return res.status(404).json({ message: "Teacher not found." });
+
+    if (!school_ids.includes(Number(teacher[0].school_id)))
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this teacher." });
+
+    await db.promise().query("DELETE FROM users WHERE id = ?", [id]);
+    res.json({ message: "Teacher deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// PUT unassign teacher from section
+exports.unassignTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const school_ids = await getSchoolHeadSchools(req.user.id);
+    const school_year_id = await getActiveYear();
+
+    const [teacher] = await db
+      .promise()
+      .query(
+        "SELECT id, school_id FROM users WHERE id = ? AND role = 'teacher'",
+        [id],
+      );
+
+    if (!teacher.length)
+      return res.status(404).json({ message: "Teacher not found." });
+
+    if (!school_ids.includes(Number(teacher[0].school_id)))
+      return res.status(403).json({ message: "Not authorized." });
+
+    await db
+      .promise()
+      .query(
+        "UPDATE sections SET adviser_id = NULL WHERE adviser_id = ? AND school_year_id = ?",
+        [id, school_year_id],
+      );
+
+    res.json({ message: "Teacher unassigned successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

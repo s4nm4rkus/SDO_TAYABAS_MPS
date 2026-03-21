@@ -125,7 +125,6 @@ const TeacherDashboard = () => {
   const male = students.filter((s) => s.gender === "Male").length;
   const female = students.filter((s) => s.gender === "Female").length;
   const barData = activeReport?.data?.filter((r) => r.class.mps !== null) || [];
-  const maxMPS = 100;
 
   const bestSubject = barData.length
     ? barData.reduce((a, b) =>
@@ -341,7 +340,7 @@ const TeacherDashboard = () => {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {periods.map((period) => {
-            const isActive = period.is_active;
+            const isActive = !!period.is_active;
             const quarterData = report?.report?.[period.id]?.data || [];
             const hasData = quarterData.some((r) => r.class.mps !== null);
             const encodedSubjects = quarterData.filter(
@@ -426,8 +425,6 @@ const TeacherDashboard = () => {
           })}
         </div>
       </div>
-
-      {/* ── Best & Lowest Subject ── */}
 
       {/* ── Bottom Grid: Chart + Encoding Status ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -537,34 +534,36 @@ const TeacherDashboard = () => {
                               {mps}%
                             </span>
                             <div
-                              className="flex items-end gap-2"
-                              style={{ height: "130px" }}
+                              className="flex items-end justify-center gap-0.5 w-full"
+                              style={{ height: "140px" }}
                             >
                               {maleMps && (
                                 <div
-                                  className="rounded-t-lg transition-all duration-700"
+                                  className="flex-1 rounded-t-md transition-all duration-700 min-w-0"
                                   style={{
-                                    height: `${(maleMps / maxMPS) * 100}%`,
-                                    width: "40px",
-                                    background: "rgba(59,130,246,0.6)",
+                                    height: `${(maleMps / 100) * 100}%`,
+                                    background: "rgba(59,130,246,0.65)",
+                                    maxWidth: "15%",
                                   }}
                                 />
                               )}
                               <div
-                                className="rounded-t-lg transition-all duration-700"
+                                className="rounded-t-md transition-all duration-700 min-w-0"
                                 style={{
-                                  height: `${(mps / maxMPS) * 100}%`,
-                                  width: "54px",
+                                  height: `${(mps / 100) * 100}%`,
                                   background: color,
+                                  flex: maleMps || femaleMps ? "1.4" : "1",
+                                  maxWidth:
+                                    maleMps || femaleMps ? "40%" : "60%",
                                 }}
                               />
                               {femaleMps && (
                                 <div
-                                  className="rounded-t-lg transition-all duration-700"
+                                  className="flex-1 rounded-t-md transition-all duration-700 min-w-0"
                                   style={{
-                                    height: `${(femaleMps / maxMPS) * 100}%`,
-                                    width: "40px",
-                                    background: "rgba(236,72,153,0.6)",
+                                    height: `${(femaleMps / 100) * 100}%`,
+                                    background: "rgba(236,72,153,0.65)",
+                                    maxWidth: "15%",
                                   }}
                                 />
                               )}
@@ -724,7 +723,7 @@ const TeacherDashboard = () => {
               </div>
               <div className="flex-1">
                 <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                  Best Subject
+                  Highest MPS
                 </p>
                 <p className="text-sm font-black text-[#242424] mt-0.5">
                   {bestSubject.subject_name}

@@ -33,8 +33,18 @@ router.post(
 router.put("/teachers/:id", ...schoolHeadOnly, sectionController.updateTeacher);
 router.put("/:id/assign", ...schoolHeadOnly, sectionController.assignAdviser);
 router.put("/:id", ...schoolHeadOnly, sectionController.updateSection);
+router.put(
+  "/teachers/:id/unassign",
+  ...schoolHeadOnly,
+  sectionController.unassignTeacher,
+);
 
 // ── DELETE ──
 router.delete("/:id", ...schoolHeadOnly, sectionController.deleteSection);
+router.delete(
+  "/teachers/:id",
+  ...schoolHeadOnly,
+  sectionController.deleteTeacher,
+);
 
 module.exports = router;

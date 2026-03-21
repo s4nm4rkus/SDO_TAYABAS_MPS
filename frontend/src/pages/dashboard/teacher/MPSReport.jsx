@@ -634,7 +634,7 @@ const MPSReport = () => {
                 <span className="text-xl shrink-0">🏆</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                    Best Subject
+                    Highest MPS
                   </p>
                   <p className="text-xs font-black text-[#242424] truncate">
                     {best.subject_name}

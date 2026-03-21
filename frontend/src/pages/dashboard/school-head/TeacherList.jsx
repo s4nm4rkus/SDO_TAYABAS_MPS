@@ -13,6 +13,8 @@ import {
   Eye,
   EyeOff,
   Pencil,
+  Trash2,
+  UserMinus,
 } from "lucide-react";
 import axios from "axios";
 
@@ -139,6 +141,14 @@ const TeacherList = () => {
   const [showEditPassword, setShowEditPassword] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
 
+  // Delete modal
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Unassign modal
+  const [unassignModal, setUnassignModal] = useState(null);
+  const [unassignLoading, setUnassignLoading] = useState(false);
+
   const fetchTeachers = async () => {
     try {
       const res = await axios.get(API, { headers });
@@ -249,6 +259,38 @@ const TeacherList = () => {
       setEditError(err.response?.data?.message || "Something went wrong.");
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  // ── Delete handler ──
+  const handleDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      await axios.delete(`${UPDATE_API}/${deleteModal.id}`, { headers });
+      await fetchTeachers();
+      setDeleteModal(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // ── Unassign handler ──
+  const handleUnassign = async () => {
+    setUnassignLoading(true);
+    try {
+      await axios.put(
+        `${UPDATE_API}/${unassignModal.id}/unassign`,
+        {},
+        { headers },
+      );
+      await fetchTeachers();
+      setUnassignModal(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setUnassignLoading(false);
     }
   };
 
@@ -587,17 +629,48 @@ const TeacherList = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => openEditModal(teacher)}
-                        className="p-1.5 rounded-lg transition hover:scale-105"
-                        style={{
-                          background: "rgba(0,151,178,0.08)",
-                          color: "#0097b2",
-                        }}
-                        title="Edit Teacher"
-                      >
-                        <Pencil size={13} />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        {/* Edit */}
+                        <button
+                          onClick={() => openEditModal(teacher)}
+                          className="p-1.5 rounded-lg transition hover:scale-105"
+                          style={{
+                            background: "rgba(0,151,178,0.08)",
+                            color: "#0097b2",
+                          }}
+                          title="Edit Teacher"
+                        >
+                          <Pencil size={13} />
+                        </button>
+
+                        {/* Unassign — only if assigned */}
+                        {teacher.section_id && (
+                          <button
+                            onClick={() => setUnassignModal(teacher)}
+                            className="p-1.5 rounded-lg transition hover:scale-105"
+                            style={{
+                              background: "rgba(245,158,11,0.08)",
+                              color: "#f59e0b",
+                            }}
+                            title="Unassign from Section"
+                          >
+                            <UserMinus size={13} />
+                          </button>
+                        )}
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => setDeleteModal(teacher)}
+                          className="p-1.5 rounded-lg transition hover:scale-105"
+                          style={{
+                            background: "rgba(239,68,68,0.08)",
+                            color: "#ef4444",
+                          }}
+                          title="Delete Teacher"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -651,7 +724,6 @@ const TeacherList = () => {
             )}
 
             <div className="flex flex-col gap-4">
-              {/* School */}
               {assignedSchools.length > 1 ? (
                 <div>
                   <label
@@ -788,7 +860,6 @@ const TeacherList = () => {
               </button>
             </div>
 
-            {/* Teacher badge */}
             <div
               className="flex items-center gap-3 p-3 rounded-xl mb-4"
               style={{
@@ -825,7 +896,6 @@ const TeacherList = () => {
             )}
 
             <div className="flex flex-col gap-4">
-              {/* School transfer */}
               {assignedSchools.length > 1 && (
                 <div>
                   <label
@@ -853,7 +923,6 @@ const TeacherList = () => {
                   </select>
                 </div>
               )}
-
               <FormField
                 label="Full Name"
                 keyName="fullname"
@@ -878,7 +947,6 @@ const TeacherList = () => {
                 setForm={setEditForm}
               />
 
-              {/* Password reset */}
               <div className="pt-2 border-t border-gray-100">
                 <p className="text-xs text-gray-400 mb-3">
                   Leave password blank to keep existing password.
@@ -922,6 +990,180 @@ const TeacherList = () => {
                 }}
               >
                 {editLoading ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Unassign Modal ── */}
+      {unassignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{
+                background: "rgba(245,158,11,0.1)",
+                border: "1px solid rgba(245,158,11,0.2)",
+              }}
+            >
+              <UserMinus size={22} className="text-yellow-500" />
+            </div>
+
+            <h2 className="text-base font-black text-[#242424] text-center mb-1">
+              Unassign Teacher
+            </h2>
+            <p className="text-sm text-gray-400 text-center mb-4">
+              Remove adviser assignment from section?
+            </p>
+
+            <div
+              className="flex items-center gap-3 p-3 rounded-xl mb-5"
+              style={{
+                background: "rgba(245,158,11,0.06)",
+                border: "1px solid rgba(245,158,11,0.2)",
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #0097b2, #004385)",
+                }}
+              >
+                {unassignModal.fullname?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-[#242424]">
+                  {unassignModal.fullname}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Adviser of{" "}
+                  <span className="font-semibold text-[#242424]">
+                    {unassignModal.section_name}
+                  </span>
+                  {unassignModal.grade_name && ` · ${unassignModal.grade_name}`}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center mb-5">
+              The teacher account will remain but will no longer be assigned as
+              adviser to any section.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUnassignModal(null)}
+                className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUnassign}
+                disabled={unassignLoading}
+                className="flex-1 px-4 py-2.5 text-sm rounded-xl text-white font-semibold transition hover:opacity-90 disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  boxShadow: "0 4px 12px rgba(245,158,11,0.3)",
+                }}
+              >
+                {unassignLoading ? "Unassigning..." : "Yes, Unassign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Modal ── */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{
+                background: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.2)",
+              }}
+            >
+              <Trash2 size={22} className="text-red-500" />
+            </div>
+
+            <h2 className="text-base font-black text-[#242424] text-center mb-1">
+              Delete Teacher
+            </h2>
+            <p className="text-sm text-gray-400 text-center mb-4">
+              You are about to permanently delete this account.
+            </p>
+
+            <div
+              className="flex items-center gap-3 p-3 rounded-xl mb-3"
+              style={{
+                background: "rgba(239,68,68,0.04)",
+                border: "1px solid rgba(239,68,68,0.15)",
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #0097b2, #004385)",
+                }}
+              >
+                {deleteModal.fullname?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[#242424]">
+                  {deleteModal.fullname}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {deleteModal.username} · {deleteModal.school_name}
+                </p>
+              </div>
+            </div>
+
+            {deleteModal.section_name && (
+              <div
+                className="flex items-center gap-2 px-3 py-2 rounded-xl mb-4"
+                style={{
+                  background: "rgba(239,68,68,0.06)",
+                  border: "1px solid rgba(239,68,68,0.15)",
+                }}
+              >
+                <UserX size={13} className="text-red-400 shrink-0" />
+                <p className="text-xs text-red-500">
+                  This teacher is currently adviser of{" "}
+                  <span className="font-bold">{deleteModal.section_name}</span>.
+                  Deleting will also remove the adviser assignment.
+                </p>
+              </div>
+            )}
+
+            <p className="text-xs text-red-400 text-center mb-5">
+              This action cannot be undone.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="flex-1 px-4 py-2.5 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2.5 text-sm rounded-xl text-white font-semibold transition hover:opacity-90 disabled:opacity-40"
+                style={{
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
+                }}
+              >
+                {deleteLoading ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>

@@ -381,29 +381,31 @@ const SchoolHeadDashboard = () => {
                             >
                               {maleMps && (
                                 <div
-                                  className="rounded-t-md transition-all duration-700"
+                                  className="flex-1 rounded-t-md transition-all duration-700 min-w-0"
                                   style={{
                                     height: `${(maleMps / 100) * 100}%`,
-                                    width: "28%",
                                     background: "rgba(59,130,246,0.65)",
+                                    maxWidth: "15%",
                                   }}
                                 />
                               )}
                               <div
-                                className="rounded-t-md transition-all duration-700"
+                                className="rounded-t-md transition-all duration-700 min-w-0"
                                 style={{
                                   height: `${(mps / 100) * 100}%`,
-                                  width: maleMps || femaleMps ? "36%" : "60%",
                                   background: color,
+                                  flex: maleMps || femaleMps ? "1.4" : "1",
+                                  maxWidth:
+                                    maleMps || femaleMps ? "40%" : "60%",
                                 }}
                               />
                               {femaleMps && (
                                 <div
-                                  className="rounded-t-md transition-all duration-700"
+                                  className="flex-1 rounded-t-md transition-all duration-700 min-w-0"
                                   style={{
                                     height: `${(femaleMps / 100) * 100}%`,
-                                    width: "28%",
                                     background: "rgba(236,72,153,0.65)",
+                                    maxWidth: "15%",
                                   }}
                                 />
                               )}
@@ -422,47 +424,36 @@ const SchoolHeadDashboard = () => {
               </div>
 
               {/* Legend */}
-              <div className="flex flex-col gap-2 pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-4 flex-wrap">
-                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                    Bars:
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-2.5 h-4 rounded-sm"
-                      style={{ background: "rgba(59,130,246,0.65)" }}
-                    />
-                    <span className="text-xs text-gray-500">Male</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-3.5 h-5 rounded-sm"
-                      style={{ background: "#6b7280" }}
-                    />
-                    <span className="text-xs text-gray-500">
-                      Class{" "}
-                      <span className="text-gray-400">(color = rating)</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-2.5 h-4 rounded-sm"
-                      style={{ background: "rgba(236,72,153,0.65)" }}
-                    />
-                    <span className="text-xs text-gray-500">Female</span>
-                  </div>
+              <div className="flex flex-wrap gap-4 pt-3 border-t border-gray-100">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-3 h-3 rounded-sm"
+                    style={{ background: "rgba(59,130,246,0.6)" }}
+                  />
+                  <span className="text-xs text-gray-400">Male</span>
                 </div>
-                <div className="flex items-center gap-4 flex-wrap">
-                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                    Rating:
-                  </span>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-3 h-3 rounded-sm"
+                    style={{ background: "#0097b2" }}
+                  />
+                  <span className="text-xs text-gray-400">Class MPS</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-3 h-3 rounded-sm"
+                    style={{ background: "rgba(236,72,153,0.6)" }}
+                  />
+                  <span className="text-xs text-gray-400">Female</span>
+                </div>
+                <div className="ml-auto flex flex-wrap gap-3">
                   {[
                     { label: "≥90% Outstanding", color: "#10b981" },
                     { label: "75-89% Satisfactory", color: "#0097b2" },
                     { label: "60-74% Developing", color: "#f59e0b" },
                     { label: "<60% Beginning", color: "#ef4444" },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center gap-1.5">
+                    <div key={item.label} className="flex items-center gap-1">
                       <div
                         className="w-2.5 h-2.5 rounded-full"
                         style={{ background: item.color }}
@@ -488,7 +479,7 @@ const SchoolHeadDashboard = () => {
                     <span className="text-xl shrink-0">🏆</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                        Best Grade
+                        Highest MPS
                       </p>
                       <p className="text-sm font-black text-[#242424] truncate">
                         {best.grade_name}
@@ -557,9 +548,11 @@ const SchoolHeadDashboard = () => {
             <div className="flex flex-col gap-2">
               {quarters?.map((q) => {
                 const isActive = !!q.is_active;
-                const hasData = grade_mps?.some((g) => g.class_mps !== null);
-                const isPast = !isActive && hasData;
-                const isUpcoming = !isActive && !hasData;
+                const activeQuarterOrder =
+                  quarters.find((q) => !!q.is_active)?.order_num || 1;
+                const isPast = !isActive && q.order_num < activeQuarterOrder;
+                const isUpcoming =
+                  !isActive && q.order_num > activeQuarterOrder;
 
                 return (
                   <div
