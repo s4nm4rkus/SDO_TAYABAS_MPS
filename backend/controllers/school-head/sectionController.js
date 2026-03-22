@@ -11,13 +11,30 @@ const getActiveYear = async () => {
 
 // Helper — get all school IDs assigned to school head
 const getSchoolHeadSchools = async (user_id) => {
-  const [rows] = await db
-    .promise()
-    .query("SELECT school_id FROM school_head_assignments WHERE user_id = ?", [
-      user_id,
-    ]);
-  if (!rows.length) throw new Error("No schools assigned to this school head.");
-  return rows.map((r) => r.school_id);
+  // First check school_head_assignments table
+  const [rows] = await db.promise().query(
+    "SELECT school_id FROM school_head_assignments WHERE user_id = ?",
+    [user_id]
+  );
+
+  if (rows.length) return rows.map((r) => r.school_id);
+
+  // ← Fallback: check users.school_id directly
+  const [userRows] = await db.promise().query(
+    "SELECT school_id FROM users WHERE id = ? AND school_id IS NOT NULL",
+    [user_id]
+  );
+
+  if (!userRows.length || !userRows[0].school_id)
+    throw new Error("No schools assigned to this school head.");
+
+  // ← Also sync school_head_assignments for future calls
+  await db.promise().query(
+    "INSERT IGNORE INTO school_head_assignments (user_id, school_id) VALUES (?, ?)",
+    [user_id, userRows[0].school_id]
+  );
+
+  return [userRows[0].school_id];
 };
 
 // GET all sections for school head's schools (active year)

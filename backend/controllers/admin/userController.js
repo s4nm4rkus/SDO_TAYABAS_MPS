@@ -11,22 +11,28 @@ exports.getAllUsers = async (req, res) => {
        FROM users u
        LEFT JOIN schools s ON u.school_id = s.id
        LEFT JOIN clusters c ON u.cluster_id = c.id
-       ORDER BY u.fullname ASC`,
+       ORDER BY u.fullname ASC`
     );
 
-    // Fetch all school head assignments at once
     const [assignments] = await db.promise().query(
-      `SELECT sha.user_id, s.id, s.school_name
+      `SELECT sha.user_id, s.id AS school_id, s.school_name
        FROM school_head_assignments sha
-       JOIN schools s ON sha.school_id = s.id`,
+       JOIN schools s ON sha.school_id = s.id`
     );
 
-    // Attach schools array to each school head
     const result = users.map((user) => {
       if (user.role === "school_head") {
-        user.schools = assignments
+        // Get from school_head_assignments first
+        let schools = assignments
           .filter((a) => a.user_id === user.id)
-          .map((a) => ({ id: a.id, school_name: a.school_name }));
+          .map((a) => ({ id: a.school_id, school_name: a.school_name }));
+
+        // ← Fallback: if no assignments but has school_id, use that
+        if (!schools.length && user.school_id && user.school_name) {
+          schools = [{ id: user.school_id, school_name: user.school_name }];
+        }
+
+        user.schools = schools;
       }
       return user;
     });
