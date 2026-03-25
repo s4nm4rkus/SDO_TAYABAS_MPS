@@ -681,7 +681,7 @@ const MySection = () => {
                   className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
                   style={{ color: "#0097b2" }}
                 >
-                  Gender <span className="text-red-400">*</span>
+                  Sex <span className="text-red-400">*</span>
                 </label>
                 <select
                   value={form.gender}
@@ -692,7 +692,7 @@ const MySection = () => {
                     border: "1px solid rgba(0,151,178,0.2)",
                   }}
                 >
-                  <option value="">Select Gender</option>
+                  <option value="">Select</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
