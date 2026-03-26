@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/sh-mps";
-const SCHOOLS_API = "http://localhost:5000/api/sections/schools";
-const YEARS_API = "http://localhost:5000/api/school-years/active";
+const BASE = `${import.meta.env.VITE_API_URL}/api/sh-mps`;
+const SCHOOLS_API = `${import.meta.env.VITE_API_URL}/api/sections/schools`;
+const YEARS_API = `${import.meta.env.VITE_API_URL}/api/school-years/active`;
 
 const getMPSColor = (mps) => {
   if (!mps) return "#d1d5db";

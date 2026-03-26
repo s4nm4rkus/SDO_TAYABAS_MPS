@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/supervisor/school-heads";
-const DASH_API = "http://localhost:5000/api/supervisor/dashboard";
+const API = `${import.meta.env.VITE_API_URL}/api/supervisor/school-heads`;
+const DASH_API = `${import.meta.env.VITE_API_URL}/api/supervisor/dashboard`;
 
 const FormField = ({
   label,

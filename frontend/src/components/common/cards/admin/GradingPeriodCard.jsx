@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Pencil, X, BookOpen, CheckCircle } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/grading-periods";
-const SCHOOL_YEARS_API = "http://localhost:5000/api/school-years";
+const API = `${import.meta.env.VITE_API_URL}/api/grading-periods`;
+const SCHOOL_YEARS_API = `${import.meta.env.VITE_API_URL}/api/school-years`;
 
 const quarterColors = [
   {

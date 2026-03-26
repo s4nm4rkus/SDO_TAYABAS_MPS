@@ -18,10 +18,10 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/sections/teacher-list";
-const CREATE_API = "http://localhost:5000/api/sections/teachers/create";
-const UPDATE_API = "http://localhost:5000/api/sections/teachers";
-const SCHOOLS_API = "http://localhost:5000/api/sections/schools";
+const API = `${import.meta.env.VITE_API_URL}/api/sections/teacher-list`;
+const CREATE_API = `${import.meta.env.VITE_API_URL}/api/sections/teachers/create`;
+const UPDATE_API = `${import.meta.env.VITE_API_URL}/api/sections/teachers`;
+const SCHOOLS_API = `${import.meta.env.VITE_API_URL}/api/sections/schools`;
 
 // ── Reusable form fields ──
 const FormField = ({

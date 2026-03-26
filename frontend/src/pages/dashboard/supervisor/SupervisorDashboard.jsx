@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/supervisor";
+const API = `${import.meta.env.VITE_API_URL}/api/supervisor`;
 
 const getMPSColor = (mps) => {
   if (!mps) return "#d1d5db";

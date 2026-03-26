@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/school-years";
+const API = `${import.meta.env.VITE_API_URL}/api/school-years`;
 
 const SchoolYearCard = () => {
   const [menuOpen, setMenuOpen] = useState(false);

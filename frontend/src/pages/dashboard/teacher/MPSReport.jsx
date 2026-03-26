@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/assessments";
+const BASE = `${import.meta.env.VITE_API_URL}/api/assessments`;
 
 // Color for MPS value
 const getMPSColor = (mps) => {
@@ -44,7 +44,7 @@ const MPSReport = () => {
       try {
         const [reportRes, yearRes] = await Promise.all([
           axios.get(`${BASE}/report`, { headers }),
-          axios.get("http://localhost:5000/api/school-years/active"),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/school-years/active`),
         ]);
         setData(reportRes.data);
         setActiveYear(yearRes.data);

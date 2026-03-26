@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/assessments";
+const BASE = `${import.meta.env.VITE_API_URL}/api/assessments`;
 
 const MPSEncoding = () => {
   const token = localStorage.getItem("token");
@@ -37,7 +37,7 @@ const MPSEncoding = () => {
     const fetchData = async () => {
       try {
         const [sectionRes, subjectsRes, periodsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/students/my-section", {
+          axios.get(`${import.meta.env.VITE_API_URL}/api/students/my-section`, {
             headers,
           }),
           axios.get(`${BASE}/subjects`, { headers }),

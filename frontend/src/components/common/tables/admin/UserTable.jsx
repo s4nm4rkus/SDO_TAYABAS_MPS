@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/users";
-const SCHOOLS_API = "http://localhost:5000/api/schools";
-const CLUSTERS_API = "http://localhost:5000/api/clusters";
+const API = `${import.meta.env.VITE_API_URL}/api/users`;
+const SCHOOLS_API = `${import.meta.env.VITE_API_URL}/api/schools`;
+const CLUSTERS_API = `${import.meta.env.VITE_API_URL}/api/clusters`;
 const ITEMS_PER_PAGE = 10;
 
 const roleBadge = {

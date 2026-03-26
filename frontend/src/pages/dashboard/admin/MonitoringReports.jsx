@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/admin/monitoring";
+const BASE = `${import.meta.env.VITE_API_URL}/api/admin/monitoring`;
 
 const getMPSColor = (mps) => {
   if (!mps) return "#d1d5db";

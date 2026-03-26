@@ -12,7 +12,7 @@ const useMainDashboardStats = () => {
     const fetchStats = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/dashboard-stats",
+          `${import.meta.env.VITE_API_URL}/api/dashboard-stats`,
         );
         const { clusterCount, schoolCount, teacherCount, studentCount } =
           res.data.stats;

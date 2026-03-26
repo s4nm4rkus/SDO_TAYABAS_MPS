@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/supervisor";
+const BASE = `${import.meta.env.VITE_API_URL}/api/supervisor`;
 
 const getMPSColor = (mps) => {
   if (!mps) return "#d1d5db";
@@ -310,7 +310,7 @@ const SupervisorMPSReport = () => {
         const [periodsRes, dashRes, yearRes] = await Promise.all([
           axios.get(`${BASE}/grading-periods`, { headers }),
           axios.get(`${BASE}/dashboard`, { headers }),
-          axios.get("http://localhost:5000/api/school-years/active"),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/school-years/active`),
         ]);
         setPeriods(periodsRes.data);
         setClusterInfo(dashRes.data.cluster);

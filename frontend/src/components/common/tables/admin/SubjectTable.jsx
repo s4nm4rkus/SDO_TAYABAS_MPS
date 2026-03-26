@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/subjects";
+const API = `${import.meta.env.VITE_API_URL}/api/subjects`;
 const ITEMS_PER_PAGE = 10;
 
 const SubjectTable = () => {

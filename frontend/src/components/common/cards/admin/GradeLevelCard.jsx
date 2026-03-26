@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/grade-levels";
-const SUBJECTS_API = "http://localhost:5000/api/subjects";
+const API = `${import.meta.env.VITE_API_URL}/api/grade-levels`;
+const SUBJECTS_API = `${import.meta.env.VITE_API_URL}/api/subjects`;
 
 const gradeColors = [
   {

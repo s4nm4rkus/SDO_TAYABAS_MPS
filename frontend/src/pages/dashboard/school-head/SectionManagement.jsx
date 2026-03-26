@@ -13,9 +13,9 @@ import SectionCard from "../../../components/common/cards/school-head/SectionCar
 import SectionModal from "../../../components/common/modals/school-head/SectionModal";
 import AssignAdviserModal from "../../../components/common/modals/school-head/AssignAdviserModal";
 
-const SECTIONS_API = "http://localhost:5000/api/sections";
-const GRADE_LEVELS_API = "http://localhost:5000/api/grade-levels";
-const SCHOOL_YEARS_API = "http://localhost:5000/api/school-years";
+const SECTIONS_API = `${import.meta.env.VITE_API_URL}/api/sections`;
+const GRADE_LEVELS_API = `${import.meta.env.VITE_API_URL}/api/grade-levels`;
+const SCHOOL_YEARS_API = `${import.meta.env.VITE_API_URL}/api/school-years`;
 
 const gradeColors = [
   {
