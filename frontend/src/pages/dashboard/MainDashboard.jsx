@@ -2,7 +2,8 @@ import SDOFbPage from "../../assets/images/sdo_fbpage.png";
 import useMainDashboardStats from "../../hooks/useMainDashboardStats";
 
 const MainDashboard = () => {
-  const { clusterCount, schoolCount, loading } = useMainDashboardStats();
+  const { clusterCount, schoolCount, studentCount, teacherCount, loading } =
+    useMainDashboardStats();
 
   return (
     <>
@@ -160,14 +161,14 @@ const MainDashboard = () => {
                 },
                 {
                   label: "Teachers",
-                  value: "—",
+                  value: loading ? "..." : teacherCount,
                   color: "#ffffff",
-                  bg: "linear-gradient(135deg, #f97316, #fb923c)",
+                  bg: "linear-gradient(135deg, #f97316, #fdba74)",
                   shadow: "rgba(249,115,22,0.4)",
                 },
                 {
                   label: "Students",
-                  value: "—",
+                  value: loading ? "..." : studentCount,
                   color: "#ffffff",
                   bg: "linear-gradient(135deg, #ec4899, #f472b6)",
                   shadow: "rgba(236,72,153,0.4)",
