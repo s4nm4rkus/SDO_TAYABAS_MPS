@@ -56,9 +56,9 @@ app.use("/api/students", studentRoutes);
 app.use("/api/assessments", assessmentRoutes);
 
 // ✅ Serve React frontend — must be LAST
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+app.use(express.static(path.join(__dirname, "../public_html")));
 app.get("/{*path}", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+  res.sendFile(path.join(__dirname, "../public_html", "index.html"));
 });
 
 const PORT = process.env.PORT || 5000;
