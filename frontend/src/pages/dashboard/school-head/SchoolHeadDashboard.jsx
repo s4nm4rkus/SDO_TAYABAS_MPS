@@ -448,10 +448,10 @@ const SchoolHeadDashboard = () => {
                 </div>
                 <div className="ml-auto flex flex-wrap gap-3">
                   {[
-                    { label: "≥90% Outstanding", color: "#10b981" },
-                    { label: "75-89% Satisfactory", color: "#0097b2" },
-                    { label: "60-74% Developing", color: "#f59e0b" },
-                    { label: "<60% Beginning", color: "#ef4444" },
+                    { label: "≥90% High Mastery", color: "#10b981" },
+                    { label: "75-89% Moderately", color: "#0097b2" },
+                    { label: "60-74% Average", color: "#f59e0b" },
+                    { label: "<60% Low Master (LM)", color: "#ef4444" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1">
                       <div
@@ -534,7 +534,7 @@ const SchoolHeadDashboard = () => {
 
         {/* ── Right Column ── */}
         <div className="flex flex-col gap-6">
-          {/* Quarter Progress */}
+          {/* Term Progress */}
           <div
             className="rounded-2xl p-5"
             style={{
@@ -543,7 +543,7 @@ const SchoolHeadDashboard = () => {
             }}
           >
             <h2 className="text-base font-black text-[#242424] mb-4">
-              Quarter Progress
+              Term Progress
             </h2>
             <div className="flex flex-col gap-2">
               {quarters?.map((q) => {

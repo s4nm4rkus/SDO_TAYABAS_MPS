@@ -36,10 +36,10 @@ const getMPSBg = (mps) => {
 const getMPSLabel = (mps) => {
   if (!mps) return "";
   const val = Number(mps);
-  if (val >= 90) return "Outstanding";
-  if (val >= 75) return "Satisfactory";
-  if (val >= 60) return "Developing";
-  return "Beginning";
+  if (val >= 90) return "High Mastery";
+  if (val >= 75) return "Moderately";
+  if (val >= 60) return "Average";
+  return "Low Master (LM)";
 };
 
 const computeAverages = (data) => {
@@ -151,7 +151,7 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
           <TrendingUp size={24} className="mb-2 opacity-20" />
           <p className="text-sm font-semibold">No scores encoded yet</p>
           <p className="text-xs mt-0.5 text-center">
-            Waiting for teacher to encode scores for this quarter.
+            Waiting for teacher to encode scores for this term.
           </p>
         </div>
       ) : (
@@ -269,10 +269,10 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
           Legend:
         </p>
         {[
-          { label: "Outstanding (≥90%)", color: "#10b981" },
-          { label: "Satisfactory (75-89%)", color: "#0097b2" },
-          { label: "Developing (60-74%)", color: "#f59e0b" },
-          { label: "Beginning (<60%)", color: "#ef4444" },
+          { label: "High Mastery (≥90%)", color: "#10b981" },
+          { label: "Moderately (75-89%)", color: "#0097b2" },
+          { label: "Average (60-74%)", color: "#f59e0b" },
+          { label: "Low Master (LM) (<60%)", color: "#ef4444" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
             <span
@@ -629,10 +629,10 @@ const SupervisorMPSReport = () => {
         )}
       </div>
 
-      {/* ── Quarter Tabs ── */}
+      {/* ── Term Tabs ── */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
-          Quarter
+          Term
         </p>
         <div className="flex flex-wrap gap-2">
           {periods.map((period) => {
@@ -694,7 +694,7 @@ const SupervisorMPSReport = () => {
           }}
         >
           <TrendingUp size={28} className="mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No data found for selected quarter.</p>
+          <p className="text-sm">No data found for selected term.</p>
         </div>
       ) : (
         <>
@@ -1169,7 +1169,7 @@ const SupervisorMPSReport = () => {
               {!schoolMPS.length ? (
                 <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                   <TrendingUp size={28} className="mb-2 opacity-30" />
-                  <p className="text-sm">No MPS data for this quarter yet.</p>
+                  <p className="text-sm">No MPS data for this term yet.</p>
                   <p className="text-xs mt-1">
                     Teachers need to encode scores first.
                   </p>
@@ -1387,10 +1387,10 @@ const SupervisorMPSReport = () => {
                     </div>
                     <div className="ml-auto flex flex-wrap gap-3">
                       {[
-                        { label: "≥90% Outstanding", color: "#10b981" },
-                        { label: "75-89% Satisfactory", color: "#0097b2" },
-                        { label: "60-74% Developing", color: "#f59e0b" },
-                        { label: "<60% Beginning", color: "#ef4444" },
+                        { label: "≥90% High Mastery", color: "#10b981" },
+                        { label: "75-89% Moderately", color: "#0097b2" },
+                        { label: "60-74% Average", color: "#f59e0b" },
+                        { label: "<60% Low Master (LM)", color: "#ef4444" },
                       ].map((item) => (
                         <div
                           key={item.label}

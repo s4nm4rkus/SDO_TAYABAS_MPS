@@ -1,6 +1,6 @@
 import LoginButton from "../../common/buttons/LoginButton";
 
-import LogoSDO from "../../../assets/images/header logo/logo_sdo_tayabas.png";
+import LogoSDO from "../../../assets/images/header logo/logo_sdo_quezon.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
@@ -13,7 +13,7 @@ function Header() {
           className="text-textHeader-color text-4xl md:text-7xl font-black m-0 p-0 text-shadow"
           style={{ WebkitTextStroke: "1px white" }}
         >
-          SDOTAYABASMPS
+          SDOQUEZONMPS
         </h1>
         <p
           className="text-textHeader-color text-lg md:text-3xl tracking-widest font-bold m-0 p-0 text-shadow"
@@ -28,18 +28,18 @@ function Header() {
         {/* Logos */}
         <div className="flex p-4 md:p-6 space-x-4">
           <div className="lg:w-logo-md lg:h-logo-md md:w-logo-sm md:h-logo-sm h-logo-sm w-logo-sm mt-.5 flex items-center justify-center rounded">
-            <img src={LogoSDO} alt="SDO Tayabas Logo" className="mt-3" />
+            <img src={LogoSDO} alt="SDO Quezon Logo" className="mt-3" />
           </div>
           <div className="lg:w-logo-mlg lg:h-logo-mlg md:w-logo-md md:h-logo-md w-logo-md h-logo-md flex items-center justify-center rounded">
             <img
               src={LogoBagongPil}
-              alt="SDO Tayabas Logo"
+              alt="SDO Quezon Logo"
               className="logo-sdo"
             />
           </div>
 
           <div className="lg:w-logo-xl lg:h-logo-lg md:w-logo-lg md:h-logo-mlg w-logo-mlg h-logo-mlg flex items-center justify-center rounded text-shadow">
-            <img src={LogoDeped} alt="SDO Tayabas Logo" className="logo-sdo" />
+            <img src={LogoDeped} alt="SDO Quezon Logo" className="logo-sdo" />
           </div>
         </div>
 
@@ -52,7 +52,7 @@ function Header() {
             DEPARTMENT OF EDUCATION
           </p>
           <p className="text-white text-lg md:text-xl font-light leading-tight">
-            City Schools Division of the City of Tayabas
+            Schools Division of Quezon
           </p>
         </div>
 

@@ -330,13 +330,13 @@ const TeacherDashboard = () => {
         </div>
       </div>
 
-      {/* ── Quarter Progress ── */}
+      {/* ── Term Progress ── */}
       <div
         className="rounded-2xl p-5"
         style={{ background: "white", border: "1px solid rgba(0,151,178,0.1)" }}
       >
         <h2 className="text-base font-black text-[#242424] mb-4">
-          Quarter Progress
+          Term Progress
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {periods.map((period) => {
@@ -443,7 +443,7 @@ const TeacherDashboard = () => {
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 Class MPS per subject —{" "}
-                {activePeriod?.period_name || "No active quarter"}
+                {activePeriod?.period_name || "No active term"}
               </p>
             </div>
             <TrendingUp size={18} style={{ color: "#0097b2" }} />
@@ -452,7 +452,7 @@ const TeacherDashboard = () => {
           {barData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <TrendingUp size={28} className="mb-2 opacity-30" />
-              <p className="text-sm">No MPS data for active quarter yet.</p>
+              <p className="text-sm">No MPS data for active term yet.</p>
               <p className="text-xs mt-1">Encode scores to see the chart.</p>
             </div>
           ) : (
@@ -604,10 +604,10 @@ const TeacherDashboard = () => {
                 </div>
                 <div className="ml-auto flex flex-wrap gap-3">
                   {[
-                    { label: "≥90% Outstanding", color: "#10b981" },
-                    { label: "75-89% Satisfactory", color: "#0097b2" },
-                    { label: "60-74% Developing", color: "#f59e0b" },
-                    { label: "<60% Beginning", color: "#ef4444" },
+                    { label: "≥90% High Mastery", color: "#10b981" },
+                    { label: "75-89% Moderately", color: "#0097b2" },
+                    { label: "60-74% Average", color: "#f59e0b" },
+                    { label: "<60% Low Master (LM)", color: "#ef4444" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1">
                       <div

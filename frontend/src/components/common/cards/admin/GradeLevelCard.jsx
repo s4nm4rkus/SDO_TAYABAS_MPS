@@ -231,9 +231,7 @@ const GradeLevelCard = () => {
               >
                 {/* Top Row */}
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
-                    Level {index + 1}
-                  </span>
+                  <span className="">{/* Level {index + 1} */}</span>
                   <div className="flex gap-1">
                     <button
                       onClick={() => openEdit(grade)}

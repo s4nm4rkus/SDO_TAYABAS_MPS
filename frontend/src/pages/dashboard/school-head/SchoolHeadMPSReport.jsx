@@ -158,7 +158,7 @@ const GradeTable = ({ gradeData, periodName }) => {
 
       {!hasData ? (
         <div className="px-5 py-6 text-center text-gray-400 text-xs">
-          No scores encoded for this quarter yet.
+          No scores encoded for this term yet.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -538,7 +538,7 @@ const SchoolHeadMPSReport = () => {
         </div>
       </div>
 
-      {/* ── Quarter Tabs ── */}
+      {/* ── Term Tabs ── */}
       <div className="flex flex-wrap gap-2">
         {periods.map((period) => {
           const isSelected = selectedPeriodId === period.id;
@@ -644,7 +644,7 @@ const SchoolHeadMPSReport = () => {
           }}
         >
           <TrendingUp size={28} className="mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No data found for selected quarter.</p>
+          <p className="text-sm">No data found for selected term.</p>
           <p className="text-xs mt-1">Teachers need to encode scores first.</p>
         </div>
       ) : (
@@ -680,10 +680,10 @@ const SchoolHeadMPSReport = () => {
               MPS Legend:
             </p>
             {[
-              { label: "Outstanding (≥90%)", color: "#10b981" },
-              { label: "Satisfactory (75-89%)", color: "#0097b2" },
-              { label: "Developing (60-74%)", color: "#f59e0b" },
-              { label: "Beginning (<60%)", color: "#ef4444" },
+              { label: "High Mastery (≥90%)", color: "#10b981" },
+              { label: "Moderately (75-89%)", color: "#0097b2" },
+              { label: "Average (60-74%)", color: "#f59e0b" },
+              { label: "Low Master (LM) (<60%)", color: "#ef4444" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <span

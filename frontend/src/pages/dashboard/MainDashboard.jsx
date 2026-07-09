@@ -100,7 +100,7 @@ const MainDashboard = () => {
       `}</style>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative mt-28 md:mt-24 lg:mt-16 w-full min-h-screen flex items-center px-6 md:px-16 lg:px-24 py-16 overflow-hidden">
+      <section className="relative mt-60 md:mt-28 lg:mt-16 w-full min-h-screen flex items-center px-6 md:px-16 lg:px-24 py-16 overflow-hidden">
         <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
           <div className="fade-left">
@@ -108,13 +108,13 @@ const MainDashboard = () => {
             <div className="badge-pill fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6">
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
               <span className="text-cyan-700 text-xs font-semibold tracking-widest uppercase">
-                Schools Division of Tayabas City
+                Schools Division of Quezon
               </span>
             </div>
 
             {/* Main Title */}
             <h1 className="shimmer-text text-6xl md:text-7xl lg:text-8xl font-black leading-none mb-4 tracking-tight text-shadow-sm">
-              TAYABAS
+              QUEZON
               <br />
               MPS
               <br />
@@ -138,8 +138,7 @@ const MainDashboard = () => {
             {/* Description */}
             <p className="fade-up-d3 text-gray-500 text-base md:text-lg max-w-lg leading-relaxed mb-10">
               A comprehensive monitoring system for tracking and evaluating Mean
-              Percentage Scores across all schools in the Division of Tayabas
-              City.
+              Percentage Scores across all schools in the Division of Quezon.
             </p>
 
             {/* Stat Cards */}
@@ -406,7 +405,7 @@ const MainDashboard = () => {
               Announcements
             </h2>
             <p className="text-gray-400 text-sm mt-2">
-              Stay updated with the latest news from SDO Tayabas City
+              Stay updated with the latest news from SDO Quezon
             </p>
           </div>
 

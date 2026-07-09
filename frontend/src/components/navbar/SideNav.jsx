@@ -136,7 +136,7 @@ const SideNav = () => {
                   MPS Tracker
                 </p>
                 <p className="text-xs" style={{ color: "rgba(0,151,178,0.8)" }}>
-                  SDO Tayabas City
+                  SDO Quezon
                 </p>
               </div>
             </div>

@@ -27,10 +27,10 @@ const getMPSColor = (mps) => {
 const getMPSLabel = (mps) => {
   if (!mps) return "No data";
   const val = Number(mps);
-  if (val >= 90) return "Outstanding";
-  if (val >= 75) return "Satisfactory";
-  if (val >= 60) return "Developing";
-  return "Beginning";
+  if (val >= 90) return "High Mastery";
+  if (val >= 75) return "Moderately";
+  if (val >= 60) return "Average";
+  return "Low Master (LM)";
 };
 
 const AdminDashboard = () => {
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
               <Building2 size={12} className="text-white" />
               <span className="text-xs text-white font-semibold">
-                DepEd Tayabas City Division
+                DepEd Quezon Division
               </span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
@@ -556,10 +556,10 @@ const AdminDashboard = () => {
           {!loading && clusterWithMPS.length > 0 && (
             <div className="flex flex-wrap gap-x-4 gap-y-1 pt-3 mt-3 border-t border-gray-100">
               {[
-                { label: "≥90% Outstanding", color: "#10b981" },
-                { label: "75-89% Satisfactory", color: "#0097b2" },
-                { label: "60-74% Developing", color: "#f59e0b" },
-                { label: "<60% Beginning", color: "#ef4444" },
+                { label: "≥90% High Mastery", color: "#10b981" },
+                { label: "75-89% Moderately", color: "#0097b2" },
+                { label: "60-74% Average", color: "#f59e0b" },
+                { label: "<60% Low Master (LM)", color: "#ef4444" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-1.5">
                   <div
@@ -573,9 +573,9 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* ── Right Column: Quarter Progress + Assignment Status ── */}
+        {/* ── Right Column: Term Progress + Assignment Status ── */}
         <div className="flex flex-col gap-6">
-          {/* Quarter Progress */}
+          {/* Term Progress */}
           <div
             className="rounded-2xl p-5"
             style={{
@@ -584,7 +584,7 @@ const AdminDashboard = () => {
             }}
           >
             <h2 className="text-base font-black text-[#242424] mb-4">
-              Quarter Progress
+              Term Progress
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {loading ? (

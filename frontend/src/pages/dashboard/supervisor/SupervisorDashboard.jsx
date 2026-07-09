@@ -29,10 +29,10 @@ const getMPSColor = (mps) => {
 const getMPSLabel = (mps) => {
   if (!mps) return "";
   const val = Number(mps);
-  if (val >= 90) return "Outstanding";
-  if (val >= 75) return "Satisfactory";
-  if (val >= 60) return "Developing";
-  return "Beginning";
+  if (val >= 90) return "High Mastery";
+  if (val >= 75) return "Moderately";
+  if (val >= 60) return "Average";
+  return "Low Master (LM)";
 };
 
 const SupervisorDashboard = () => {
@@ -358,8 +358,8 @@ const SupervisorDashboard = () => {
               MPS Overview by School
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              {active_quarter?.period_name || "No active quarter"} · Class MPS
-              per school
+              {active_quarter?.period_name || "No active term"} · Class MPS per
+              school
             </p>
           </div>
           <TrendingUp size={18} style={{ color: "#0097b2" }} />
@@ -368,7 +368,7 @@ const SupervisorDashboard = () => {
         {!school_mps?.length ? (
           <div className="flex flex-col items-center justify-center py-10 text-gray-400">
             <TrendingUp size={28} className="mb-2 opacity-30" />
-            <p className="text-sm">No MPS data for active quarter yet.</p>
+            <p className="text-sm">No MPS data for active term yet.</p>
             <p className="text-xs mt-1">
               Teachers need to encode scores first.
             </p>
@@ -537,10 +537,10 @@ const SupervisorDashboard = () => {
               </div>
               <div className="ml-auto flex flex-wrap gap-3">
                 {[
-                  { label: "≥90% Outstanding", color: "#10b981" },
-                  { label: "75-89% Satisfactory", color: "#0097b2" },
-                  { label: "60-74% Developing", color: "#f59e0b" },
-                  { label: "<60% Beginning", color: "#ef4444" },
+                  { label: "≥90% High Mastery", color: "#10b981" },
+                  { label: "75-89% Moderately", color: "#0097b2" },
+                  { label: "60-74% Average", color: "#f59e0b" },
+                  { label: "<60% Low Master (LM)", color: "#ef4444" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-1">
                     <div
@@ -556,9 +556,9 @@ const SupervisorDashboard = () => {
         )}
       </div>
 
-      {/* ── Bottom Grid: Quarter Progress + Per School Stats ── */}
+      {/* ── Bottom Grid: Term Progress + Per School Stats ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quarter Progress */}
+        {/* Term Progress */}
         <div
           className="rounded-2xl p-5"
           style={{
@@ -567,7 +567,7 @@ const SupervisorDashboard = () => {
           }}
         >
           <h2 className="text-base font-black text-[#242424] mb-4">
-            Quarter Progress
+            Term Progress
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {quarters?.map((q) => {

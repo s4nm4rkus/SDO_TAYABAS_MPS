@@ -143,7 +143,7 @@ const MPSReport = () => {
     a.click();
   };
 
-  // Compute averages for a quarter
+  // Compute averages for a term
   const computeAverages = (quarterData) => {
     const validMale = quarterData.filter((r) => r.male.mps !== null);
     const validFemale = quarterData.filter((r) => r.female.mps !== null);
@@ -281,7 +281,7 @@ const MPSReport = () => {
         ))}
       </div>
 
-      {/* Quarter Tabs */}
+      {/* Term Tabs */}
       <div className="flex flex-wrap gap-2">
         {data.periods.map((period) => {
           const isSelected = selectedPeriodId === period.id;
@@ -573,22 +573,22 @@ const MPSReport = () => {
               </p>
               {[
                 {
-                  label: "Outstanding (≥90%)",
+                  label: "High Mastery (≥90%)",
                   color: "#10b981",
                   bg: "rgba(16,185,129,0.08)",
                 },
                 {
-                  label: "Satisfactory (75-89%)",
+                  label: "Moderately (75-89%)",
                   color: "#0097b2",
                   bg: "rgba(0,151,178,0.08)",
                 },
                 {
-                  label: "Developing (60-74%)",
+                  label: "Average (60-74%)",
                   color: "#f59e0b",
                   bg: "rgba(245,158,11,0.08)",
                 },
                 {
-                  label: "Beginning (<60%)",
+                  label: "Low Master (LM) (<60%)",
                   color: "#ef4444",
                   bg: "rgba(239,68,68,0.08)",
                 },

@@ -63,7 +63,7 @@ const MPSEncoding = () => {
   // Load assessment when subject + period + total_items are set
   const handleLoadAssessment = async () => {
     if (!selectedSubject || !selectedPeriod || !totalItems)
-      return setError("Please select subject, quarter and enter total items.");
+      return setError("Please select subject, term and enter total items.");
     if (Number(totalItems) < 1)
       return setError("Total items must be at least 1.");
 
@@ -242,20 +242,20 @@ const MPSEncoding = () => {
         }}
       />
 
-      {/* Step 1 — Select Quarter + Subject + Total Items */}
+      {/* Step 1 — Select Term + Subject + Total Items */}
       {!assessment ? (
         <div className="flex flex-col gap-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Step 1 — Select Quarter, Subject and Total Items
+            Step 1 — Select Term, Subject and Total Items
           </p>
 
-          {/* Quarter Tabs */}
+          {/* Term Tabs */}
           <div>
             <label
               className="text-xs font-semibold uppercase tracking-wider mb-2 block"
               style={{ color: "#0097b2" }}
             >
-              Quarter
+              Term
             </label>
             <div className="flex flex-wrap gap-2">
               {periods.map((period) => (
@@ -432,7 +432,7 @@ const MPSEncoding = () => {
           {/* Assessment Info */}
           <div className="flex flex-wrap gap-3">
             {[
-              { label: "Quarter", value: selectedPeriod?.period_name },
+              { label: "Term", value: selectedPeriod?.period_name },
               { label: "Subject", value: selectedSubject?.subject_name },
               { label: "Total Items", value: assessment?.total_items },
               { label: "Students", value: students.length },
@@ -488,7 +488,7 @@ const MPSEncoding = () => {
                       LRN
                     </th>
                     <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
-                      Gender
+                      Sex
                     </th>
                     <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
                       Score{" "}

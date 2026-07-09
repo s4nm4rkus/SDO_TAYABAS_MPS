@@ -37,10 +37,10 @@ const getMPSBg = (mps) => {
 const getMPSLabel = (mps) => {
   if (!mps) return "No data";
   const val = Number(mps);
-  if (val >= 90) return "Outstanding";
-  if (val >= 75) return "Satisfactory";
-  if (val >= 60) return "Developing";
-  return "Beginning";
+  if (val >= 90) return "High Mastery";
+  if (val >= 75) return "Moderately";
+  if (val >= 60) return "Average";
+  return "Low Master (LM)";
 };
 
 const computeAverages = (data) => {
@@ -265,10 +265,10 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
           Legend:
         </p>
         {[
-          { label: "Outstanding (≥90%)", color: "#10b981" },
-          { label: "Satisfactory (75-89%)", color: "#0097b2" },
-          { label: "Developing (60-74%)", color: "#f59e0b" },
-          { label: "Beginning (<60%)", color: "#ef4444" },
+          { label: "High Mastery (≥90%)", color: "#10b981" },
+          { label: "Moderately (75-89%)", color: "#0097b2" },
+          { label: "Average (60-74%)", color: "#f59e0b" },
+          { label: "Low Master (LM) (<60%)", color: "#ef4444" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
             <span
@@ -460,10 +460,10 @@ const BarChart = ({
         </div>
         <div className="ml-auto flex flex-wrap gap-3">
           {[
-            { label: "≥90% Outstanding", color: "#10b981" },
-            { label: "75-89% Satisfactory", color: "#0097b2" },
-            { label: "60-74% Developing", color: "#f59e0b" },
-            { label: "<60% Beginning", color: "#ef4444" },
+            { label: "≥90% High Mastery", color: "#10b981" },
+            { label: "75-89% Moderately", color: "#0097b2" },
+            { label: "60-74% Average", color: "#f59e0b" },
+            { label: "<60% Low Master (LM)", color: "#ef4444" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
               <div
@@ -829,7 +829,7 @@ const MonitoringReports = () => {
               >
                 <TrendingUp size={14} style={{ color: "#0097b2" }} />
                 <div>
-                  <p className="text-xs text-gray-400">Active Quarter</p>
+                  <p className="text-xs text-gray-400">Active Term</p>
                   <p className="text-sm font-black text-[#242424]">
                     {overview?.active_quarter?.period_name || "None"}
                   </p>
@@ -1040,8 +1040,7 @@ const MonitoringReports = () => {
                     MPS per Cluster
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {overview?.active_quarter?.period_name ||
-                      "No active quarter"}{" "}
+                    {overview?.active_quarter?.period_name || "No active term"}{" "}
                     · Class MPS
                   </p>
                 </div>
@@ -1070,8 +1069,7 @@ const MonitoringReports = () => {
                     MPS per School
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {overview?.active_quarter?.period_name ||
-                      "No active quarter"}{" "}
+                    {overview?.active_quarter?.period_name || "No active term"}{" "}
                     · Class MPS
                   </p>
                 </div>
@@ -1114,10 +1112,10 @@ const MonitoringReports = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {/* ── Quarter tabs ── */}
+            {/* ── Term tabs ── */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
-                Quarter
+                Term
               </p>
               <div className="flex flex-wrap gap-2">
                 {periods.map((period) => {
@@ -1180,7 +1178,7 @@ const MonitoringReports = () => {
                 }}
               >
                 <TrendingUp size={28} className="mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No data found for selected quarter.</p>
+                <p className="text-sm">No data found for selected term.</p>
               </div>
             ) : (
               <>
