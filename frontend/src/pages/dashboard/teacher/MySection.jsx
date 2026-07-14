@@ -12,6 +12,9 @@ import {
   ChevronUp,
   ChevronDown,
   User,
+  Upload,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import axios from "axios";
 
@@ -46,6 +49,10 @@ const MySection = () => {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState("");
   const [formLoading, setFormLoading] = useState(false);
+
+  const [importFile, setImportFile] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
 
   const fetchSection = async () => {
     try {
@@ -197,6 +204,48 @@ const MySection = () => {
     } catch (err) {
       alert(err.response?.data?.message || "Something went wrong.");
     }
+  };
+
+  const handleDownloadTemplate = async () => {
+    const res = await axios.get(`${BASE}/template`, {
+      headers,
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "student_import_template.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  const handleImport = async () => {
+    if (!importFile) return;
+    setImportLoading(true);
+    setImportResult(null);
+    const formData = new FormData();
+    formData.append("file", importFile);
+    try {
+      const res = await axios.post(`${BASE}/bulk-import`, formData, {
+        headers: { ...headers, "Content-Type": "multipart/form-data" },
+      });
+      setImportResult(res.data);
+      await fetchStudents();
+    } catch (err) {
+      setImportResult({
+        message: err.response?.data?.message || "Import failed.",
+        errors: [],
+      });
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  const closeImportModal = () => {
+    setModal(null);
+    setImportFile(null);
+    setImportResult(null);
   };
 
   const male = students.filter((s) => s.gender === "Male").length;
@@ -392,6 +441,32 @@ const MySection = () => {
             >
               <PlusCircle size={15} />
               Add Student
+            </button>
+
+            <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition hover:bg-gray-50"
+              style={{
+                background: "white",
+                color: "#242424",
+                border: "1px solid rgba(0,151,178,0.2)",
+              }}
+            >
+              <Download size={15} />
+              Template
+            </button>
+
+            <button
+              onClick={() => setModal("import")}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition hover:bg-gray-50"
+              style={{
+                background: "white",
+                color: "#0097b2",
+                border: "1px solid rgba(0,151,178,0.3)",
+              }}
+            >
+              <Upload size={15} />
+              Import Excel
             </button>
           </div>
 
@@ -798,6 +873,126 @@ const MySection = () => {
                     : "Save Changes"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "import" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h2 className="text-base font-black text-[#242424]">
+                  Import Students from Excel
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Upload the template file with your student list.
+                </p>
+              </div>
+              <button
+                onClick={closeImportModal}
+                className="text-gray-400 hover:text-red-500 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {!importResult && (
+              <>
+                <label
+                  className="flex flex-col items-center justify-center gap-2 rounded-2xl p-8 cursor-pointer transition hover:bg-gray-50"
+                  style={{ border: "2px dashed rgba(0,151,178,0.3)" }}
+                >
+                  <FileSpreadsheet size={28} style={{ color: "#0097b2" }} />
+                  <span className="text-sm text-gray-500">
+                    {importFile
+                      ? importFile.name
+                      : "Click to select an .xlsx file"}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={(e) => setImportFile(e.target.files[0] || null)}
+                  />
+                </label>
+
+                <div className="flex justify-end gap-2 mt-5">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImport}
+                    disabled={!importFile || importLoading}
+                    className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90 disabled:opacity-40"
+                    style={{
+                      background: "linear-gradient(135deg, #0097b2, #004385)",
+                    }}
+                  >
+                    {importLoading ? "Importing..." : "Upload & Import"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {importResult && (
+              <>
+                <div
+                  className="p-4 rounded-xl mb-4"
+                  style={{
+                    background: "rgba(0,151,178,0.06)",
+                    border: "1px solid rgba(0,151,178,0.2)",
+                  }}
+                >
+                  <p className="text-sm font-semibold text-[#242424]">
+                    {importResult.message}
+                  </p>
+                </div>
+
+                {importResult.errors?.length > 0 && (
+                  <div className="max-h-64 overflow-y-auto rounded-xl border border-red-100">
+                    <table className="w-full text-xs text-left">
+                      <thead style={{ background: "rgba(239,68,68,0.06)" }}>
+                        <tr>
+                          <th className="px-3 py-2">Row</th>
+                          <th className="px-3 py-2">LRN</th>
+                          <th className="px-3 py-2">Reason</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importResult.errors.map((e, i) => (
+                          <tr key={i} className="border-t border-red-50">
+                            <td className="px-3 py-2">{e.row}</td>
+                            <td className="px-3 py-2 font-mono">{e.lrn}</td>
+                            <td className="px-3 py-2 text-red-500">
+                              {e.reason}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="flex justify-end mt-5">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90"
+                    style={{
+                      background: "linear-gradient(135deg, #0097b2, #004385)",
+                    }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
