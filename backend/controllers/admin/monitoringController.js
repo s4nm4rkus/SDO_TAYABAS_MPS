@@ -32,7 +32,7 @@ exports.getOverview = async (req, res) => {
   try {
     const year = await getActiveYear();
 
-    // Active quarter
+    // Active terms
     const [quarters] = await db.promise().query(
       `SELECT id, period_name, order_num, is_active
        FROM grading_periods WHERE school_year_id = ?
