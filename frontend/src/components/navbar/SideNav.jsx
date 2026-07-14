@@ -112,7 +112,7 @@ const SideNav = () => {
               <div className="flex items-end gap-0.5 h-7">
                 <div
                   className="w-1.5 rounded-t-sm"
-                  style={{ height: "40%", background: "#ef4444" }}
+                  style={{ height: "40%", background: "#dc2626" }}
                 />
                 <div
                   className="w-1.5 rounded-t-sm"
@@ -147,7 +147,7 @@ const SideNav = () => {
             <div className="flex items-end gap-0.5 h-6 mx-auto">
               <div
                 className="w-1 rounded-t-sm"
-                style={{ height: "40%", background: "#ef4444" }}
+                style={{ height: "40%", background: "#dc2626" }}
               />
               <div
                 className="w-1 rounded-t-sm"
@@ -394,7 +394,7 @@ const SideNav = () => {
                 onClick={handleLogout}
                 className="flex-1 px-4 py-2.5 text-sm rounded-xl text-white font-semibold transition hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  background: "linear-gradient(135deg, #dc2626, #dc2626)",
                   boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
                 }}
               >

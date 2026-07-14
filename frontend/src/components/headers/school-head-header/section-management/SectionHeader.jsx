@@ -24,7 +24,7 @@ const SectionHeader = ({ sections, loading }) => {
       label: "Unassigned",
       value: loading ? "..." : unassigned,
       icon: <UserX size={18} className="text-white" />,
-      bg: "linear-gradient(135deg, #f97316, #fb923c)",
+      bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
       shadow: "rgba(249,115,22,0.35)",
     },
   ];

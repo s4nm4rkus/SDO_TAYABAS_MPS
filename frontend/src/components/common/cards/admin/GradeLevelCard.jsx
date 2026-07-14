@@ -24,7 +24,7 @@ const gradeColors = [
     shadow: "rgba(139,92,246,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #f97316, #fb923c)",
+    bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
     shadow: "rgba(249,115,22,0.35)",
   },
   {
@@ -44,7 +44,7 @@ const gradeColors = [
     shadow: "rgba(59,130,246,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #ef4444, #f87171)",
+    bg: "linear-gradient(135deg, #dc2626, #f87171)",
     shadow: "rgba(239,68,68,0.35)",
   },
   {

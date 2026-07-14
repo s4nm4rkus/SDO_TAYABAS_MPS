@@ -10,7 +10,7 @@ const cardColors = [
     shadow: "rgba(139,92,246,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #f97316, #fb923c)",
+    bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
     shadow: "rgba(249,115,22,0.35)",
   },
   {

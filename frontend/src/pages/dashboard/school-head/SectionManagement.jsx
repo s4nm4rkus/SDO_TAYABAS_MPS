@@ -31,7 +31,7 @@ const gradeColors = [
   {
     bg: "rgba(249,115,22,0.08)",
     border: "rgba(249,115,22,0.2)",
-    accent: "#f97316",
+    accent: "#ff6b35",
   },
   {
     bg: "rgba(236,72,153,0.08)",
@@ -56,7 +56,7 @@ const gradeColors = [
   {
     bg: "rgba(239,68,68,0.08)",
     border: "rgba(239,68,68,0.2)",
-    accent: "#ef4444",
+    accent: "#dc2626",
   },
   {
     bg: "rgba(20,184,166,0.08)",
@@ -323,7 +323,7 @@ const SectionManagement = () => {
                 value: selectedSchool
                   ? unassignedSections
                   : sections.filter((s) => !s.adviser_id).length,
-                color: "linear-gradient(135deg, #f97316, #fb923c)",
+                color: "linear-gradient(135deg, #ff6b35, #fb923c)",
                 shadow: "rgba(249,115,22,0.35)",
               },
             ].map((card, i) => (

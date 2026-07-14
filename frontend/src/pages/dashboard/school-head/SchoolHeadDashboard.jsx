@@ -17,12 +17,15 @@ import axios from "axios";
 const API = "http://localhost:5000/api/sections/dashboard";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const SchoolHeadDashboard = () => {
@@ -222,7 +225,7 @@ const SchoolHeadDashboard = () => {
             label: "Unassigned",
             value: stats?.unassigned_sections,
             icon: <AlertCircle size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #f97316, #fb923c)",
+            bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
             shadow: "rgba(249,115,22,0.35)",
           },
         ].map((card, i) => (
@@ -448,10 +451,11 @@ const SchoolHeadDashboard = () => {
                 </div>
                 <div className="ml-auto flex flex-wrap gap-3">
                   {[
-                    { label: "≥90% High Mastery", color: "#10b981" },
-                    { label: "75-89% Moderately", color: "#0097b2" },
-                    { label: "60-74% Average", color: "#f59e0b" },
-                    { label: "<60% Low Master (LM)", color: "#ef4444" },
+                    { label: "High Mastery (90–100%)", color: "#10b981" },
+                    { label: "Moderately (70–89%)", color: "#0097b2" },
+                    { label: "Average (50–69%)", color: "#f59e0b" },
+                    { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+                    { label: "No Mastery (<20%)", color: "#dc2626" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1">
                       <div
@@ -520,7 +524,7 @@ const SchoolHeadDashboard = () => {
                       </div>
                       <p
                         className="text-xl font-black shrink-0"
-                        style={{ color: "#f97316" }}
+                        style={{ color: "#ff6b35" }}
                       >
                         {lowest.class_mps}%
                       </p>
@@ -670,7 +674,7 @@ const SchoolHeadDashboard = () => {
                 {
                   label: "Sections without adviser",
                   value: stats?.unassigned_sections,
-                  icon: <AlertCircle size={13} style={{ color: "#f97316" }} />,
+                  icon: <AlertCircle size={13} style={{ color: "#ff6b35" }} />,
                   color: "rgba(249,115,22,0.06)",
                   border: "rgba(249,115,22,0.2)",
                 },
@@ -684,7 +688,7 @@ const SchoolHeadDashboard = () => {
                 {
                   label: "Teachers unassigned",
                   value: stats?.unassigned_teachers,
-                  icon: <UserX size={13} style={{ color: "#ef4444" }} />,
+                  icon: <UserX size={13} style={{ color: "#dc2626" }} />,
                   color: "rgba(239,68,68,0.06)",
                   border: "rgba(239,68,68,0.2)",
                 },

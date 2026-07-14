@@ -256,7 +256,7 @@ const Login = () => {
                 {[
                   { x: 18, h: 45, color: "#0097b2" },
                   { x: 34, h: 60, color: "#8b5cf6" },
-                  { x: 50, h: 35, color: "#f97316" },
+                  { x: 50, h: 35, color: "#ff6b35" },
                   { x: 66, h: 70, color: "#ec4899" },
                   { x: 82, h: 50, color: "#10b981" },
                   { x: 98, h: 55, color: "#f59e0b" },

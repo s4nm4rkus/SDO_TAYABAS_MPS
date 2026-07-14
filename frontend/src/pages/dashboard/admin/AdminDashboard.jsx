@@ -16,21 +16,25 @@ import axios from "axios";
 const BASE = "http://localhost:5000/api/admin/monitoring";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSLabel = (mps) => {
   if (!mps) return "No data";
   const val = Number(mps);
   if (val >= 90) return "High Mastery";
-  if (val >= 75) return "Moderately";
-  if (val >= 60) return "Average";
-  return "Low Master (LM)";
+  if (val >= 70) return "Moderately";
+  if (val >= 50) return "Average";
+  if (val >= 20) return "Low Mastery (LM)";
+  return "No Mastery (NM)";
 };
 
 const AdminDashboard = () => {
@@ -229,7 +233,7 @@ const AdminDashboard = () => {
             label: "Teachers",
             value: stats?.total_teachers,
             icon: <Users size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #f97316, #fb923c)",
+            bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
             shadow: "rgba(249,115,22,0.35)",
           },
           {
@@ -324,13 +328,13 @@ const AdminDashboard = () => {
                 <p className="text-sm font-black text-[#242424] truncate">
                   {lowestCluster.cluster_name}
                 </p>
-                <p className="text-xs" style={{ color: "#f97316" }}>
+                <p className="text-xs" style={{ color: "#ff6b35" }}>
                   {getMPSLabel(lowestCluster.class_mps)}
                 </p>
               </div>
               <p
                 className="text-xl font-black shrink-0"
-                style={{ color: "#f97316" }}
+                style={{ color: "#ff6b35" }}
               >
                 {lowestCluster.class_mps}%
               </p>
@@ -386,7 +390,7 @@ const AdminDashboard = () => {
               </div>
               <p
                 className="text-xl font-black shrink-0"
-                style={{ color: "#f97316" }}
+                style={{ color: "#ff6b35" }}
               >
                 {lowestSchool.class_mps}%
               </p>
@@ -556,10 +560,11 @@ const AdminDashboard = () => {
           {!loading && clusterWithMPS.length > 0 && (
             <div className="flex flex-wrap gap-x-4 gap-y-1 pt-3 mt-3 border-t border-gray-100">
               {[
-                { label: "≥90% High Mastery", color: "#10b981" },
-                { label: "75-89% Moderately", color: "#0097b2" },
-                { label: "60-74% Average", color: "#f59e0b" },
-                { label: "<60% Low Master (LM)", color: "#ef4444" },
+                { label: "High Mastery (90–100%)", color: "#10b981" },
+                { label: "Moderately (70–89%)", color: "#0097b2" },
+                { label: "Average (50–69%)", color: "#f59e0b" },
+                { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+                { label: "No Mastery (<20%)", color: "#dc2626" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-1.5">
                   <div

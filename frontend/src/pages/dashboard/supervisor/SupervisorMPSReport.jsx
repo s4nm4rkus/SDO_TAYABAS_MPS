@@ -16,20 +16,24 @@ import axios from "axios";
 const BASE = "http://localhost:5000/api/supervisor";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSBg = (mps) => {
   if (!mps) return "transparent";
   const val = Number(mps);
   if (val >= 90) return "rgba(16,185,129,0.08)";
-  if (val >= 75) return "rgba(0,151,178,0.08)";
-  if (val >= 60) return "rgba(245,158,11,0.08)";
+  if (val >= 70) return "rgba(0,151,178,0.08)";
+  if (val >= 50) return "rgba(245,158,11,0.08)";
+  if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
 };
 
@@ -37,9 +41,10 @@ const getMPSLabel = (mps) => {
   if (!mps) return "";
   const val = Number(mps);
   if (val >= 90) return "High Mastery";
-  if (val >= 75) return "Moderately";
-  if (val >= 60) return "Average";
-  return "Low Master (LM)";
+  if (val >= 70) return "Moderately";
+  if (val >= 50) return "Average";
+  if (val >= 20) return "Low Mastery (LM)";
+  return "No Mastery (NM)";
 };
 
 const computeAverages = (data) => {
@@ -115,7 +120,7 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
             <div className="flex items-center gap-1.5 mt-1">
               <Users
                 size={11}
-                style={{ color: adviser ? "#0097b2" : "#f97316" }}
+                style={{ color: adviser ? "#0097b2" : "#ff6b35" }}
               />
               {adviser ? (
                 <span
@@ -269,10 +274,11 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
           Legend:
         </p>
         {[
-          { label: "High Mastery (≥90%)", color: "#10b981" },
-          { label: "Moderately (75-89%)", color: "#0097b2" },
-          { label: "Average (60-74%)", color: "#f59e0b" },
-          { label: "Low Master (LM) (<60%)", color: "#ef4444" },
+          { label: "High Mastery (90–100%)", color: "#10b981" },
+          { label: "Moderately (70–89%)", color: "#0097b2" },
+          { label: "Average (50–69%)", color: "#f59e0b" },
+          { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+          { label: "No Mastery (<20%)", color: "#dc2626" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
             <span
@@ -585,7 +591,7 @@ const SupervisorMPSReport = () => {
             border: "1px solid rgba(0,151,178,0.12)",
           }}
         >
-          <CalendarDays size={14} style={{ color: "#f97316" }} />
+          <CalendarDays size={14} style={{ color: "#ff6b35" }} />
           <div>
             <p className="text-xs text-gray-400">School Year</p>
             <p className="text-sm font-black text-[#242424]">
@@ -1018,7 +1024,7 @@ const SupervisorMPSReport = () => {
                                   style={{
                                     color: sec.adviser_name
                                       ? "#0097b2"
-                                      : "#f97316",
+                                      : "#ff6b35",
                                   }}
                                 />
                                 <span className="text-xs font-bold text-[#242424]">
@@ -1030,7 +1036,7 @@ const SupervisorMPSReport = () => {
                                   style={{
                                     color: sec.adviser_name
                                       ? "#0097b2"
-                                      : "#f97316",
+                                      : "#ff6b35",
                                   }}
                                 />
                                 <span
@@ -1038,7 +1044,7 @@ const SupervisorMPSReport = () => {
                                   style={{
                                     color: sec.adviser_name
                                       ? "#0097b2"
-                                      : "#f97316",
+                                      : "#ff6b35",
                                   }}
                                 >
                                   {sec.adviser_name || "No adviser"}
@@ -1089,7 +1095,7 @@ const SupervisorMPSReport = () => {
                                 style={{
                                   color: sec.adviser_name
                                     ? "#0097b2"
-                                    : "#f97316",
+                                    : "#ff6b35",
                                 }}
                               />
                               <span className="text-xs font-bold text-[#242424]">
@@ -1101,7 +1107,7 @@ const SupervisorMPSReport = () => {
                                 style={{
                                   color: sec.adviser_name
                                     ? "#0097b2"
-                                    : "#f97316",
+                                    : "#ff6b35",
                                 }}
                               />
                               <span
@@ -1109,7 +1115,7 @@ const SupervisorMPSReport = () => {
                                 style={{
                                   color: sec.adviser_name
                                     ? "#0097b2"
-                                    : "#f97316",
+                                    : "#ff6b35",
                                 }}
                               >
                                 {sec.adviser_name || "No adviser"}
@@ -1221,13 +1227,13 @@ const SupervisorMPSReport = () => {
                             <p className="text-sm font-black text-[#242424] truncate">
                               {lowestSchool.school_name}
                             </p>
-                            <p className="text-xs" style={{ color: "#f97316" }}>
+                            <p className="text-xs" style={{ color: "#ff6b35" }}>
                               {getMPSLabel(lowestSchool.class_mps)}
                             </p>
                           </div>
                           <p
                             className="text-xl font-black shrink-0"
-                            style={{ color: "#f97316" }}
+                            style={{ color: "#ff6b35" }}
                           >
                             {lowestSchool.class_mps}%
                           </p>
@@ -1387,10 +1393,11 @@ const SupervisorMPSReport = () => {
                     </div>
                     <div className="ml-auto flex flex-wrap gap-3">
                       {[
-                        { label: "≥90% High Mastery", color: "#10b981" },
-                        { label: "75-89% Moderately", color: "#0097b2" },
-                        { label: "60-74% Average", color: "#f59e0b" },
-                        { label: "<60% Low Master (LM)", color: "#ef4444" },
+                        { label: "High Mastery (90–100%)", color: "#10b981" },
+                        { label: "Moderately (70–89%)", color: "#0097b2" },
+                        { label: "Average (50–69%)", color: "#f59e0b" },
+                        { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+                        { label: "No Mastery (<20%)", color: "#dc2626" },
                       ].map((item) => (
                         <div
                           key={item.label}

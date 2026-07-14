@@ -106,12 +106,15 @@ const TeacherDashboard = () => {
   const activeReport = activePeriod && report?.report?.[activePeriod.id];
 
   const getMPSColor = (mps) => {
-    if (!mps) return "#d1d5db";
+    if (mps == null) return "text-gray-300";
+
     const val = Number(mps);
-    if (val >= 90) return "#10b981";
-    if (val >= 75) return "#0097b2";
-    if (val >= 60) return "#f59e0b";
-    return "#ef4444";
+
+    if (val >= 90) return "#10b981"; // High Mastery
+    if (val >= 70) return "#0097b2"; // Moderately
+    if (val >= 50) return "#f59e0b"; // Average
+    if (val >= 20) return "#ff6b35"; // Low Mastery
+    return "#dc2626"; // No Mastery
   };
 
   const encodingStatus = subjects.map((subject) => {
@@ -604,10 +607,11 @@ const TeacherDashboard = () => {
                 </div>
                 <div className="ml-auto flex flex-wrap gap-3">
                   {[
-                    { label: "≥90% High Mastery", color: "#10b981" },
-                    { label: "75-89% Moderately", color: "#0097b2" },
-                    { label: "60-74% Average", color: "#f59e0b" },
-                    { label: "<60% Low Master (LM)", color: "#ef4444" },
+                    { label: "High Mastery (90–100%)", color: "#10b981" },
+                    { label: "Moderately (70–89%)", color: "#0097b2" },
+                    { label: "Average (50–69%)", color: "#f59e0b" },
+                    { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+                    { label: "No Mastery (<20%)", color: "#dc2626" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1">
                       <div
@@ -770,7 +774,7 @@ const TeacherDashboard = () => {
                 <div className="text-right">
                   <p
                     className="text-2xl font-black"
-                    style={{ color: "#f97316" }}
+                    style={{ color: "#ff6b35" }}
                   >
                     {lowestSubject.class.mps}%
                   </p>

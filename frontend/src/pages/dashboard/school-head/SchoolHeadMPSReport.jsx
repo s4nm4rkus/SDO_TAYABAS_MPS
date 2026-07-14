@@ -15,20 +15,24 @@ const SCHOOLS_API = "http://localhost:5000/api/sections/schools";
 const YEARS_API = "http://localhost:5000/api/school-years/active";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSBg = (mps) => {
   if (!mps) return "transparent";
   const val = Number(mps);
   if (val >= 90) return "rgba(16,185,129,0.08)";
-  if (val >= 75) return "rgba(0,151,178,0.08)";
-  if (val >= 60) return "rgba(245,158,11,0.08)";
+  if (val >= 70) return "rgba(0,151,178,0.08)";
+  if (val >= 50) return "rgba(245,158,11,0.08)";
+  if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
 };
 
@@ -119,7 +123,7 @@ const GradeTable = ({ gradeData, periodName }) => {
                 >
                   <BookOpen
                     size={11}
-                    style={{ color: sec.adviser_name ? "#0097b2" : "#f97316" }}
+                    style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
                   />
                   <span className="text-xs font-semibold text-[#242424]">
                     {sec.section_name}
@@ -127,7 +131,7 @@ const GradeTable = ({ gradeData, periodName }) => {
                   <span className="text-xs text-gray-300">·</span>
                   <Users
                     size={10}
-                    style={{ color: sec.adviser_name ? "#0097b2" : "#f97316" }}
+                    style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
                   />
                   {sec.adviser_name ? (
                     <span className="text-xs" style={{ color: "#0097b2" }}>
@@ -513,7 +517,7 @@ const SchoolHeadMPSReport = () => {
             border: "1px solid rgba(0,151,178,0.12)",
           }}
         >
-          <CalendarDays size={14} style={{ color: "#f97316" }} />
+          <CalendarDays size={14} style={{ color: "#ff6b35" }} />
           <div>
             <p className="text-xs text-gray-400">School Year</p>
             <p className="text-sm font-black text-[#242424]">
@@ -680,10 +684,11 @@ const SchoolHeadMPSReport = () => {
               MPS Legend:
             </p>
             {[
-              { label: "High Mastery (≥90%)", color: "#10b981" },
-              { label: "Moderately (75-89%)", color: "#0097b2" },
-              { label: "Average (60-74%)", color: "#f59e0b" },
-              { label: "Low Master (LM) (<60%)", color: "#ef4444" },
+              { label: "High Mastery (90–100%)", color: "#10b981" },
+              { label: "Moderately (70–89%)", color: "#0097b2" },
+              { label: "Average (50–69%)", color: "#f59e0b" },
+              { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+              { label: "No Mastery (<20%)", color: "#dc2626" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <span

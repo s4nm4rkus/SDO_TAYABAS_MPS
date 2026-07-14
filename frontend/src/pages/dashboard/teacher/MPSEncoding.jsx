@@ -581,7 +581,7 @@ const MPSEncoding = () => {
                                 color:
                                   Number(percentage) >= 75
                                     ? "#10b981"
-                                    : "#f97316",
+                                    : "#ff6b35",
                               }}
                             >
                               {percentage}%

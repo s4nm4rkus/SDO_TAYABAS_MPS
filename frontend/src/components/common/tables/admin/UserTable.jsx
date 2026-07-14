@@ -27,7 +27,7 @@ const roleBadge = {
   admin: {
     bg: "rgba(239,68,68,0.08)",
     border: "rgba(239,68,68,0.2)",
-    color: "#ef4444",
+    color: "#dc2626",
   },
   school_head: {
     bg: "rgba(0,151,178,0.08)",

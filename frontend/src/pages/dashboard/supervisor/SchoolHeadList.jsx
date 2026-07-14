@@ -383,7 +383,7 @@ const SupervisorSchoolHeadList = () => {
               label: "Unassigned",
               value: unassigned,
               icon: <UserX size={18} className="text-white" />,
-              bg: "linear-gradient(135deg, #f97316, #fb923c)",
+              bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
               shadow: "rgba(249,115,22,0.35)",
             },
           ].map((card, i) => (
@@ -610,7 +610,7 @@ const SupervisorSchoolHeadList = () => {
                           className="p-1.5 rounded-lg transition hover:scale-105"
                           style={{
                             background: "rgba(239,68,68,0.08)",
-                            color: "#ef4444",
+                            color: "#dc2626",
                           }}
                           title="Delete"
                         >
@@ -1027,7 +1027,7 @@ const SupervisorSchoolHeadList = () => {
                 disabled={deleteLoading}
                 className="flex-1 px-4 py-2.5 text-sm rounded-xl text-white font-semibold transition hover:opacity-90 disabled:opacity-40"
                 style={{
-                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  background: "linear-gradient(135deg, #dc2626, #dc2626)",
                   boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
                 }}
               >

@@ -11,22 +11,25 @@ import axios from "axios";
 
 const BASE = "http://localhost:5000/api/assessments";
 
-// Color for MPS value
 const getMPSColor = (mps) => {
-  if (!mps) return "text-gray-300";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSBg = (mps) => {
   if (!mps) return "transparent";
   const val = Number(mps);
   if (val >= 90) return "rgba(16,185,129,0.08)";
-  if (val >= 75) return "rgba(0,151,178,0.08)";
-  if (val >= 60) return "rgba(245,158,11,0.08)";
+  if (val >= 70) return "rgba(0,151,178,0.08)";
+  if (val >= 50) return "rgba(245,158,11,0.08)";
+  if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
 };
 
@@ -259,7 +262,7 @@ const MPSReport = () => {
             value: data.school,
           },
           {
-            icon: <CalendarDays size={14} style={{ color: "#f97316" }} />,
+            icon: <CalendarDays size={14} style={{ color: "#ff6b35" }} />,
             label: "School Year",
             value: activeYear ? `SY ${activeYear.year_label}` : "—",
           },
@@ -573,23 +576,28 @@ const MPSReport = () => {
               </p>
               {[
                 {
-                  label: "High Mastery (≥90%)",
+                  label: "High Mastery (90–100%)",
                   color: "#10b981",
                   bg: "rgba(16,185,129,0.08)",
                 },
                 {
-                  label: "Moderately (75-89%)",
+                  label: "Moderately (70–89%)",
                   color: "#0097b2",
                   bg: "rgba(0,151,178,0.08)",
                 },
                 {
-                  label: "Average (60-74%)",
+                  label: "Average (50–69%)",
                   color: "#f59e0b",
                   bg: "rgba(245,158,11,0.08)",
                 },
                 {
-                  label: "Low Master (LM) (<60%)",
-                  color: "#ef4444",
+                  label: "Low Mastery (20–49%)",
+                  color: "#ff6b35",
+                  bg: "rgba(251,146,60,0.08)",
+                },
+                {
+                  label: "No Mastery (<20%)",
+                  color: "#dc2626",
                   bg: "rgba(239,68,68,0.08)",
                 },
               ].map((item, i) => (
@@ -672,7 +680,7 @@ const MPSReport = () => {
                   </div>
                   <p
                     className="text-lg font-black shrink-0"
-                    style={{ color: "#f97316" }}
+                    style={{ color: "#ff6b35" }}
                   >
                     {lowest.class.mps}%
                   </p>
