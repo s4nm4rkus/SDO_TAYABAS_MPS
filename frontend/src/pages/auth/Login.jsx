@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { loginUser, getCurrentUser } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleLogin = async () => {
     if (!username || !password) return setError("Please fill in all fields.");
@@ -29,6 +31,7 @@ const Login = () => {
 
       const userData = await getCurrentUser();
       setUser(userData);
+      showToast(`Welcome back, ${userData.fullname}!`, "success");
       if (userData.role === "admin") navigate("/admin");
       else if (userData.role === "school_head") navigate("/school-head");
       else if (userData.role === "supervisor") navigate("/supervisor");

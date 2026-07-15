@@ -19,6 +19,7 @@ import {
   Copy,
 } from "lucide-react";
 import axios from "axios";
+import { useToast } from "../../../../hooks/useToast";
 
 const API = "http://localhost:5000/api/users";
 const SCHOOLS_API = "http://localhost:5000/api/schools";
@@ -271,6 +272,7 @@ const UserTable = () => {
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState("all");
+  const { showToast } = useToast();
 
   // Add modal
   const [addModal, setAddModal] = useState(false);
@@ -393,6 +395,7 @@ const UserTable = () => {
       await axios.post(API, addForm, { headers });
       await fetchUsers();
       closeAddModal();
+      showToast(`${addForm.fullname} was added successfully.`, "success");
     } catch (err) {
       setAddError(err.response?.data?.message || "Something went wrong.");
     } finally {
@@ -431,8 +434,12 @@ const UserTable = () => {
       await axios.put(`${API}/${editModal.id}/assign`, data, { headers });
       await fetchUsers();
       closeEditModal();
+      showToast("User assignment updated.", "success");
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong.");
+      showToast(
+        err.response?.data?.message || "Something went wrong.",
+        "error",
+      );
     }
   };
 
@@ -441,8 +448,15 @@ const UserTable = () => {
     try {
       await axios.put(`${API}/${user.id}/status`, {}, { headers });
       await fetchUsers();
+      showToast(
+        `${user.fullname} was ${user.is_active ? "deactivated" : "activated"}.`,
+        "success",
+      );
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong.");
+      showToast(
+        err.response?.data?.message || "Something went wrong.",
+        "error",
+      );
     }
   };
 
@@ -450,9 +464,13 @@ const UserTable = () => {
     try {
       await axios.delete(`${API}/${deleteModal.id}`, { headers });
       await fetchUsers();
+      showToast(`${deleteModal.fullname} was deleted.`, "success");
       setDeleteModal(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong.");
+      showToast(
+        err.response?.data?.message || "Something went wrong.",
+        "error",
+      );
     }
   };
 
@@ -471,8 +489,12 @@ const UserTable = () => {
         { headers },
       );
       setResetResult(res.data.tempPassword);
+      showToast("Password reset successfully.", "success");
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong.");
+      showToast(
+        err.response?.data?.message || "Something went wrong.",
+        "error",
+      );
       closeResetModal();
     } finally {
       setResetLoading(false);
