@@ -412,7 +412,7 @@ const MainDashboard = () => {
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {/* Facebook Page */}
-            <div
+            {/* <div
               className="fade-up-d1 info-card shadow-lg"
               style={{ border: "2px solid rgba(0,151,178,0.2)" }}
             >
@@ -449,10 +449,10 @@ const MainDashboard = () => {
                   Follow us for the latest updates and announcements.
                 </p>
               </div>
-            </div>
+            </div> */}
 
             {/* Division Memorandum */}
-            <div
+            {/* <div
               className="fade-up-d2 info-card shadow-lg p-5"
               style={{ border: "2px solid rgba(139,92,246,0.2)" }}
             >
@@ -517,10 +517,10 @@ const MainDashboard = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Division Advisory */}
-            <div
+            {/* <div
               className="fade-up-d3 info-card shadow-lg p-5"
               style={{ border: "2px solid rgba(249,115,22,0.2)" }}
             >
@@ -587,10 +587,10 @@ const MainDashboard = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {/* Feedback */}
-            <div
+            {/* <div
               className="fade-up-d4 info-card shadow-lg"
               style={{ border: "2px solid rgba(236,72,153,0.2)" }}
             >
@@ -633,7 +633,7 @@ const MainDashboard = () => {
                   Share your thoughts and help us improve our services.
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
