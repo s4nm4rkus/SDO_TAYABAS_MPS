@@ -20,10 +20,11 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { useToast } from "../../../../hooks/useToast";
+import { API_URL } from "../../../../config/api";
 
-const API = "http://localhost:5000/api/users";
-const SCHOOLS_API = "http://localhost:5000/api/schools";
-const CLUSTERS_API = "http://localhost:5000/api/clusters";
+const API = `${API_URL}/api/users`;
+const SCHOOLS_API = `${API_URL}/api/schools`;
+const CLUSTERS_API = `${API_URL}/api/clusters`;
 const ITEMS_PER_PAGE = 10;
 
 const roleBadge = {

@@ -17,8 +17,9 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import axios from "axios";
+import { API_URL } from "../../../config/api";
 
-const BASE = "http://localhost:5000/api/students";
+const BASE = `${API_URL}/api/students`;
 
 const emptyForm = {
   lrn: "",

@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Users,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/supervisor";
+const API = API_URL + "/api/supervisor";
 
 const getMPSColor = (mps) => {
   if (mps == null) return "text-gray-300";

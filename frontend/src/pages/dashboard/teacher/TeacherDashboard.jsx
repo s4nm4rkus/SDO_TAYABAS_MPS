@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Users,
@@ -14,8 +15,8 @@ import {
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-const STUDENTS_API = "http://localhost:5000/api/students";
-const ASSESSMENTS_API = "http://localhost:5000/api/assessments";
+const STUDENTS_API = API_URL + "/api/students";
+const ASSESSMENTS_API = API_URL + "/api/assessments";
 
 const TeacherDashboard = () => {
   const [activeYear, setActiveYear] = useState(null);
@@ -84,7 +85,7 @@ const TeacherDashboard = () => {
           axios.get(`${ASSESSMENTS_API}/subjects`, { headers }),
           axios.get(`${ASSESSMENTS_API}/grading-periods`, { headers }),
           axios.get(`${ASSESSMENTS_API}/report`, { headers }),
-          axios.get("http://localhost:5000/api/school-years/active"),
+          axios.get(API_URL + "/api/school-years/active"),
         ]);
         setSection(sectionRes.data);
         setStudents(studentsRes.data);

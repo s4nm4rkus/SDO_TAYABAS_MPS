@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import {
   BookOpen,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/assessments";
+const BASE = API_URL + "/api/assessments";
 
 const MPSEncoding = () => {
   const token = localStorage.getItem("token");
@@ -37,7 +38,7 @@ const MPSEncoding = () => {
     const fetchData = async () => {
       try {
         const [sectionRes, subjectsRes, periodsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/students/my-section", {
+          axios.get(API_URL + "/api/students/my-section", {
             headers,
           }),
           axios.get(`${BASE}/subjects`, { headers }),

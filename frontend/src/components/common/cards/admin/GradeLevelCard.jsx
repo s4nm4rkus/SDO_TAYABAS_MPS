@@ -1,3 +1,4 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Pencil,
@@ -11,8 +12,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/grade-levels";
-const SUBJECTS_API = "http://localhost:5000/api/subjects";
+const API = API_URL + "/api/grade-levels";
+const SUBJECTS_API = API_URL + "/api/subjects";
 
 const gradeColors = [
   {

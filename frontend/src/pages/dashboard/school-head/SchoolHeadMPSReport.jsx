@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
@@ -10,9 +11,9 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/sh-mps";
-const SCHOOLS_API = "http://localhost:5000/api/sections/schools";
-const YEARS_API = "http://localhost:5000/api/school-years/active";
+const BASE = API_URL + "/api/sh-mps";
+const SCHOOLS_API = API_URL + "/api/sections/schools";
+const YEARS_API = API_URL + "/api/school-years/active";
 
 const getMPSColor = (mps) => {
   if (mps == null) return "text-gray-300";

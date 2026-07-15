@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useMemo } from "react";
 import {
   Users,
@@ -18,10 +19,10 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/sections/teacher-list";
-const CREATE_API = "http://localhost:5000/api/sections/teachers/create";
-const UPDATE_API = "http://localhost:5000/api/sections/teachers";
-const SCHOOLS_API = "http://localhost:5000/api/sections/schools";
+const API = API_URL + "/api/sections/teacher-list";
+const CREATE_API = API_URL + "/api/sections/teachers/create";
+const UPDATE_API = API_URL + "/api/sections/teachers";
+const SCHOOLS_API = API_URL + "/api/sections/schools";
 
 // ── Reusable form fields ──
 const FormField = ({
