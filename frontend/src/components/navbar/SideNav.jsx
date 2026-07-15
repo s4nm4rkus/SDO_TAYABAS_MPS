@@ -7,7 +7,7 @@ import { MdOutlineDashboard } from "react-icons/md";
 import { RiSettings4Line } from "react-icons/ri";
 import { TbReportAnalytics } from "react-icons/tb";
 import { AiOutlineUser, AiOutlineTeam } from "react-icons/ai";
-import { FiFolder, FiLogOut } from "react-icons/fi";
+import { FiFolder, FiLogOut, FiKey } from "react-icons/fi";
 
 const SideNav = () => {
   const [open, setOpen] = useState(true);
@@ -16,6 +16,10 @@ const SideNav = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleChangePassword = () => {
+    navigate("/change-password");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -273,6 +277,47 @@ const SideNav = () => {
               </Link>
             </div>
           ))}
+        </div>
+
+        {/* ── Change Password Button ── */}
+        <div className="px-3 pt-3 shrink-0">
+          <div
+            className="relative"
+            onMouseEnter={(e) => {
+              if (!open) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setTooltip({
+                  visible: true,
+                  name: "Change Password",
+                  y: rect.top + rect.height / 2,
+                });
+              }
+            }}
+            onMouseLeave={() => setTooltip({ visible: false, name: "", y: 0 })}
+          >
+            <button
+              onClick={handleChangePassword}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${!open ? "justify-center" : ""}`}
+              style={{
+                background: "rgba(0,151,178,0.08)",
+                border: "1px solid rgba(0,151,178,0.15)",
+              }}
+            >
+              <FiKey
+                size={20}
+                className="shrink-0 transition"
+                style={{ color: "#0097b2" }}
+              />
+              {open && (
+                <span
+                  className="text-sm font-semibold transition"
+                  style={{ color: "#0097b2" }}
+                >
+                  Change Password
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* ── Logout Button ── */}

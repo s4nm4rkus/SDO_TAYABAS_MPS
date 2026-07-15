@@ -15,6 +15,8 @@ import {
   CheckSquare,
   Square,
   AlertCircle,
+  KeyRound,
+  Copy,
 } from "lucide-react";
 import axios from "axios";
 
@@ -301,6 +303,12 @@ const UserTable = () => {
   // Delete modal
   const [deleteModal, setDeleteModal] = useState(null);
 
+  // Reset password
+  const [resetModal, setResetModal] = useState(null);
+  const [resetResult, setResetResult] = useState(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const fetchUsers = async () => {
     try {
       const res = await axios.get(API, { headers });
@@ -446,6 +454,35 @@ const UserTable = () => {
     } catch (err) {
       alert(err.response?.data?.message || "Something went wrong.");
     }
+  };
+
+  const closeResetModal = () => {
+    setResetModal(null);
+    setResetResult(null);
+    setCopied(false);
+  };
+
+  const handleResetPassword = async () => {
+    setResetLoading(true);
+    try {
+      const res = await axios.put(
+        `${API}/${resetModal.id}/reset-password`,
+        {},
+        { headers },
+      );
+      setResetResult(res.data.tempPassword);
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong.");
+      closeResetModal();
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleCopyTempPassword = () => {
+    navigator.clipboard.writeText(resetResult);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   // Sort + Filter
@@ -713,6 +750,17 @@ const UserTable = () => {
                             title="Edit Assignment"
                           >
                             <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => setResetModal(user)}
+                            className="p-1.5 rounded-lg transition hover:scale-105"
+                            style={{
+                              background: "rgba(139,92,246,0.08)",
+                              color: "#8b5cf6",
+                            }}
+                            title="Reset Password"
+                          >
+                            <KeyRound size={14} />
                           </button>
                           <button
                             onClick={() => handleToggleStatus(user)}
@@ -1161,6 +1209,133 @@ const UserTable = () => {
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset Password Modal ── */}
+      {resetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6"
+            style={{ border: "1px solid rgba(0,151,178,0.15)" }}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-base font-black text-[#242424]">
+                Reset Password
+              </h2>
+              <button
+                onClick={closeResetModal}
+                className="text-gray-400 hover:text-red-500 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {!resetResult ? (
+              <>
+                <div
+                  className="flex items-center gap-3 p-3 rounded-xl mb-4"
+                  style={{
+                    background: "rgba(0,151,178,0.06)",
+                    border: "1px solid rgba(0,151,178,0.15)",
+                  }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                    style={{
+                      background: "linear-gradient(135deg, #0097b2, #004385)",
+                    }}
+                  >
+                    {resetModal.fullname?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#242424]">
+                      {resetModal.fullname}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {resetModal.username}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-500 mb-1">
+                  This will generate a new temporary password for this account.
+                </p>
+                <p className="text-xs text-orange-500 mb-5">
+                  The user will be required to set a new password on their next
+                  login.
+                </p>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={closeResetModal}
+                    className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleResetPassword}
+                    disabled={resetLoading}
+                    className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90 disabled:opacity-40"
+                    style={{
+                      background: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                    }}
+                  >
+                    {resetLoading ? "Resetting..." : "Reset Password"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div
+                  className="p-4 rounded-xl mb-4"
+                  style={{
+                    background: "rgba(16,185,129,0.06)",
+                    border: "1px solid rgba(16,185,129,0.2)",
+                  }}
+                >
+                  <p className="text-xs text-gray-400 mb-2">
+                    Temporary password — share this with{" "}
+                    <span className="font-semibold text-[#242424]">
+                      {resetModal.fullname}
+                    </span>{" "}
+                    now. It will not be shown again.
+                  </p>
+                  <div
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white"
+                    style={{ border: "1px solid rgba(16,185,129,0.3)" }}
+                  >
+                    <code className="text-sm font-mono font-bold text-[#242424]">
+                      {resetResult}
+                    </code>
+                    <button
+                      onClick={handleCopyTempPassword}
+                      className="p-1.5 rounded-lg transition hover:bg-gray-100"
+                      style={{ color: "#0097b2" }}
+                      title="Copy"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                  {copied && (
+                    <p className="text-xs text-green-600 mt-1.5">Copied!</p>
+                  )}
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={closeResetModal}
+                    className="px-4 py-2 text-sm rounded-xl text-white transition hover:opacity-90"
+                    style={{
+                      background: "linear-gradient(135deg, #0097b2, #004385)",
+                    }}
+                  >
+                    Done
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

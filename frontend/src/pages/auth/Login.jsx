@@ -20,6 +20,13 @@ const Login = () => {
     try {
       const data = await loginUser({ username, password });
       login(data.token);
+
+      if (data.mustChangePassword) {
+        // ← added
+        navigate("/change-password", { state: { forced: true } });
+        return;
+      }
+
       const userData = await getCurrentUser();
       setUser(userData);
       if (userData.role === "admin") navigate("/admin");
