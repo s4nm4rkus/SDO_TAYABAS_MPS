@@ -4,8 +4,15 @@ const authController = require("../../controllers/authController");
 const userController = require("../../controllers/admin/userController");
 const { verifyToken } = require("../../middlewares/authMiddleware");
 const { authorizeRoles } = require("../../middlewares/roleMiddleware");
+const {
+  blockForcedPasswordChange,
+} = require("../../middlewares/authMiddleware");
 
-const adminOnly = [verifyToken, authorizeRoles("admin")];
+const adminOnly = [
+  verifyToken,
+  authorizeRoles("admin"),
+  blockForcedPasswordChange,
+]; // ← added blockForcedPasswordChange
 
 // Create user — reuses register from authController
 router.post("/", ...adminOnly, userController.createUser);
@@ -24,5 +31,7 @@ router.put("/:id/status", ...adminOnly, userController.toggleStatus);
 
 // Delete user
 router.delete("/:id", ...adminOnly, userController.deleteUser);
+
+router.put("/:id/reset-password", ...adminOnly, userController.resetPassword);
 
 module.exports = router;

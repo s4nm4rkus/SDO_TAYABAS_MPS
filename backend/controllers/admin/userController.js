@@ -11,13 +11,13 @@ exports.getAllUsers = async (req, res) => {
        FROM users u
        LEFT JOIN schools s ON u.school_id = s.id
        LEFT JOIN clusters c ON u.cluster_id = c.id
-       ORDER BY u.fullname ASC`
+       ORDER BY u.fullname ASC`,
     );
 
     const [assignments] = await db.promise().query(
       `SELECT sha.user_id, s.id AS school_id, s.school_name
        FROM school_head_assignments sha
-       JOIN schools s ON sha.school_id = s.id`
+       JOIN schools s ON sha.school_id = s.id`,
     );
 
     const result = users.map((user) => {
@@ -96,7 +96,7 @@ exports.createUser = async (req, res) => {
     const [result] = await db
       .promise()
       .query(
-        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id) VALUES (?,?,?,?,?,?,?)",
+        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id, must_change_password) VALUES (?,?,?,?,?,?,?,?)",
         [
           fullname,
           username,
@@ -105,6 +105,7 @@ exports.createUser = async (req, res) => {
           role,
           resolvedSchoolId,
           resolvedClusterId,
+          1, // ← force password change on first login
         ],
       );
 
@@ -190,6 +191,38 @@ exports.toggleStatus = (req, res) => {
       res.json({ message: "User status updated successfully" });
     },
   );
+};
+
+const crypto = require("crypto");
+
+function generateTempPassword(length = 10) {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"; // no 0/O/1/l/I — avoids confusion when admin reads it aloud/types it
+  let pass = "";
+  for (let i = 0; i < length; i++)
+    pass += chars[crypto.randomInt(0, chars.length)];
+  return pass;
+}
+
+// Admin resets any user's password to a random temp password.
+exports.resetPassword = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const tempPassword = generateTempPassword();
+    const hashed = await bcrypt.hash(tempPassword, 10);
+
+    const [result] = await db
+      .promise()
+      .query(
+        "UPDATE users SET password = ?, must_change_password = 1 WHERE id = ?",
+        [hashed, id],
+      );
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: "User not found." });
+
+    res.json({ message: "Password reset successfully.", tempPassword });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Delete user
