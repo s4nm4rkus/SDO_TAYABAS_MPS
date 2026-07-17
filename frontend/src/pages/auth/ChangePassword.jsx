@@ -4,6 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 import { getCurrentUser } from "../../services/authService";
 import axios from "axios";
+import { API_URL } from "../../config/api";
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const ChangePassword = () => {
     setLoading(true);
     try {
       const res = await axios.put(
-        "http://localhost:5000/api/auth/change-password",
+        `${API_URL}/api/auth/change-password`,
         { currentPassword, newPassword },
         { headers },
       );

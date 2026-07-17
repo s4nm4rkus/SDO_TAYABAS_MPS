@@ -1,3 +1,4 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Building2,
@@ -15,8 +16,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const CLUSTERS_API = "http://localhost:5000/api/clusters";
-const SCHOOLS_API = "http://localhost:5000/api/schools";
+const CLUSTERS_API = API_URL + "/api/clusters";
+const SCHOOLS_API = API_URL + "/api/schools";
 
 const clusterColors = [
   {

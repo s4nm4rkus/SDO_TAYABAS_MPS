@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = "http://localhost:5000/api/assessments";
+const BASE = API_URL + "/api/assessments";
 
 const getMPSColor = (mps) => {
   if (mps == null) return "text-gray-300";
@@ -47,7 +48,7 @@ const MPSReport = () => {
       try {
         const [reportRes, yearRes] = await Promise.all([
           axios.get(`${BASE}/report`, { headers }),
-          axios.get("http://localhost:5000/api/school-years/active"),
+          axios.get(API_URL + "/api/school-years/active"),
         ]);
         setData(reportRes.data);
         setActiveYear(yearRes.data);

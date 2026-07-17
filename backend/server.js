@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-// const path = require("path");
+const path = require("path");
 require("dotenv").config();
 
 const dashboardStatRoutes = require("./routes/dashboardStatRoutes");
@@ -55,11 +55,10 @@ app.use("/api/teacher", teacherRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/assessments", assessmentRoutes);
 
-// ✅ Serve React frontend — must be LAST
-// app.use(express.static(path.join(__dirname, "client/dist")));
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "client/dist", "index.html"));
-// });
+app.use(express.static(path.join(__dirname, "public")));
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

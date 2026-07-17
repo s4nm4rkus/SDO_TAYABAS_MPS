@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Users,
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/sections/dashboard";
+const API = API_URL + "/api/sections/dashboard";
 
 const getMPSColor = (mps) => {
   if (mps == null) return "text-gray-300";
@@ -79,7 +80,7 @@ const SchoolHeadDashboard = () => {
       try {
         const [dashRes, yearRes] = await Promise.all([
           axios.get(API, { headers }),
-          axios.get("http://localhost:5000/api/school-years/active"),
+          axios.get(API_URL + "/api/school-years/active"),
         ]);
         setData(dashRes.data);
         setActiveYear(yearRes.data);

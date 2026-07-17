@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useMemo } from "react";
 import {
   Users,
@@ -17,8 +18,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = "http://localhost:5000/api/supervisor/school-heads";
-const DASH_API = "http://localhost:5000/api/supervisor/dashboard";
+const API = API_URL + "/api/supervisor/school-heads";
+const DASH_API = API_URL + "/api/supervisor/dashboard";
 
 const FormField = ({
   label,

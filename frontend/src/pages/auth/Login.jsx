@@ -23,14 +23,15 @@ const Login = () => {
       const data = await loginUser({ username, password });
       login(data.token);
 
+      const userData = await getCurrentUser();
+      setUser(userData);
+
       if (data.mustChangePassword) {
         // ← added
         navigate("/change-password", { state: { forced: true } });
         return;
       }
 
-      const userData = await getCurrentUser();
-      setUser(userData);
       showToast(`Welcome back, ${userData.fullname}!`, "success");
       if (userData.role === "admin") navigate("/admin");
       else if (userData.role === "school_head") navigate("/school-head");
