@@ -1,6 +1,6 @@
 import LogoSDO from "../../../assets/images/header logo/logo_sdo_quezon.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
-import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
+import LogoSchool from "../../../assets/images/header logo/liwayway_sch_logo.png";
 
 function Footer() {
   return (
@@ -11,11 +11,11 @@ function Footer() {
           <img
             src={LogoSDO}
             alt="SDO Quezon"
-            className="h-logo-sm w-logo-sm object-contain mt-1"
+            className="h-logo-sm w-logo-sm lg:h-logo-xl lg:w-logo-xl object-contain mt-1"
           />
           <img
-            src={LogoBagongPil}
-            alt="Bagong Pilipinas"
+            src={LogoSchool}
+            alt="Liwayway National Elementary School"
             className="h-logo-mlg w-logo-mlg object-contain"
           />
           <img
