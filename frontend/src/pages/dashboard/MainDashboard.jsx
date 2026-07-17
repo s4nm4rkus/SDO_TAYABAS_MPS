@@ -2,7 +2,7 @@ import SDOFbPage from "../../assets/images/sdo_fbpage.png";
 import useMainDashboardStats from "../../hooks/useMainDashboardStats";
 
 const MainDashboard = () => {
-  const { clusterCount, schoolCount, studentCount, teacherCount, loading } =
+  const { schoolCount, studentCount, teacherCount, loading } =
     useMainDashboardStats();
 
   return (
@@ -114,9 +114,9 @@ const MainDashboard = () => {
 
             {/* Main Title */}
             <h1 className="shimmer-text text-6xl md:text-7xl lg:text-8xl font-black leading-none mb-4 tracking-tight text-shadow-sm">
-              QUEZON
+              LIWAYWAY
               <br />
-              MPS
+              ES MPS
               <br />
               {/* <span className="text-5xl md:text-6xl lg:text-7xl">MPS</span> */}
             </h1>
@@ -138,19 +138,19 @@ const MainDashboard = () => {
             {/* Description */}
             <p className="fade-up-d3 text-gray-500 text-base md:text-lg max-w-lg leading-relaxed mb-10">
               A comprehensive monitoring system for tracking and evaluating Mean
-              Percentage Scores across all schools in the Division of Quezon.
+              Percentage Scores.
             </p>
 
             {/* Stat Cards */}
             <div className="fade-up-d4 grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                {
-                  label: "Clusters",
-                  value: loading ? "..." : clusterCount,
-                  color: "#ffffff",
-                  bg: "linear-gradient(135deg, #0097b2, #00b4d8)",
-                  shadow: "rgba(0,151,178,0.4)",
-                },
+                // {
+                //   label: "Clusters",
+                //   value: loading ? "..." : clusterCount,
+                //   color: "#ffffff",
+                //   bg: "linear-gradient(135deg, #0097b2, #00b4d8)",
+                //   shadow: "rgba(0,151,178,0.4)",
+                // },
                 {
                   label: "Schools",
                   value: loading ? "..." : schoolCount,
@@ -405,7 +405,7 @@ const MainDashboard = () => {
               Announcements
             </h2>
             <p className="text-gray-400 text-sm mt-2">
-              Stay updated with the latest news from SDO Quezon
+              Stay updated with the latest news from Liwayway Elementary School.
             </p>
           </div>
 
