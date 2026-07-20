@@ -9,19 +9,21 @@ function Footer() {
         {/* Logos - fixed width */}
         <div className="flex items-center gap-4 md:w-80">
           <img
+            src={LogoDeped}
+            alt="DepEd"
+            className="h-logo-sm w-logo-md lg:h-logo-lg lg:w-logo-xl object-contain"
+          />
+
+          <img
             src={LogoSDO}
             alt="SDO Quezon"
-            className="h-logo-sm w-logo-sm lg:h-logo-xl lg:w-logo-xl object-contain mt-1"
+            className="h-logo-md w-logo-md lg:h-logo-xl lg:w-logo-xl object-contain mt-1"
           />
+
           <img
             src={LogoSchool}
             alt="Liwayway National Elementary School"
-            className="h-logo-mlg w-logo-mlg object-contain"
-          />
-          <img
-            src={LogoDeped}
-            alt="DepEd"
-            className="h-logo-mlg w-logo-xl object-contain"
+            className="h-logo-sm w-logo-sm lg:h-logo-md lg:w-logo-md object-contain"
           />
         </div>
 

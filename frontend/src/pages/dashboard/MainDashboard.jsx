@@ -2,8 +2,7 @@ import SDOFbPage from "../../assets/images/sdo_fbpage.png";
 import useMainDashboardStats from "../../hooks/useMainDashboardStats";
 
 const MainDashboard = () => {
-  const { schoolCount, studentCount, teacherCount, loading } =
-    useMainDashboardStats();
+  const { studentCount, teacherCount, loading } = useMainDashboardStats();
 
   return (
     <>
@@ -151,13 +150,13 @@ const MainDashboard = () => {
                 //   bg: "linear-gradient(135deg, #0097b2, #00b4d8)",
                 //   shadow: "rgba(0,151,178,0.4)",
                 // },
-                {
-                  label: "Schools",
-                  value: loading ? "..." : schoolCount,
-                  color: "#ffffff",
-                  bg: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
-                  shadow: "rgba(139,92,246,0.4)",
-                },
+                // {
+                //   label: "Schools",
+                //   value: loading ? "..." : schoolCount,
+                //   color: "#ffffff",
+                //   bg: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                //   shadow: "rgba(139,92,246,0.4)",
+                // },
                 {
                   label: "Teachers",
                   value: loading ? "..." : teacherCount,
