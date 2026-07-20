@@ -294,7 +294,7 @@ const Login = () => {
                 />
               </svg>
             </div>
-            <h1 className="shimmer-title text-2xl font-black">QUEZON MPS</h1>
+            <h1 className="shimmer-title text-2xl font-black">LIWAYWAY ES</h1>
             <div className="flex items-center gap-2 mt-1">
               <div
                 className="h-px w-8 rounded-full"

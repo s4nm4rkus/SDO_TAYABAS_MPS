@@ -214,13 +214,13 @@ const SupervisorDashboard = () => {
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          {
-            label: "Schools",
-            value: stats?.total_schools,
-            icon: <Building2 size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #0097b2, #004385)",
-            shadow: "rgba(0,151,178,0.35)",
-          },
+          // {
+          //   label: "Schools",
+          //   value: stats?.total_schools,
+          //   icon: <Building2 size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #0097b2, #004385)",
+          //   shadow: "rgba(0,151,178,0.35)",
+          // },
           {
             label: "Sections",
             value: stats?.total_sections,
@@ -242,20 +242,20 @@ const SupervisorDashboard = () => {
             bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
             shadow: "rgba(249,115,22,0.35)",
           },
-          {
-            label: "Male",
-            value: stats?.male_students,
-            icon: <Users size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #3b82f6, #60a5fa)",
-            shadow: "rgba(59,130,246,0.35)",
-          },
-          {
-            label: "Female",
-            value: stats?.female_students,
-            icon: <Users size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #ec4899, #f472b6)",
-            shadow: "rgba(236,72,153,0.35)",
-          },
+          // {
+          //   label: "Male",
+          //   value: stats?.male_students,
+          //   icon: <Users size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #3b82f6, #60a5fa)",
+          //   shadow: "rgba(59,130,246,0.35)",
+          // },
+          // {
+          //   label: "Female",
+          //   value: stats?.female_students,
+          //   icon: <Users size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #ec4899, #f472b6)",
+          //   shadow: "rgba(236,72,153,0.35)",
+          // },
         ].map((card, i) => (
           <div
             key={i}

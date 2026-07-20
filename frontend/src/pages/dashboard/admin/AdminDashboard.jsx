@@ -209,20 +209,20 @@ const AdminDashboard = () => {
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
         {[
-          {
-            label: "Clusters",
-            value: stats?.total_clusters,
-            icon: <Building2 size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #0097b2, #004385)",
-            shadow: "rgba(0,151,178,0.35)",
-          },
-          {
-            label: "Schools",
-            value: stats?.total_schools,
-            icon: <School size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
-            shadow: "rgba(139,92,246,0.35)",
-          },
+          // {
+          //   label: "Clusters",
+          //   value: stats?.total_clusters,
+          //   icon: <Building2 size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #0097b2, #004385)",
+          //   shadow: "rgba(0,151,178,0.35)",
+          // },
+          // {
+          //   label: "Schools",
+          //   value: stats?.total_schools,
+          //   icon: <School size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+          //   shadow: "rgba(139,92,246,0.35)",
+          // },
           {
             label: "Sections",
             value: stats?.total_sections,
@@ -244,20 +244,20 @@ const AdminDashboard = () => {
             bg: "linear-gradient(135deg, #14b8a6, #0d9488)",
             shadow: "rgba(20,184,166,0.35)",
           },
-          {
-            label: "Male",
-            value: stats?.male_students,
-            icon: <Users size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #3b82f6, #60a5fa)",
-            shadow: "rgba(59,130,246,0.35)",
-          },
-          {
-            label: "Female",
-            value: stats?.female_students,
-            icon: <Users size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #ec4899, #f472b6)",
-            shadow: "rgba(236,72,153,0.35)",
-          },
+          // {
+          //   label: "Male",
+          //   value: stats?.male_students,
+          //   icon: <Users size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #3b82f6, #60a5fa)",
+          //   shadow: "rgba(59,130,246,0.35)",
+          // },
+          // {
+          //   label: "Female",
+          //   value: stats?.female_students,
+          //   icon: <Users size={18} className="text-white" />,
+          //   bg: "linear-gradient(135deg, #ec4899, #f472b6)",
+          //   shadow: "rgba(236,72,153,0.35)",
+          // },
         ].map((card, i) => (
           <div
             key={i}
