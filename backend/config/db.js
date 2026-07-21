@@ -10,4 +10,13 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
+// Optional: quick sanity check on startup
+db.getConnection((err, connection) => {
+  if (err) console.error("MySQL Pool Connection Failed:", err);
+  else {
+    console.log("MySQL Pool Connected");
+    connection.release();
+  }
+});
+
 module.exports = db;

@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
@@ -9,24 +10,27 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = `${import.meta.env.VITE_API_URL}/api/assessments`;
+const BASE = API_URL + "/api/assessments";
 
-// Color for MPS value
 const getMPSColor = (mps) => {
-  if (!mps) return "text-gray-300";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSBg = (mps) => {
   if (!mps) return "transparent";
   const val = Number(mps);
   if (val >= 90) return "rgba(16,185,129,0.08)";
-  if (val >= 75) return "rgba(0,151,178,0.08)";
-  if (val >= 60) return "rgba(245,158,11,0.08)";
+  if (val >= 70) return "rgba(0,151,178,0.08)";
+  if (val >= 50) return "rgba(245,158,11,0.08)";
+  if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
 };
 
@@ -44,7 +48,7 @@ const MPSReport = () => {
       try {
         const [reportRes, yearRes] = await Promise.all([
           axios.get(`${BASE}/report`, { headers }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/school-years/active`),
+          axios.get(API_URL + "/api/school-years/active"),
         ]);
         setData(reportRes.data);
         setActiveYear(yearRes.data);
@@ -143,7 +147,7 @@ const MPSReport = () => {
     a.click();
   };
 
-  // Compute averages for a quarter
+  // Compute averages for a term
   const computeAverages = (quarterData) => {
     const validMale = quarterData.filter((r) => r.male.mps !== null);
     const validFemale = quarterData.filter((r) => r.female.mps !== null);
@@ -259,7 +263,7 @@ const MPSReport = () => {
             value: data.school,
           },
           {
-            icon: <CalendarDays size={14} style={{ color: "#f97316" }} />,
+            icon: <CalendarDays size={14} style={{ color: "#ff6b35" }} />,
             label: "School Year",
             value: activeYear ? `SY ${activeYear.year_label}` : "—",
           },
@@ -281,7 +285,7 @@ const MPSReport = () => {
         ))}
       </div>
 
-      {/* Quarter Tabs */}
+      {/* Term Tabs */}
       <div className="flex flex-wrap gap-2">
         {data.periods.map((period) => {
           const isSelected = selectedPeriodId === period.id;
@@ -573,23 +577,28 @@ const MPSReport = () => {
               </p>
               {[
                 {
-                  label: "Outstanding (≥90%)",
+                  label: "High Mastery (90–100%)",
                   color: "#10b981",
                   bg: "rgba(16,185,129,0.08)",
                 },
                 {
-                  label: "Satisfactory (75-89%)",
+                  label: "Moderately (70–89%)",
                   color: "#0097b2",
                   bg: "rgba(0,151,178,0.08)",
                 },
                 {
-                  label: "Developing (60-74%)",
+                  label: "Average (50–69%)",
                   color: "#f59e0b",
                   bg: "rgba(245,158,11,0.08)",
                 },
                 {
-                  label: "Beginning (<60%)",
-                  color: "#ef4444",
+                  label: "Low Mastery (20–49%)",
+                  color: "#ff6b35",
+                  bg: "rgba(251,146,60,0.08)",
+                },
+                {
+                  label: "No Mastery (<20%)",
+                  color: "#dc2626",
                   bg: "rgba(239,68,68,0.08)",
                 },
               ].map((item, i) => (
@@ -672,7 +681,7 @@ const MPSReport = () => {
                   </div>
                   <p
                     className="text-lg font-black shrink-0"
-                    style={{ color: "#f97316" }}
+                    style={{ color: "#ff6b35" }}
                   >
                     {lowest.class.mps}%
                   </p>

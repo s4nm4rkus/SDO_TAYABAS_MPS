@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -13,9 +14,9 @@ import SectionCard from "../../../components/common/cards/school-head/SectionCar
 import SectionModal from "../../../components/common/modals/school-head/SectionModal";
 import AssignAdviserModal from "../../../components/common/modals/school-head/AssignAdviserModal";
 
-const SECTIONS_API = `${import.meta.env.VITE_API_URL}/api/sections`;
-const GRADE_LEVELS_API = `${import.meta.env.VITE_API_URL}/api/grade-levels`;
-const SCHOOL_YEARS_API = `${import.meta.env.VITE_API_URL}/api/school-years`;
+const SECTIONS_API = API_URL + "/api/sections";
+const GRADE_LEVELS_API = API_URL + "/api/grade-levels";
+const SCHOOL_YEARS_API = API_URL + "/api/school-years";
 
 const gradeColors = [
   {
@@ -31,7 +32,7 @@ const gradeColors = [
   {
     bg: "rgba(249,115,22,0.08)",
     border: "rgba(249,115,22,0.2)",
-    accent: "#f97316",
+    accent: "#ff6b35",
   },
   {
     bg: "rgba(236,72,153,0.08)",
@@ -56,7 +57,7 @@ const gradeColors = [
   {
     bg: "rgba(239,68,68,0.08)",
     border: "rgba(239,68,68,0.2)",
-    accent: "#ef4444",
+    accent: "#dc2626",
   },
   {
     bg: "rgba(20,184,166,0.08)",
@@ -323,7 +324,7 @@ const SectionManagement = () => {
                 value: selectedSchool
                   ? unassignedSections
                   : sections.filter((s) => !s.adviser_id).length,
-                color: "linear-gradient(135deg, #f97316, #fb923c)",
+                color: "linear-gradient(135deg, #ff6b35, #fb923c)",
                 shadow: "rgba(249,115,22,0.35)",
               },
             ].map((card, i) => (

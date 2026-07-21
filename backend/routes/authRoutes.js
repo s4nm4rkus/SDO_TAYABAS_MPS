@@ -9,4 +9,6 @@ router.post("/login", authController.login);
 // Protected — get current logged in user
 router.get("/me", verifyToken, authController.getCurrentUser);
 
+router.put("/change-password", verifyToken, authController.changePassword);
+
 module.exports = router;

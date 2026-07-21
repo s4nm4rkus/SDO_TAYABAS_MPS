@@ -1,3 +1,4 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Pencil,
@@ -11,8 +12,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = `${import.meta.env.VITE_API_URL}/api/grade-levels`;
-const SUBJECTS_API = `${import.meta.env.VITE_API_URL}/api/subjects`;
+const API = API_URL + "/api/grade-levels";
+const SUBJECTS_API = API_URL + "/api/subjects";
 
 const gradeColors = [
   {
@@ -24,7 +25,7 @@ const gradeColors = [
     shadow: "rgba(139,92,246,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #f97316, #fb923c)",
+    bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
     shadow: "rgba(249,115,22,0.35)",
   },
   {
@@ -44,7 +45,7 @@ const gradeColors = [
     shadow: "rgba(59,130,246,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #ef4444, #f87171)",
+    bg: "linear-gradient(135deg, #dc2626, #f87171)",
     shadow: "rgba(239,68,68,0.35)",
   },
   {
@@ -231,9 +232,7 @@ const GradeLevelCard = () => {
               >
                 {/* Top Row */}
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
-                    Level {index + 1}
-                  </span>
+                  <span className="">{/* Level {index + 1} */}</span>
                   <div className="flex gap-1">
                     <button
                       onClick={() => openEdit(grade)}

@@ -100,7 +100,7 @@ const MainDashboard = () => {
       `}</style>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative mt-28 md:mt-24 lg:mt-16 w-full min-h-screen flex items-center px-6 md:px-16 lg:px-24 py-16 overflow-hidden">
+      <section className="relative mt-60 md:mt-28 lg:mt-16 w-full min-h-screen flex items-center px-6 md:px-16 lg:px-24 py-16 overflow-hidden">
         <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
           <div className="fade-left">
@@ -138,8 +138,7 @@ const MainDashboard = () => {
             {/* Description */}
             <p className="fade-up-d3 text-gray-500 text-base md:text-lg max-w-lg leading-relaxed mb-10">
               A comprehensive monitoring system for tracking and evaluating Mean
-              Percentage Scores across all schools in the Division of Tayabas
-              City.
+              Percentage Scores across all schools in the Division of Tayabas.
             </p>
 
             {/* Stat Cards */}
@@ -163,7 +162,7 @@ const MainDashboard = () => {
                   label: "Teachers",
                   value: loading ? "..." : teacherCount,
                   color: "#ffffff",
-                  bg: "linear-gradient(135deg, #f97316, #fdba74)",
+                  bg: "linear-gradient(135deg, #ff6b35, #fdba74)",
                   shadow: "rgba(249,115,22,0.4)",
                 },
                 {
@@ -246,7 +245,7 @@ const MainDashboard = () => {
                       x2="100%"
                       y2="100%"
                     >
-                      <stop offset="0%" stopColor="#f97316" />
+                      <stop offset="0%" stopColor="#ff6b35" />
                       <stop offset="100%" stopColor="#ec4899" />
                     </linearGradient>
                   </defs>
@@ -278,7 +277,7 @@ const MainDashboard = () => {
                   {[
                     { x: 18, h: 45, color: "#0097b2" },
                     { x: 34, h: 60, color: "#8b5cf6" },
-                    { x: 50, h: 35, color: "#f97316" },
+                    { x: 50, h: 35, color: "#ff6b35" },
                     { x: 66, h: 70, color: "#ec4899" },
                     { x: 82, h: 50, color: "#10b981" },
                     { x: 98, h: 55, color: "#f59e0b" },
@@ -334,7 +333,7 @@ const MainDashboard = () => {
                   top: "75%",
                   left: "90%",
                   size: 10,
-                  color: "#f97316",
+                  color: "#ff6b35",
                   delay: "1s",
                 },
                 {
@@ -406,7 +405,7 @@ const MainDashboard = () => {
               Announcements
             </h2>
             <p className="text-gray-400 text-sm mt-2">
-              Stay updated with the latest news from SDO Tayabas City
+              Stay updated with the latest news from SDO Tayabas
             </p>
           </div>
 
@@ -532,7 +531,7 @@ const MainDashboard = () => {
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{
-                    background: "linear-gradient(135deg, #f97316, #fb923c)",
+                    background: "linear-gradient(135deg, #ff6b35, #fb923c)",
                   }}
                 >
                   <svg
@@ -577,7 +576,7 @@ const MainDashboard = () => {
                     <span
                       className="text-xs font-bold shrink-0 px-2 py-1 rounded-lg text-white"
                       style={{
-                        background: "linear-gradient(135deg, #f97316, #fb923c)",
+                        background: "linear-gradient(135deg, #ff6b35, #fb923c)",
                       }}
                     >
                       {item.no}

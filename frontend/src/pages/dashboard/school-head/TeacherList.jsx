@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useMemo } from "react";
 import {
   Users,
@@ -18,10 +19,10 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = `${import.meta.env.VITE_API_URL}/api/sections/teacher-list`;
-const CREATE_API = `${import.meta.env.VITE_API_URL}/api/sections/teachers/create`;
-const UPDATE_API = `${import.meta.env.VITE_API_URL}/api/sections/teachers`;
-const SCHOOLS_API = `${import.meta.env.VITE_API_URL}/api/sections/schools`;
+const API = API_URL + "/api/sections/teacher-list";
+const CREATE_API = API_URL + "/api/sections/teachers/create";
+const UPDATE_API = API_URL + "/api/sections/teachers";
+const SCHOOLS_API = API_URL + "/api/sections/schools";
 
 // ── Reusable form fields ──
 const FormField = ({
@@ -393,7 +394,7 @@ const TeacherList = () => {
               label: "Unassigned",
               value: unassigned,
               icon: <UserX size={18} className="text-white" />,
-              bg: "linear-gradient(135deg, #f97316, #fb923c)",
+              bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
               shadow: "rgba(249,115,22,0.35)",
             },
           ].map((card, i) => (
@@ -664,7 +665,7 @@ const TeacherList = () => {
                           className="p-1.5 rounded-lg transition hover:scale-105"
                           style={{
                             background: "rgba(239,68,68,0.08)",
-                            color: "#ef4444",
+                            color: "#dc2626",
                           }}
                           title="Delete Teacher"
                         >
@@ -1159,7 +1160,7 @@ const TeacherList = () => {
                 disabled={deleteLoading}
                 className="flex-1 px-4 py-2.5 text-sm rounded-xl text-white font-semibold transition hover:opacity-90 disabled:opacity-40"
                 style={{
-                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  background: "linear-gradient(135deg, #dc2626, #dc2626)",
                   boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
                 }}
               >

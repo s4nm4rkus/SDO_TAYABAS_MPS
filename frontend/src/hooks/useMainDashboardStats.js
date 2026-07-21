@@ -1,3 +1,4 @@
+import { API_URL } from "../config/api";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -12,7 +13,7 @@ const useMainDashboardStats = () => {
     const fetchStats = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/dashboard-stats`,
+          API_URL + "/api/dashboard-stats",
         );
         const { clusterCount, schoolCount, teacherCount, studentCount } =
           res.data.stats;

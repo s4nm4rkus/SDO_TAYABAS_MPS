@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { loginUser, getCurrentUser } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   const handleLogin = async () => {
     if (!username || !password) return setError("Please fill in all fields.");
@@ -20,8 +22,17 @@ const Login = () => {
     try {
       const data = await loginUser({ username, password });
       login(data.token);
+
       const userData = await getCurrentUser();
       setUser(userData);
+
+      if (data.mustChangePassword) {
+        // ← added
+        navigate("/change-password", { state: { forced: true } });
+        return;
+      }
+
+      showToast(`Welcome back, ${userData.fullname}!`, "success");
       if (userData.role === "admin") navigate("/admin");
       else if (userData.role === "school_head") navigate("/school-head");
       else if (userData.role === "supervisor") navigate("/supervisor");
@@ -256,7 +267,7 @@ const Login = () => {
                 {[
                   { x: 18, h: 45, color: "#0097b2" },
                   { x: 34, h: 60, color: "#8b5cf6" },
-                  { x: 50, h: 35, color: "#f97316" },
+                  { x: 50, h: 35, color: "#ff6b35" },
                   { x: 66, h: 70, color: "#ec4899" },
                   { x: 82, h: 50, color: "#10b981" },
                   { x: 98, h: 55, color: "#f59e0b" },
@@ -290,7 +301,7 @@ const Login = () => {
                 style={{ background: "#0097b2" }}
               />
               <p className="text-xs font-medium" style={{ color: "#0097b2" }}>
-                Schools Division of Tayabas City
+                Schools Division of Tayabas
               </p>
               <div
                 className="h-px w-8 rounded-full"
@@ -421,7 +432,7 @@ const Login = () => {
             className="text-center text-xs mt-8"
             style={{ color: "rgba(36,36,36,0.4)" }}
           >
-            © {new Date().getFullYear()} DepEd Tayabas City Division
+            © {new Date().getFullYear()} DepEd Tayabas Division
           </p>
         </div>
       </div>

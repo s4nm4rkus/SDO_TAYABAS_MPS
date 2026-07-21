@@ -1,6 +1,6 @@
 import LoginButton from "../../common/buttons/LoginButton";
 
-import LogoSDO from "../../../assets/images/header logo/logo_sdo_tayabas.png";
+import LogoSDO from "../../../assets/images/header logo/logo_sdo_Tayabas.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
@@ -13,7 +13,7 @@ function Header() {
           className="text-textHeader-color text-4xl md:text-7xl font-black m-0 p-0 text-shadow"
           style={{ WebkitTextStroke: "1px white" }}
         >
-          SDOTAYABASMPS
+          SDOTayabasMPS
         </h1>
         <p
           className="text-textHeader-color text-lg md:text-3xl tracking-widest font-bold m-0 p-0 text-shadow"
@@ -52,7 +52,7 @@ function Header() {
             DEPARTMENT OF EDUCATION
           </p>
           <p className="text-white text-lg md:text-xl font-light leading-tight">
-            City Schools Division of the City of Tayabas
+            Schools Division of Tayabas
           </p>
         </div>
 

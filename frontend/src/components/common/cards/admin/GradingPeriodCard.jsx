@@ -1,9 +1,10 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect } from "react";
 import { Pencil, X, BookOpen, CheckCircle } from "lucide-react";
 import axios from "axios";
 
-const API = `${import.meta.env.VITE_API_URL}/api/grading-periods`;
-const SCHOOL_YEARS_API = `${import.meta.env.VITE_API_URL}/api/school-years`;
+const API = API_URL + "/api/grading-periods";
+const SCHOOL_YEARS_API = API_URL + "/api/school-years";
 
 const quarterColors = [
   {
@@ -15,7 +16,7 @@ const quarterColors = [
     shadow: "rgba(16,185,129,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #f97316, #fb923c)",
+    bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
     shadow: "rgba(249,115,22,0.35)",
   },
   {
@@ -113,7 +114,7 @@ const GradingPeriodCard = () => {
             Grading Periods
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            {periods.length} quarters for this school year
+            {periods.length} terms for this school year
           </p>
         </div>
 
@@ -158,9 +159,9 @@ const GradingPeriodCard = () => {
       ) : periods.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
           <BookOpen size={28} className="mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No quarters found for this school year.</p>
+          <p className="text-sm">No terms found for this school year.</p>
           <p className="text-xs mt-1">
-            Quarters are auto-generated when creating a school year.
+            Terms are auto-generated when creating a school year.
           </p>
         </div>
       ) : (
@@ -200,7 +201,7 @@ const GradingPeriodCard = () => {
                   {/* Content */}
                   <div className="mt-6">
                     <p className="text-xs text-white/70 uppercase tracking-wider mb-1">
-                      Quarter {period.order_num}
+                      Term {period.order_num}
                     </p>
                     <h3 className="text-base font-black text-white mb-1">
                       {period.period_name}
@@ -241,10 +242,10 @@ const GradingPeriodCard = () => {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h2 className="text-base font-black text-[#242424]">
-                  Edit Quarter Name
+                  Edit Term Name
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Quarter {selected?.order_num} · SY {selectedYear?.year_label}
+                  Term {selected?.order_num} · SY {selectedYear?.year_label}
                 </p>
               </div>
               <button

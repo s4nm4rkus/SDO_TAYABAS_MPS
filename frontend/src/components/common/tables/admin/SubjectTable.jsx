@@ -1,3 +1,4 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect, useMemo } from "react";
 import {
   Pencil,
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = `${import.meta.env.VITE_API_URL}/api/subjects`;
+const API = API_URL + "/api/subjects";
 const ITEMS_PER_PAGE = 10;
 
 const SubjectTable = () => {

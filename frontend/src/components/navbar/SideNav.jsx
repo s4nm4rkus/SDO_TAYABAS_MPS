@@ -7,7 +7,7 @@ import { MdOutlineDashboard } from "react-icons/md";
 import { RiSettings4Line } from "react-icons/ri";
 import { TbReportAnalytics } from "react-icons/tb";
 import { AiOutlineUser, AiOutlineTeam } from "react-icons/ai";
-import { FiFolder, FiLogOut } from "react-icons/fi";
+import { FiFolder, FiLogOut, FiKey } from "react-icons/fi";
 
 const SideNav = () => {
   const [open, setOpen] = useState(true);
@@ -16,6 +16,10 @@ const SideNav = () => {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleChangePassword = () => {
+    navigate("/change-password");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -112,7 +116,7 @@ const SideNav = () => {
               <div className="flex items-end gap-0.5 h-7">
                 <div
                   className="w-1.5 rounded-t-sm"
-                  style={{ height: "40%", background: "#ef4444" }}
+                  style={{ height: "40%", background: "#dc2626" }}
                 />
                 <div
                   className="w-1.5 rounded-t-sm"
@@ -136,7 +140,7 @@ const SideNav = () => {
                   MPS Tracker
                 </p>
                 <p className="text-xs" style={{ color: "rgba(0,151,178,0.8)" }}>
-                  SDO Tayabas City
+                  SDO Tayabas
                 </p>
               </div>
             </div>
@@ -147,7 +151,7 @@ const SideNav = () => {
             <div className="flex items-end gap-0.5 h-6 mx-auto">
               <div
                 className="w-1 rounded-t-sm"
-                style={{ height: "40%", background: "#ef4444" }}
+                style={{ height: "40%", background: "#dc2626" }}
               />
               <div
                 className="w-1 rounded-t-sm"
@@ -275,6 +279,47 @@ const SideNav = () => {
           ))}
         </div>
 
+        {/* ── Change Password Button ── */}
+        <div className="px-3 pt-3 shrink-0">
+          <div
+            className="relative"
+            onMouseEnter={(e) => {
+              if (!open) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setTooltip({
+                  visible: true,
+                  name: "Change Password",
+                  y: rect.top + rect.height / 2,
+                });
+              }
+            }}
+            onMouseLeave={() => setTooltip({ visible: false, name: "", y: 0 })}
+          >
+            <button
+              onClick={handleChangePassword}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${!open ? "justify-center" : ""}`}
+              style={{
+                background: "rgba(0,151,178,0.08)",
+                border: "1px solid rgba(0,151,178,0.15)",
+              }}
+            >
+              <FiKey
+                size={20}
+                className="shrink-0 transition"
+                style={{ color: "#0097b2" }}
+              />
+              {open && (
+                <span
+                  className="text-sm font-semibold transition"
+                  style={{ color: "#0097b2" }}
+                >
+                  Change Password
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* ── Logout Button ── */}
         <div
           className="px-3 py-3 shrink-0"
@@ -394,7 +439,7 @@ const SideNav = () => {
                 onClick={handleLogout}
                 className="flex-1 px-4 py-2.5 text-sm rounded-xl text-white font-semibold transition hover:opacity-90"
                 style={{
-                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  background: "linear-gradient(135deg, #dc2626, #dc2626)",
                   boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
                 }}
               >

@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
@@ -14,33 +15,38 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = `${import.meta.env.VITE_API_URL}/api/admin/monitoring`;
+const BASE = API_URL + "/api/admin/monitoring";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSBg = (mps) => {
   if (!mps) return "transparent";
   const val = Number(mps);
   if (val >= 90) return "rgba(16,185,129,0.08)";
-  if (val >= 75) return "rgba(0,151,178,0.08)";
-  if (val >= 60) return "rgba(245,158,11,0.08)";
+  if (val >= 70) return "rgba(0,151,178,0.08)";
+  if (val >= 50) return "rgba(245,158,11,0.08)";
+  if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
 };
 
 const getMPSLabel = (mps) => {
   if (!mps) return "No data";
   const val = Number(mps);
-  if (val >= 90) return "Outstanding";
-  if (val >= 75) return "Satisfactory";
-  if (val >= 60) return "Developing";
-  return "Beginning";
+  if (val >= 90) return "High Mastery";
+  if (val >= 70) return "Moderately";
+  if (val >= 50) return "Average";
+  if (val >= 20) return "Low Mastery (LM)";
+  return "No Mastery (NM)";
 };
 
 const computeAverages = (data) => {
@@ -115,7 +121,7 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
             <div className="flex items-center gap-1.5 mt-1">
               <Users
                 size={11}
-                style={{ color: adviser ? "#0097b2" : "#f97316" }}
+                style={{ color: adviser ? "#0097b2" : "#ff6b35" }}
               />
               {adviser ? (
                 <span
@@ -265,10 +271,10 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
           Legend:
         </p>
         {[
-          { label: "Outstanding (≥90%)", color: "#10b981" },
-          { label: "Satisfactory (75-89%)", color: "#0097b2" },
-          { label: "Developing (60-74%)", color: "#f59e0b" },
-          { label: "Beginning (<60%)", color: "#ef4444" },
+          { label: "High Mastery (≥90%)", color: "#10b981" },
+          { label: "Moderately (75-89%)", color: "#0097b2" },
+          { label: "Average (60-74%)", color: "#f59e0b" },
+          { label: "Low Master (LM) (<60%)", color: "#dc2626" },
         ].map((item) => (
           <div key={item.label} className="flex items-center gap-1.5">
             <span
@@ -460,10 +466,11 @@ const BarChart = ({
         </div>
         <div className="ml-auto flex flex-wrap gap-3">
           {[
-            { label: "≥90% Outstanding", color: "#10b981" },
-            { label: "75-89% Satisfactory", color: "#0097b2" },
-            { label: "60-74% Developing", color: "#f59e0b" },
-            { label: "<60% Beginning", color: "#ef4444" },
+            { label: "High Mastery (90–100%)", color: "#10b981" },
+            { label: "Moderately (70–89%)", color: "#0097b2" },
+            { label: "Average (50–69%)", color: "#f59e0b" },
+            { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+            { label: "No Mastery (<20%)", color: "#dc2626" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
               <div
@@ -812,7 +819,7 @@ const MonitoringReports = () => {
                   border: "1px solid rgba(0,151,178,0.12)",
                 }}
               >
-                <CalendarDays size={14} style={{ color: "#f97316" }} />
+                <CalendarDays size={14} style={{ color: "#ff6b35" }} />
                 <div>
                   <p className="text-xs text-gray-400">School Year</p>
                   <p className="text-sm font-black text-[#242424]">
@@ -829,7 +836,7 @@ const MonitoringReports = () => {
               >
                 <TrendingUp size={14} style={{ color: "#0097b2" }} />
                 <div>
-                  <p className="text-xs text-gray-400">Active Quarter</p>
+                  <p className="text-xs text-gray-400">Active Term</p>
                   <p className="text-sm font-black text-[#242424]">
                     {overview?.active_quarter?.period_name || "None"}
                   </p>
@@ -865,7 +872,7 @@ const MonitoringReports = () => {
                   label: "Teachers",
                   value: overview?.stats?.total_teachers,
                   icon: <Users size={18} className="text-white" />,
-                  bg: "linear-gradient(135deg, #f97316, #fb923c)",
+                  bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
                   shadow: "rgba(249,115,22,0.35)",
                 },
                 {
@@ -954,13 +961,13 @@ const MonitoringReports = () => {
                         <p className="text-sm font-black text-[#242424] truncate">
                           {lowestCluster.cluster_name}
                         </p>
-                        <p className="text-xs" style={{ color: "#f97316" }}>
+                        <p className="text-xs" style={{ color: "#ff6b35" }}>
                           {getMPSLabel(lowestCluster.class_mps)}
                         </p>
                       </div>
                       <p
                         className="text-xl font-black shrink-0"
-                        style={{ color: "#f97316" }}
+                        style={{ color: "#ff6b35" }}
                       >
                         {lowestCluster.class_mps}%
                       </p>
@@ -1017,7 +1024,7 @@ const MonitoringReports = () => {
                       </div>
                       <p
                         className="text-xl font-black shrink-0"
-                        style={{ color: "#f97316" }}
+                        style={{ color: "#ff6b35" }}
                       >
                         {lowestSchool.class_mps}%
                       </p>
@@ -1040,8 +1047,7 @@ const MonitoringReports = () => {
                     MPS per Cluster
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {overview?.active_quarter?.period_name ||
-                      "No active quarter"}{" "}
+                    {overview?.active_quarter?.period_name || "No active term"}{" "}
                     · Class MPS
                   </p>
                 </div>
@@ -1070,8 +1076,7 @@ const MonitoringReports = () => {
                     MPS per School
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {overview?.active_quarter?.period_name ||
-                      "No active quarter"}{" "}
+                    {overview?.active_quarter?.period_name || "No active term"}{" "}
                     · Class MPS
                   </p>
                 </div>
@@ -1114,10 +1119,10 @@ const MonitoringReports = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-            {/* ── Quarter tabs ── */}
+            {/* ── Term tabs ── */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">
-                Quarter
+                Term
               </p>
               <div className="flex flex-wrap gap-2">
                 {periods.map((period) => {
@@ -1180,7 +1185,7 @@ const MonitoringReports = () => {
                 }}
               >
                 <TrendingUp size={28} className="mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No data found for selected quarter.</p>
+                <p className="text-sm">No data found for selected term.</p>
               </div>
             ) : (
               <>
@@ -1589,7 +1594,7 @@ const MonitoringReports = () => {
                                     style={{
                                       color: sec.adviser_name
                                         ? "#0097b2"
-                                        : "#f97316",
+                                        : "#ff6b35",
                                     }}
                                   />
                                   <span className="text-xs font-bold text-[#242424]">
@@ -1603,7 +1608,7 @@ const MonitoringReports = () => {
                                     style={{
                                       color: sec.adviser_name
                                         ? "#0097b2"
-                                        : "#f97316",
+                                        : "#ff6b35",
                                     }}
                                   />
                                   <span
@@ -1611,7 +1616,7 @@ const MonitoringReports = () => {
                                     style={{
                                       color: sec.adviser_name
                                         ? "#0097b2"
-                                        : "#f97316",
+                                        : "#ff6b35",
                                     }}
                                   >
                                     {sec.adviser_name || "No adviser"}
@@ -1660,7 +1665,7 @@ const MonitoringReports = () => {
                                 style={{
                                   color: sec.adviser_name
                                     ? "#0097b2"
-                                    : "#f97316",
+                                    : "#ff6b35",
                                 }}
                               />
                               <span className="text-xs font-bold text-[#242424]">
@@ -1672,7 +1677,7 @@ const MonitoringReports = () => {
                                 style={{
                                   color: sec.adviser_name
                                     ? "#0097b2"
-                                    : "#f97316",
+                                    : "#ff6b35",
                                 }}
                               />
                               <span
@@ -1680,7 +1685,7 @@ const MonitoringReports = () => {
                                 style={{
                                   color: sec.adviser_name
                                     ? "#0097b2"
-                                    : "#f97316",
+                                    : "#ff6b35",
                                 }}
                               >
                                 {sec.adviser_name || "No adviser"}

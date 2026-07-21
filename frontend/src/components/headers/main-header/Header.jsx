@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { LogIn } from "lucide-react";
-import LogoSDO from "../../../assets/images/header logo/logo_sdo_tayabas.png";
+import LogoSDO from "../../../assets/images/header logo/logo_sdo_Tayabas.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
@@ -47,12 +47,12 @@ function Header() {
             <img
               src={LogoBagongPil}
               alt="Bagong Pilipinas"
-              className="h-logo-mlg w-logo-mlg object-contain"
+              className="h-logo-md w-logo-md object-contain"
             />
             <img
               src={LogoDeped}
               alt="DepEd"
-              className="h-logo-mlg w-logo-xl lg:h-logo-lg lg:w-logo-xl object-contain"
+              className="h-logo-sm w-logo-md lg:h-logo-lg lg:w-logo-xl object-contain"
             />
           </div>
 
@@ -71,7 +71,7 @@ function Header() {
             <p
               className={`text-base font-light leading-tight transition-all duration-300 ${scrolled ? "text-white/85" : "text-[#242424]"}`}
             >
-              City Schools Division of the City of Tayabas
+              Schools Division of Tayabas City
             </p>
           </div>
 

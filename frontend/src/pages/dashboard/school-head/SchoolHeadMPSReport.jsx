@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect, useRef } from "react";
 import {
   BookOpen,
@@ -10,25 +11,29 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = `${import.meta.env.VITE_API_URL}/api/sh-mps`;
-const SCHOOLS_API = `${import.meta.env.VITE_API_URL}/api/sections/schools`;
-const YEARS_API = `${import.meta.env.VITE_API_URL}/api/school-years/active`;
+const BASE = API_URL + "/api/sh-mps";
+const SCHOOLS_API = API_URL + "/api/sections/schools";
+const YEARS_API = API_URL + "/api/school-years/active";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSBg = (mps) => {
   if (!mps) return "transparent";
   const val = Number(mps);
   if (val >= 90) return "rgba(16,185,129,0.08)";
-  if (val >= 75) return "rgba(0,151,178,0.08)";
-  if (val >= 60) return "rgba(245,158,11,0.08)";
+  if (val >= 70) return "rgba(0,151,178,0.08)";
+  if (val >= 50) return "rgba(245,158,11,0.08)";
+  if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
 };
 
@@ -119,7 +124,7 @@ const GradeTable = ({ gradeData, periodName }) => {
                 >
                   <BookOpen
                     size={11}
-                    style={{ color: sec.adviser_name ? "#0097b2" : "#f97316" }}
+                    style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
                   />
                   <span className="text-xs font-semibold text-[#242424]">
                     {sec.section_name}
@@ -127,7 +132,7 @@ const GradeTable = ({ gradeData, periodName }) => {
                   <span className="text-xs text-gray-300">·</span>
                   <Users
                     size={10}
-                    style={{ color: sec.adviser_name ? "#0097b2" : "#f97316" }}
+                    style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
                   />
                   {sec.adviser_name ? (
                     <span className="text-xs" style={{ color: "#0097b2" }}>
@@ -158,7 +163,7 @@ const GradeTable = ({ gradeData, periodName }) => {
 
       {!hasData ? (
         <div className="px-5 py-6 text-center text-gray-400 text-xs">
-          No scores encoded for this quarter yet.
+          No scores encoded for this term yet.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -513,7 +518,7 @@ const SchoolHeadMPSReport = () => {
             border: "1px solid rgba(0,151,178,0.12)",
           }}
         >
-          <CalendarDays size={14} style={{ color: "#f97316" }} />
+          <CalendarDays size={14} style={{ color: "#ff6b35" }} />
           <div>
             <p className="text-xs text-gray-400">School Year</p>
             <p className="text-sm font-black text-[#242424]">
@@ -538,7 +543,7 @@ const SchoolHeadMPSReport = () => {
         </div>
       </div>
 
-      {/* ── Quarter Tabs ── */}
+      {/* ── Term Tabs ── */}
       <div className="flex flex-wrap gap-2">
         {periods.map((period) => {
           const isSelected = selectedPeriodId === period.id;
@@ -644,7 +649,7 @@ const SchoolHeadMPSReport = () => {
           }}
         >
           <TrendingUp size={28} className="mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No data found for selected quarter.</p>
+          <p className="text-sm">No data found for selected term.</p>
           <p className="text-xs mt-1">Teachers need to encode scores first.</p>
         </div>
       ) : (
@@ -680,10 +685,11 @@ const SchoolHeadMPSReport = () => {
               MPS Legend:
             </p>
             {[
-              { label: "Outstanding (≥90%)", color: "#10b981" },
-              { label: "Satisfactory (75-89%)", color: "#0097b2" },
-              { label: "Developing (60-74%)", color: "#f59e0b" },
-              { label: "Beginning (<60%)", color: "#ef4444" },
+              { label: "High Mastery (90–100%)", color: "#10b981" },
+              { label: "Moderately (70–89%)", color: "#0097b2" },
+              { label: "Average (50–69%)", color: "#f59e0b" },
+              { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+              { label: "No Mastery (<20%)", color: "#dc2626" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <span

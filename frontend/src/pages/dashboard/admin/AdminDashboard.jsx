@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Users,
@@ -13,24 +14,28 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const BASE = `${import.meta.env.VITE_API_URL}/api/admin/monitoring`;
+const BASE = API_URL + "/api/admin/monitoring";
 
 const getMPSColor = (mps) => {
-  if (!mps) return "#d1d5db";
+  if (mps == null) return "text-gray-300";
+
   const val = Number(mps);
-  if (val >= 90) return "#10b981";
-  if (val >= 75) return "#0097b2";
-  if (val >= 60) return "#f59e0b";
-  return "#ef4444";
+
+  if (val >= 90) return "#10b981"; // High Mastery
+  if (val >= 70) return "#0097b2"; // Moderately
+  if (val >= 50) return "#f59e0b"; // Average
+  if (val >= 20) return "#ff6b35"; // Low Mastery
+  return "#dc2626"; // No Mastery
 };
 
 const getMPSLabel = (mps) => {
   if (!mps) return "No data";
   const val = Number(mps);
-  if (val >= 90) return "Outstanding";
-  if (val >= 75) return "Satisfactory";
-  if (val >= 60) return "Developing";
-  return "Beginning";
+  if (val >= 90) return "High Mastery";
+  if (val >= 70) return "Moderately";
+  if (val >= 50) return "Average";
+  if (val >= 20) return "Low Mastery (LM)";
+  return "No Mastery (NM)";
 };
 
 const AdminDashboard = () => {
@@ -172,7 +177,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
               <Building2 size={12} className="text-white" />
               <span className="text-xs text-white font-semibold">
-                DepEd Tayabas City Division
+                DepEd Tayabas Division
               </span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
@@ -229,7 +234,7 @@ const AdminDashboard = () => {
             label: "Teachers",
             value: stats?.total_teachers,
             icon: <Users size={18} className="text-white" />,
-            bg: "linear-gradient(135deg, #f97316, #fb923c)",
+            bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
             shadow: "rgba(249,115,22,0.35)",
           },
           {
@@ -324,13 +329,13 @@ const AdminDashboard = () => {
                 <p className="text-sm font-black text-[#242424] truncate">
                   {lowestCluster.cluster_name}
                 </p>
-                <p className="text-xs" style={{ color: "#f97316" }}>
+                <p className="text-xs" style={{ color: "#ff6b35" }}>
                   {getMPSLabel(lowestCluster.class_mps)}
                 </p>
               </div>
               <p
                 className="text-xl font-black shrink-0"
-                style={{ color: "#f97316" }}
+                style={{ color: "#ff6b35" }}
               >
                 {lowestCluster.class_mps}%
               </p>
@@ -386,7 +391,7 @@ const AdminDashboard = () => {
               </div>
               <p
                 className="text-xl font-black shrink-0"
-                style={{ color: "#f97316" }}
+                style={{ color: "#ff6b35" }}
               >
                 {lowestSchool.class_mps}%
               </p>
@@ -556,10 +561,11 @@ const AdminDashboard = () => {
           {!loading && clusterWithMPS.length > 0 && (
             <div className="flex flex-wrap gap-x-4 gap-y-1 pt-3 mt-3 border-t border-gray-100">
               {[
-                { label: "≥90% Outstanding", color: "#10b981" },
-                { label: "75-89% Satisfactory", color: "#0097b2" },
-                { label: "60-74% Developing", color: "#f59e0b" },
-                { label: "<60% Beginning", color: "#ef4444" },
+                { label: "High Mastery (90–100%)", color: "#10b981" },
+                { label: "Moderately (70–89%)", color: "#0097b2" },
+                { label: "Average (50–69%)", color: "#f59e0b" },
+                { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+                { label: "No Mastery (<20%)", color: "#dc2626" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-1.5">
                   <div
@@ -573,9 +579,9 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* ── Right Column: Quarter Progress + Assignment Status ── */}
+        {/* ── Right Column: Term Progress + Assignment Status ── */}
         <div className="flex flex-col gap-6">
-          {/* Quarter Progress */}
+          {/* Term Progress */}
           <div
             className="rounded-2xl p-5"
             style={{
@@ -584,7 +590,7 @@ const AdminDashboard = () => {
             }}
           >
             <h2 className="text-base font-black text-[#242424] mb-4">
-              Quarter Progress
+              Term Progress
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {loading ? (

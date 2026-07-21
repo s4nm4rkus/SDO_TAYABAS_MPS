@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "../pages/auth/Login";
+import ChangePassword from "../pages/auth/ChangePassword";
 import MainDashboard from "../pages/dashboard/MainDashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../components/layouts/MainLayout";
@@ -38,6 +39,7 @@ const AppRoutes = () => {
 
       {/* ===== PRIVATE AREA ===== */}
       <Route element={<ProtectedRoute />}>
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route element={<DashboardLayout />}>
           {/* Teacher */}
           <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>

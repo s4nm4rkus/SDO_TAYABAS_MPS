@@ -1,3 +1,4 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Building2,
@@ -15,8 +16,8 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const CLUSTERS_API = `${import.meta.env.VITE_API_URL}/api/clusters`;
-const SCHOOLS_API = `${import.meta.env.VITE_API_URL}/api/schools`;
+const CLUSTERS_API = API_URL + "/api/clusters";
+const SCHOOLS_API = API_URL + "/api/schools";
 
 const clusterColors = [
   {
@@ -28,7 +29,7 @@ const clusterColors = [
     shadow: "rgba(139,92,246,0.35)",
   },
   {
-    bg: "linear-gradient(135deg, #f97316, #fb923c)",
+    bg: "linear-gradient(135deg, #ff6b35, #fb923c)",
     shadow: "rgba(249,115,22,0.35)",
   },
   {
@@ -449,7 +450,7 @@ const SchoolManagementCards = () => {
                         background: isSelected
                           ? "rgba(255,255,255,0.25)"
                           : "rgba(239,68,68,0.08)",
-                        color: isSelected ? "white" : "#ef4444",
+                        color: isSelected ? "white" : "#dc2626",
                       }}
                     >
                       <Trash2 size={11} />
@@ -544,7 +545,7 @@ const SchoolManagementCards = () => {
               style={{
                 background:
                   selectedCluster?.id === "unassigned"
-                    ? "linear-gradient(135deg, #ef4444, #f87171)"
+                    ? "linear-gradient(135deg, #dc2626, #f87171)"
                     : "white",
                 border:
                   selectedCluster?.id === "unassigned"
@@ -571,7 +572,7 @@ const SchoolManagementCards = () => {
                     color:
                       selectedCluster?.id === "unassigned"
                         ? "white"
-                        : "#ef4444",
+                        : "#dc2626",
                   }}
                 />
               </div>
@@ -608,7 +609,7 @@ const SchoolManagementCards = () => {
                 className="text-xs font-bold"
                 style={{
                   color:
-                    selectedCluster?.id === "unassigned" ? "white" : "#ef4444",
+                    selectedCluster?.id === "unassigned" ? "white" : "#dc2626",
                 }}
               >
                 {unassignedCount} {unassignedCount === 1 ? "school" : "schools"}

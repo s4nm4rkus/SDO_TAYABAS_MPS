@@ -1,4 +1,4 @@
-import LogoSDO from "../../../assets/images/header logo/logo_sdo_tayabas.png";
+import LogoSDO from "../../../assets/images/header logo/logo_sdo_Tayabas.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
@@ -28,7 +28,7 @@ function Footer() {
         {/* Center Text - truly centered */}
         <div className="text-center flex-1 py-3 md:py-0">
           <p className="text-white text-sm font-semibold">
-            City Schools Division of the City of Tayabas
+            Schools Division of Tayabas
           </p>
           <p className="text-white/70 text-xs mt-1">
             Department of Education — Republic of the Philippines
@@ -47,7 +47,7 @@ function Footer() {
       {/* Bottom Bar */}
       <div className="bg-black/20 text-center py-2">
         <p className="text-white/50 text-xs">
-          SDOTAYABASMPS — Learning Outcomes Assessment System
+          SDOTayabasMPS — Learning Outcomes Assessment System
         </p>
       </div>
     </footer>

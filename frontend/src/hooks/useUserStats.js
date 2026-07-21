@@ -1,7 +1,8 @@
+import { API_URL } from "../config/api";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const API = `${import.meta.env.VITE_API_URL}/api/users`;
+const API = API_URL + "/api/users";
 
 const useUserStats = () => {
   const [stats, setStats] = useState({

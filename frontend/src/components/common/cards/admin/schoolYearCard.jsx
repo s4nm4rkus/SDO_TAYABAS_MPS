@@ -1,3 +1,4 @@
+import { API_URL } from "../../../../config/api";
 import { useState, useEffect } from "react";
 import {
   MoreVertical,
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 
-const API = `${import.meta.env.VITE_API_URL}/api/school-years`;
+const API = API_URL + "/api/school-years";
 
 const SchoolYearCard = () => {
   const [menuOpen, setMenuOpen] = useState(false);

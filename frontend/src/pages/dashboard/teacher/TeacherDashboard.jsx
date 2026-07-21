@@ -1,3 +1,4 @@
+import { API_URL } from "../../../config/api";
 import { useState, useEffect } from "react";
 import {
   Users,
@@ -14,8 +15,8 @@ import {
 import { Link } from "react-router-dom";
 import axios from "axios";
 
-const STUDENTS_API = `${import.meta.env.VITE_API_URL}/api/students`;
-const ASSESSMENTS_API = `${import.meta.env.VITE_API_URL}/api/assessments`;
+const STUDENTS_API = API_URL + "/api/students";
+const ASSESSMENTS_API = API_URL + "/api/assessments";
 
 const TeacherDashboard = () => {
   const [activeYear, setActiveYear] = useState(null);
@@ -84,7 +85,7 @@ const TeacherDashboard = () => {
           axios.get(`${ASSESSMENTS_API}/subjects`, { headers }),
           axios.get(`${ASSESSMENTS_API}/grading-periods`, { headers }),
           axios.get(`${ASSESSMENTS_API}/report`, { headers }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/school-years/active`),
+          axios.get(API_URL + "/api/school-years/active"),
         ]);
         setSection(sectionRes.data);
         setStudents(studentsRes.data);
@@ -106,12 +107,15 @@ const TeacherDashboard = () => {
   const activeReport = activePeriod && report?.report?.[activePeriod.id];
 
   const getMPSColor = (mps) => {
-    if (!mps) return "#d1d5db";
+    if (mps == null) return "text-gray-300";
+
     const val = Number(mps);
-    if (val >= 90) return "#10b981";
-    if (val >= 75) return "#0097b2";
-    if (val >= 60) return "#f59e0b";
-    return "#ef4444";
+
+    if (val >= 90) return "#10b981"; // High Mastery
+    if (val >= 70) return "#0097b2"; // Moderately
+    if (val >= 50) return "#f59e0b"; // Average
+    if (val >= 20) return "#ff6b35"; // Low Mastery
+    return "#dc2626"; // No Mastery
   };
 
   const encodingStatus = subjects.map((subject) => {
@@ -330,13 +334,13 @@ const TeacherDashboard = () => {
         </div>
       </div>
 
-      {/* ── Quarter Progress ── */}
+      {/* ── Term Progress ── */}
       <div
         className="rounded-2xl p-5"
         style={{ background: "white", border: "1px solid rgba(0,151,178,0.1)" }}
       >
         <h2 className="text-base font-black text-[#242424] mb-4">
-          Quarter Progress
+          Term Progress
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {periods.map((period) => {
@@ -443,7 +447,7 @@ const TeacherDashboard = () => {
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 Class MPS per subject —{" "}
-                {activePeriod?.period_name || "No active quarter"}
+                {activePeriod?.period_name || "No active term"}
               </p>
             </div>
             <TrendingUp size={18} style={{ color: "#0097b2" }} />
@@ -452,7 +456,7 @@ const TeacherDashboard = () => {
           {barData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <TrendingUp size={28} className="mb-2 opacity-30" />
-              <p className="text-sm">No MPS data for active quarter yet.</p>
+              <p className="text-sm">No MPS data for active term yet.</p>
               <p className="text-xs mt-1">Encode scores to see the chart.</p>
             </div>
           ) : (
@@ -604,10 +608,11 @@ const TeacherDashboard = () => {
                 </div>
                 <div className="ml-auto flex flex-wrap gap-3">
                   {[
-                    { label: "≥90% Outstanding", color: "#10b981" },
-                    { label: "75-89% Satisfactory", color: "#0097b2" },
-                    { label: "60-74% Developing", color: "#f59e0b" },
-                    { label: "<60% Beginning", color: "#ef4444" },
+                    { label: "High Mastery (90–100%)", color: "#10b981" },
+                    { label: "Moderately (70–89%)", color: "#0097b2" },
+                    { label: "Average (50–69%)", color: "#f59e0b" },
+                    { label: "Low Mastery (20–49%)", color: "#ff6b35" },
+                    { label: "No Mastery (<20%)", color: "#dc2626" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1">
                       <div
@@ -770,7 +775,7 @@ const TeacherDashboard = () => {
                 <div className="text-right">
                   <p
                     className="text-2xl font-black"
-                    style={{ color: "#f97316" }}
+                    style={{ color: "#ff6b35" }}
                   >
                     {lowestSubject.class.mps}%
                   </p>
