@@ -13,7 +13,7 @@ const SchoolManagement = () => {
             School Management
           </h1>
           <p className="text-sm text-gray-400 mt-1">
-            Manage clusters and schools across Quezon Division
+            Manage clusters and schools across Tayabas Division
           </p>
         </div>
         <div className="flex gap-3">

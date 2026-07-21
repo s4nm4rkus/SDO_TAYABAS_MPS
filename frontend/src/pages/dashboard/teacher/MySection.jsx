@@ -838,7 +838,7 @@ const MySection = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Brgy. San Jose, Tiaong, Quezon"
+                  placeholder="e.g. Brgy. San Jose, Tiaong, Tayabas"
                   value={form.address}
                   onChange={(e) =>
                     setForm({ ...form, address: e.target.value })

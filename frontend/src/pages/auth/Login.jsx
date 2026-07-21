@@ -294,14 +294,14 @@ const Login = () => {
                 />
               </svg>
             </div>
-            <h1 className="shimmer-title text-2xl font-black">QUEZON MPS</h1>
+            <h1 className="shimmer-title text-2xl font-black">TAYABAS MPS</h1>
             <div className="flex items-center gap-2 mt-1">
               <div
                 className="h-px w-8 rounded-full"
                 style={{ background: "#0097b2" }}
               />
               <p className="text-xs font-medium" style={{ color: "#0097b2" }}>
-                Schools Division of Quezon
+                Schools Division of Tayabas
               </p>
               <div
                 className="h-px w-8 rounded-full"
@@ -432,7 +432,7 @@ const Login = () => {
             className="text-center text-xs mt-8"
             style={{ color: "rgba(36,36,36,0.4)" }}
           >
-            © {new Date().getFullYear()} DepEd Quezon Division
+            © {new Date().getFullYear()} DepEd Tayabas Division
           </p>
         </div>
       </div>

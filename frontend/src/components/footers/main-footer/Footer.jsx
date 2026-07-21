@@ -1,4 +1,4 @@
-import LogoSDO from "../../../assets/images/header logo/logo_sdo_quezon.png";
+import LogoSDO from "../../../assets/images/header logo/logo_sdo_Tayabas.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
@@ -10,7 +10,7 @@ function Footer() {
         <div className="flex items-center gap-4 md:w-80">
           <img
             src={LogoSDO}
-            alt="SDO Quezon"
+            alt="SDO Tayabas"
             className="h-logo-sm w-logo-sm object-contain mt-1"
           />
           <img
@@ -28,7 +28,7 @@ function Footer() {
         {/* Center Text - truly centered */}
         <div className="text-center flex-1 py-3 md:py-0">
           <p className="text-white text-sm font-semibold">
-            Schools Division of Quezon
+            Schools Division of Tayabas
           </p>
           <p className="text-white/70 text-xs mt-1">
             Department of Education — Republic of the Philippines
@@ -38,7 +38,7 @@ function Footer() {
         {/* Copyright - same fixed width as logos */}
         <div className="text-right md:w-80">
           <p className="text-white/60 text-xs">
-            © {new Date().getFullYear()} SDO Quezon
+            © {new Date().getFullYear()} SDO Tayabas
           </p>
           <p className="text-white/60 text-xs">All rights reserved</p>
         </div>
@@ -47,7 +47,7 @@ function Footer() {
       {/* Bottom Bar */}
       <div className="bg-black/20 text-center py-2">
         <p className="text-white/50 text-xs">
-          SDOQUEZONMPS — Learning Outcomes Assessment System
+          SDOTayabasMPS — Learning Outcomes Assessment System
         </p>
       </div>
     </footer>

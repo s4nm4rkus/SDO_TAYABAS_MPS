@@ -108,13 +108,13 @@ const MainDashboard = () => {
             <div className="badge-pill fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6">
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
               <span className="text-cyan-700 text-xs font-semibold tracking-widest uppercase">
-                Schools Division of Quezon
+                Schools Division of Tayabas City
               </span>
             </div>
 
             {/* Main Title */}
             <h1 className="shimmer-text text-6xl md:text-7xl lg:text-8xl font-black leading-none mb-4 tracking-tight text-shadow-sm">
-              QUEZON
+              TAYABAS
               <br />
               MPS
               <br />
@@ -138,7 +138,7 @@ const MainDashboard = () => {
             {/* Description */}
             <p className="fade-up-d3 text-gray-500 text-base md:text-lg max-w-lg leading-relaxed mb-10">
               A comprehensive monitoring system for tracking and evaluating Mean
-              Percentage Scores across all schools in the Division of Quezon.
+              Percentage Scores across all schools in the Division of Tayabas.
             </p>
 
             {/* Stat Cards */}
@@ -405,14 +405,14 @@ const MainDashboard = () => {
               Announcements
             </h2>
             <p className="text-gray-400 text-sm mt-2">
-              Stay updated with the latest news from SDO Quezon
+              Stay updated with the latest news from SDO Tayabas
             </p>
           </div>
 
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {/* Facebook Page */}
-            {/* <div
+            <div
               className="fade-up-d1 info-card shadow-lg"
               style={{ border: "2px solid rgba(0,151,178,0.2)" }}
             >
@@ -449,10 +449,10 @@ const MainDashboard = () => {
                   Follow us for the latest updates and announcements.
                 </p>
               </div>
-            </div> */}
+            </div>
 
             {/* Division Memorandum */}
-            {/* <div
+            <div
               className="fade-up-d2 info-card shadow-lg p-5"
               style={{ border: "2px solid rgba(139,92,246,0.2)" }}
             >
@@ -517,10 +517,10 @@ const MainDashboard = () => {
                   </div>
                 ))}
               </div>
-            </div> */}
+            </div>
 
             {/* Division Advisory */}
-            {/* <div
+            <div
               className="fade-up-d3 info-card shadow-lg p-5"
               style={{ border: "2px solid rgba(249,115,22,0.2)" }}
             >
@@ -587,10 +587,10 @@ const MainDashboard = () => {
                   </div>
                 ))}
               </div>
-            </div> */}
+            </div>
 
             {/* Feedback */}
-            {/* <div
+            <div
               className="fade-up-d4 info-card shadow-lg"
               style={{ border: "2px solid rgba(236,72,153,0.2)" }}
             >
@@ -633,7 +633,7 @@ const MainDashboard = () => {
                   Share your thoughts and help us improve our services.
                 </p>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
       </section>

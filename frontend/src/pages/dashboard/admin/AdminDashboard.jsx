@@ -177,7 +177,7 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
               <Building2 size={12} className="text-white" />
               <span className="text-xs text-white font-semibold">
-                DepEd Quezon Division
+                DepEd Tayabas Division
               </span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">

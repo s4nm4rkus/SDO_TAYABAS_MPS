@@ -343,7 +343,7 @@ exports.downloadStudentTemplate = async (req, res) => {
       "Dela Cruz",
       "Male",
       "2015-06-14",
-      "Brgy. San Jose, Tiaong, Quezon",
+      "Brgy. San Jose, Tiaong, Tayabas",
       "09171234567",
     ],
   ];

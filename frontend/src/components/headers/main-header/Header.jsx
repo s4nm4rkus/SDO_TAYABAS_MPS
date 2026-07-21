@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { LogIn } from "lucide-react";
-import LogoSDO from "../../../assets/images/header logo/logo_sdo_quezon.png";
+import LogoSDO from "../../../assets/images/header logo/logo_sdo_Tayabas.png";
 import LogoDeped from "../../../assets/images/header logo/logo_deped.png";
 import LogoBagongPil from "../../../assets/images/header logo/logo_bagong_pil.png";
 
@@ -41,8 +41,8 @@ function Header() {
           <div className="flex items-center gap-4 p-2 lg:w-80">
             <img
               src={LogoSDO}
-              alt="SDO Quezon"
-              className="h-logo-sm w-logo-sm lg:h-logo-xl lg:w-logo-xl object-contain mt-1"
+              alt="SDO Tayabas"
+              className="h-logo-sm w-logo-sm lg:h-logo-md lg:w-logo-md object-contain mt-1"
             />
             <img
               src={LogoBagongPil}
@@ -71,7 +71,7 @@ function Header() {
             <p
               className={`text-base font-light leading-tight transition-all duration-300 ${scrolled ? "text-white/85" : "text-[#242424]"}`}
             >
-              Schools Division of Quezon
+              Schools Division of Tayabas City
             </p>
           </div>
 
