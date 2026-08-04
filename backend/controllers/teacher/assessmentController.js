@@ -24,6 +24,21 @@ const getTeacherSection = async (teacher_id) => {
   return rows[0];
 };
 
+// Fixed 3 assessment slots per section + subject + grading period:
+// 1st Summative Test, 2nd Summative Test, Term/Quarter Examination.
+const MAX_ASSESSMENT_SLOTS = 3;
+const DEFAULT_SLOT_LABELS = {
+  1: "1st Summative Test",
+  2: "2nd Summative Test",
+  3: "Term Examination",
+};
+const defaultSlotLabel = (slot) =>
+  DEFAULT_SLOT_LABELS[slot] || `Assessment ${slot}`;
+const normalizeSlot = (assessment_no) => {
+  const n = Number(assessment_no);
+  return n >= 1 && n <= MAX_ASSESSMENT_SLOTS ? n : 1;
+};
+
 // GET subjects for teacher's grade level
 exports.getSubjects = async (req, res) => {
   try {
@@ -63,21 +78,75 @@ exports.getGradingPeriods = async (req, res) => {
   }
 };
 
-// GET or CREATE assessment for section + subject + quarter
+// GET the status of both assessment slots for a subject + quarter, so the
+// teacher can see which one(s) already have data before picking one to encode.
+exports.getAssessmentSlots = async (req, res) => {
+  try {
+    const section = await getTeacherSection(req.user.id);
+    const school_year_id = await getActiveYear();
+    const { subject_id, grading_period_id } = req.query;
+
+    if (!subject_id || !grading_period_id)
+      return res
+        .status(400)
+        .json({ message: "Subject and term are required." });
+
+    const [rows] = await db.promise().query(
+      `SELECT a.id, a.assessment_no, a.label, a.total_items,
+        COUNT(acs.id) AS encoded_count
+       FROM assessments a
+       LEFT JOIN assessment_scores acs ON acs.assessment_id = a.id
+       WHERE a.section_id = ? AND a.subject_id = ? AND a.grading_period_id = ? AND a.school_year_id = ?
+       GROUP BY a.id`,
+      [section.id, subject_id, grading_period_id, school_year_id],
+    );
+
+    const slots = Array.from({ length: MAX_ASSESSMENT_SLOTS }, (_, i) => {
+      const no = i + 1;
+      const existing = rows.find((r) => r.assessment_no === no);
+      return existing
+        ? {
+            assessment_no: no,
+            id: existing.id,
+            label: existing.label,
+            total_items: existing.total_items,
+            encoded_count: existing.encoded_count,
+            exists: true,
+          }
+        : {
+            assessment_no: no,
+            id: null,
+            label: defaultSlotLabel(no),
+            total_items: null,
+            encoded_count: 0,
+            exists: false,
+          };
+    });
+
+    res.json(slots);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET or CREATE assessment for section + subject + quarter + slot
 exports.getOrCreateAssessment = async (req, res) => {
   try {
     const section = await getTeacherSection(req.user.id);
     const school_year_id = await getActiveYear();
-    const { subject_id, grading_period_id, total_items } = req.body;
+    const { subject_id, grading_period_id, total_items, assessment_no, label } =
+      req.body;
 
     if (!subject_id || !grading_period_id || !total_items)
       return res.status(400).json({ message: "All fields are required." });
 
-    // Check if assessment already exists
+    const slot = normalizeSlot(assessment_no);
+
+    // Check if assessment already exists for this slot
     const [existing] = await db.promise().query(
       `SELECT * FROM assessments
-       WHERE section_id = ? AND subject_id = ? AND grading_period_id = ? AND school_year_id = ?`,
-      [section.id, subject_id, grading_period_id, school_year_id],
+       WHERE section_id = ? AND subject_id = ? AND grading_period_id = ? AND school_year_id = ? AND assessment_no = ?`,
+      [section.id, subject_id, grading_period_id, school_year_id, slot],
     );
 
     let assessment;
@@ -94,15 +163,28 @@ exports.getOrCreateAssessment = async (req, res) => {
           ]);
         assessment.total_items = total_items;
       }
+      // Allow renaming the slot (e.g. "Written Work") without losing data
+      if (label && label.trim() && label.trim() !== assessment.label) {
+        await db
+          .promise()
+          .query("UPDATE assessments SET label = ? WHERE id = ?", [
+            label.trim(),
+            assessment.id,
+          ]);
+        assessment.label = label.trim();
+      }
     } else {
+      const assessmentLabel = label?.trim() || defaultSlotLabel(slot);
       const [result] = await db.promise().query(
-        `INSERT INTO assessments (section_id, subject_id, grading_period_id, school_year_id, total_items)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO assessments (section_id, subject_id, grading_period_id, school_year_id, assessment_no, label, total_items)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           section.id,
           subject_id,
           grading_period_id,
           school_year_id,
+          slot,
+          assessmentLabel,
           total_items,
         ],
       );
@@ -175,20 +257,35 @@ exports.saveScores = async (req, res) => {
   }
 };
 
-// GET MPS report for teacher's section
+const computeMPS = (arr, totalItems) => {
+  if (!arr.length) return null;
+  const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+  return ((avg / totalItems) * 100).toFixed(2);
+};
+
+const computeSD = (arr) => {
+  if (!arr.length) return null;
+  const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+  const variance =
+    arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / arr.length;
+  return Math.sqrt(variance).toFixed(2);
+};
+
+// GET MPS report for teacher's section — one row per subject PER assessment slot
 exports.getMPSReport = async (req, res) => {
   try {
     const section = await getTeacherSection(req.user.id);
     const school_year_id = await getActiveYear();
     const { grading_period_id } = req.params;
 
-    // Get all assessments for this section and quarter
+    // Get all assessments (both slots) for this section and quarter
     const [assessments] = await db.promise().query(
-      `SELECT a.id, a.total_items, a.subject_id,
+      `SELECT a.id, a.total_items, a.subject_id, a.assessment_no, a.label,
         s.subject_name, s.subject_code
        FROM assessments a
        JOIN subjects s ON a.subject_id = s.id
-       WHERE a.section_id = ? AND a.grading_period_id = ? AND a.school_year_id = ?`,
+       WHERE a.section_id = ? AND a.grading_period_id = ? AND a.school_year_id = ?
+       ORDER BY s.subject_name ASC, a.assessment_no ASC`,
       [section.id, grading_period_id, school_year_id],
     );
 
@@ -206,44 +303,31 @@ exports.getMPSReport = async (req, res) => {
 
       const maleScores = scores
         .filter((s) => s.gender === "Male")
-        .map((s) => s.score);
+        .map((s) => Number(s.score));
       const femaleScores = scores
         .filter((s) => s.gender === "Female")
-        .map((s) => s.score);
-      const allScores = scores.map((s) => s.score);
-
-      const computeMPS = (arr) => {
-        if (!arr.length) return null;
-        const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
-        return ((avg / assessment.total_items) * 100).toFixed(2);
-      };
-
-      const computeSD = (arr) => {
-        if (!arr.length) return null;
-        const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
-        const variance =
-          arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
-          arr.length;
-        return Math.sqrt(variance).toFixed(2);
-      };
+        .map((s) => Number(s.score));
+      const allScores = scores.map((s) => Number(s.score));
 
       report.push({
         subject_id: assessment.subject_id,
         subject_name: assessment.subject_name,
         subject_code: assessment.subject_code,
+        assessment_no: assessment.assessment_no,
+        assessment_label: assessment.label,
         total_items: assessment.total_items,
         male: {
-          mps: computeMPS(maleScores),
+          mps: computeMPS(maleScores, assessment.total_items),
           sd: computeSD(maleScores),
           count: maleScores.length,
         },
         female: {
-          mps: computeMPS(femaleScores),
+          mps: computeMPS(femaleScores, assessment.total_items),
           sd: computeSD(femaleScores),
           count: femaleScores.length,
         },
         class: {
-          mps: computeMPS(allScores),
+          mps: computeMPS(allScores, assessment.total_items),
           sd: computeSD(allScores),
           count: allScores.length,
         },
@@ -260,7 +344,8 @@ exports.getMPSReport = async (req, res) => {
   }
 };
 
-// GET full MPS report for all quarters
+// GET full MPS report for all quarters — each subject gets one entry
+// per assessment slot (both slots always shown, even if not yet encoded).
 exports.getFullMPSReport = async (req, res) => {
   try {
     const section = await getTeacherSection(req.user.id);
@@ -285,21 +370,6 @@ exports.getFullMPSReport = async (req, res) => {
       [section.grade_level_id],
     );
 
-    const computeMPS = (scores, totalItems) => {
-      if (!scores.length) return null;
-      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-      return ((avg / totalItems) * 100).toFixed(2);
-    };
-
-    const computeSD = (scores) => {
-      if (!scores.length) return null;
-      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-      const variance =
-        scores.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
-        scores.length;
-      return Math.sqrt(variance).toFixed(2);
-    };
-
     // Build report per quarter
     const report = {};
 
@@ -307,64 +377,71 @@ exports.getFullMPSReport = async (req, res) => {
       const quarterData = [];
 
       for (const subject of subjects) {
-        // Get assessment for this section + subject + quarter
+        // Get all assessment slots for this section + subject + quarter
         const [assessments] = await db.promise().query(
-          `SELECT id, total_items FROM assessments
-           WHERE section_id = ? AND subject_id = ? AND grading_period_id = ? AND school_year_id = ?`,
+          `SELECT id, total_items, assessment_no, label FROM assessments
+           WHERE section_id = ? AND subject_id = ? AND grading_period_id = ? AND school_year_id = ?
+           ORDER BY assessment_no ASC`,
           [section.id, subject.id, period.id, school_year_id],
         );
 
-        if (!assessments.length) {
+        for (let slot = 1; slot <= MAX_ASSESSMENT_SLOTS; slot++) {
+          const assessment = assessments.find((a) => a.assessment_no === slot);
+
+          if (!assessment) {
+            quarterData.push({
+              subject_id: subject.id,
+              subject_name: subject.subject_name,
+              subject_code: subject.subject_code,
+              assessment_no: slot,
+              assessment_label: defaultSlotLabel(slot),
+              male: { mps: null, sd: null, count: 0 },
+              female: { mps: null, sd: null, count: 0 },
+              class: { mps: null, sd: null, count: 0 },
+            });
+            continue;
+          }
+
+          // Get scores with gender
+          const [scores] = await db.promise().query(
+            `SELECT acs.score, st.gender
+             FROM assessment_scores acs
+             JOIN students st ON acs.student_id = st.id
+             WHERE acs.assessment_id = ?`,
+            [assessment.id],
+          );
+
+          const maleScores = scores
+            .filter((s) => s.gender === "Male")
+            .map((s) => Number(s.score));
+          const femaleScores = scores
+            .filter((s) => s.gender === "Female")
+            .map((s) => Number(s.score));
+          const allScores = scores.map((s) => Number(s.score));
+
           quarterData.push({
             subject_id: subject.id,
             subject_name: subject.subject_name,
             subject_code: subject.subject_code,
-            male: { mps: null, sd: null, count: 0 },
-            female: { mps: null, sd: null, count: 0 },
-            class: { mps: null, sd: null, count: 0 },
+            assessment_no: slot,
+            assessment_label: assessment.label,
+            male: {
+              mps: computeMPS(maleScores, assessment.total_items),
+              sd: computeSD(maleScores),
+              count: maleScores.length,
+            },
+            female: {
+              mps: computeMPS(femaleScores, assessment.total_items),
+              sd: computeSD(femaleScores),
+              count: femaleScores.length,
+            },
+            class: {
+              mps: computeMPS(allScores, assessment.total_items),
+              sd: computeSD(allScores),
+              count: allScores.length,
+            },
           });
-          continue;
         }
-
-        const assessment = assessments[0];
-
-        // Get scores with gender
-        const [scores] = await db.promise().query(
-          `SELECT acs.score, st.gender
-           FROM assessment_scores acs
-           JOIN students st ON acs.student_id = st.id
-           WHERE acs.assessment_id = ?`,
-          [assessment.id],
-        );
-
-        const maleScores = scores
-          .filter((s) => s.gender === "Male")
-          .map((s) => Number(s.score));
-        const femaleScores = scores
-          .filter((s) => s.gender === "Female")
-          .map((s) => Number(s.score));
-        const allScores = scores.map((s) => Number(s.score));
-
-        quarterData.push({
-          subject_id: subject.id,
-          subject_name: subject.subject_name,
-          subject_code: subject.subject_code,
-          male: {
-            mps: computeMPS(maleScores, assessment.total_items),
-            sd: computeSD(maleScores),
-            count: maleScores.length,
-          },
-          female: {
-            mps: computeMPS(femaleScores, assessment.total_items),
-            sd: computeSD(femaleScores),
-            count: femaleScores.length,
-          },
-          class: {
-            mps: computeMPS(allScores, assessment.total_items),
-            sd: computeSD(allScores),
-            count: allScores.length,
-          },
-        });
       }
 
       report[period.id] = {

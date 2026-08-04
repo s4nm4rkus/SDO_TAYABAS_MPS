@@ -1,5 +1,5 @@
 import { API_URL } from "../../../config/api";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import {
   BookOpen,
   School,
@@ -32,6 +32,54 @@ const getMPSBg = (mps) => {
   if (val >= 50) return "rgba(245,158,11,0.08)";
   if (val >= 20) return "rgba(249,115,22,0.08)";
   return "rgba(239,68,68,0.08)";
+};
+
+// The backend now returns one row per subject PER assessment slot (1st
+// Summative Test / 2nd Summative Test / Term Examination), instead of one
+// row per subject. Group them back together here so the report can show
+// each subject's 3 assessments plus a computed subject average.
+const groupBySubject = (quarterData) => {
+  const groups = new Map();
+
+  quarterData.forEach((row) => {
+    if (!groups.has(row.subject_id)) {
+      groups.set(row.subject_id, {
+        subject_id: row.subject_id,
+        subject_name: row.subject_name,
+        subject_code: row.subject_code,
+        assessments: [],
+      });
+    }
+    groups.get(row.subject_id).assessments.push(row);
+  });
+
+  return Array.from(groups.values()).map((group) => {
+    const assessments = [...group.assessments].sort(
+      (a, b) => a.assessment_no - b.assessment_no,
+    );
+
+    const avgFor = (key) => {
+      const valid = assessments.filter((a) => a[key].mps !== null);
+      if (!valid.length) return { mps: null, sd: null };
+      const mps = (
+        valid.reduce((sum, a) => sum + Number(a[key].mps), 0) / valid.length
+      ).toFixed(2);
+      const sd = (
+        valid.reduce((sum, a) => sum + Number(a[key].sd || 0), 0) / valid.length
+      ).toFixed(2);
+      return { mps, sd };
+    };
+
+    return {
+      ...group,
+      assessments,
+      average: {
+        male: avgFor("male"),
+        female: avgFor("female"),
+        class: avgFor("class"),
+      },
+    };
+  });
 };
 
 const MPSReport = () => {
@@ -77,6 +125,7 @@ const MPSReport = () => {
             th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: center; }
             th { background: #f0f9ff; font-weight: bold; }
             td:first-child { text-align: left; }
+            tr.subject-average { font-weight: bold; background: #fafaff; }
             tr:last-child { font-weight: bold; background: #f8f8ff; }
             .header { margin-bottom: 16px; }
             .header h2 { margin: 0; font-size: 16px; }
@@ -95,6 +144,8 @@ const MPSReport = () => {
     const quarter = data.report[selectedPeriodId];
     if (!quarter) return;
 
+    const subjectGroups = groupBySubject(quarter.data);
+
     const rows = [
       [`MPS Report - ${quarter.period_name}`],
       [
@@ -105,6 +156,7 @@ const MPSReport = () => {
       [],
       [
         "Subject",
+        "Assessment",
         "Male MPS",
         "Male SD",
         "Female MPS",
@@ -114,22 +166,36 @@ const MPSReport = () => {
       ],
     ];
 
-    quarter.data.forEach((row) => {
+    subjectGroups.forEach((group) => {
+      group.assessments.forEach((a) => {
+        rows.push([
+          group.subject_name,
+          a.assessment_label,
+          a.male.mps ? `${a.male.mps}%` : "—",
+          a.male.sd ?? "—",
+          a.female.mps ? `${a.female.mps}%` : "—",
+          a.female.sd ?? "—",
+          a.class.mps ? `${a.class.mps}%` : "—",
+          a.class.sd ?? "—",
+        ]);
+      });
       rows.push([
-        row.subject_name,
-        row.male.mps ? `${row.male.mps}%` : "—",
-        row.male.sd ?? "—",
-        row.female.mps ? `${row.female.mps}%` : "—",
-        row.female.sd ?? "—",
-        row.class.mps ? `${row.class.mps}%` : "—",
-        row.class.sd ?? "—",
+        group.subject_name,
+        "Subject Average",
+        group.average.male.mps ? `${group.average.male.mps}%` : "—",
+        group.average.male.sd ?? "—",
+        group.average.female.mps ? `${group.average.female.mps}%` : "—",
+        group.average.female.sd ?? "—",
+        group.average.class.mps ? `${group.average.class.mps}%` : "—",
+        group.average.class.sd ?? "—",
       ]);
     });
 
-    // Average row
+    // Term average row (average of subject averages)
     const avg = computeAverages(quarter.data);
     rows.push([
-      "Average",
+      "Term Average",
+      "",
       avg.male.mps ? `${avg.male.mps}%` : "—",
       avg.male.sd ?? "—",
       avg.female.mps ? `${avg.female.mps}%` : "—",
@@ -147,23 +213,30 @@ const MPSReport = () => {
     a.click();
   };
 
-  // Compute averages for a term
+  // Term-level average, computed from each subject's average (not raw rows,
+  // since each subject now has up to 3 assessment rows).
   const computeAverages = (quarterData) => {
-    const validMale = quarterData.filter((r) => r.male.mps !== null);
-    const validFemale = quarterData.filter((r) => r.female.mps !== null);
-    const validClass = quarterData.filter((r) => r.class.mps !== null);
+    const subjectGroups = groupBySubject(quarterData);
+    const validMale = subjectGroups.filter((g) => g.average.male.mps !== null);
+    const validFemale = subjectGroups.filter(
+      (g) => g.average.female.mps !== null,
+    );
+    const validClass = subjectGroups.filter(
+      (g) => g.average.class.mps !== null,
+    );
 
     const avg = (arr, key) => {
       if (!arr.length) return null;
       return (
-        arr.reduce((sum, r) => sum + Number(r[key].mps), 0) / arr.length
+        arr.reduce((sum, g) => sum + Number(g.average[key].mps), 0) / arr.length
       ).toFixed(2);
     };
 
     const avgSD = (arr, key) => {
       if (!arr.length) return null;
       return (
-        arr.reduce((sum, r) => sum + Number(r[key].sd || 0), 0) / arr.length
+        arr.reduce((sum, g) => sum + Number(g.average[key].sd || 0), 0) /
+        arr.length
       ).toFixed(2);
     };
 
@@ -192,6 +265,9 @@ const MPSReport = () => {
     );
 
   const selectedQuarter = data.report[selectedPeriodId];
+  const subjectGroups = selectedQuarter
+    ? groupBySubject(selectedQuarter.data)
+    : [];
   const averages = selectedQuarter
     ? computeAverages(selectedQuarter.data)
     : null;
@@ -368,8 +444,17 @@ const MPSReport = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ background: "rgba(248,248,255,0.8)" }}>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                    <th
+                      rowSpan={2}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100 align-bottom"
+                    >
                       Learning Area
+                    </th>
+                    <th
+                      rowSpan={2}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100 align-bottom"
+                    >
+                      Assessment
                     </th>
                     {/* Male */}
                     <th
@@ -397,7 +482,6 @@ const MPSReport = () => {
                     </th>
                   </tr>
                   <tr style={{ background: "rgba(248,248,255,0.5)" }}>
-                    <th className="px-4 py-2 border-b border-gray-100"></th>
                     <th className="px-4 py-2 text-center text-xs text-gray-400 border-b border-gray-100">
                       MPS
                     </th>
@@ -419,81 +503,157 @@ const MPSReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedQuarter.data.map((row) => (
-                    <tr
-                      key={row.subject_id}
-                      className="border-t border-gray-50 hover:bg-gray-50/30 transition"
-                    >
-                      <td className="px-4 py-3 font-semibold text-[#242424]">
-                        {row.subject_name}
-                        <span className="ml-2 text-xs text-gray-400">
-                          ({row.subject_code})
-                        </span>
-                      </td>
+                  {subjectGroups.map((group) => (
+                    <Fragment key={group.subject_id}>
+                      {group.assessments.map((a, idx) => (
+                        <tr
+                          key={`${group.subject_id}-${a.assessment_no}`}
+                          className="border-t border-gray-50 hover:bg-gray-50/30 transition"
+                        >
+                          {idx === 0 && (
+                            <td
+                              rowSpan={group.assessments.length + 1}
+                              className="px-4 py-3 font-semibold text-[#242424] align-top"
+                            >
+                              {group.subject_name}
+                              <span className="block text-xs text-gray-400 mt-0.5">
+                                ({group.subject_code})
+                              </span>
+                            </td>
+                          )}
+                          <td className="px-4 py-3 text-xs text-gray-500">
+                            {a.assessment_label}
+                          </td>
 
-                      {/* Male */}
-                      <td className="px-4 py-3 text-center">
-                        {row.male.mps ? (
-                          <span
-                            className="text-xs font-semibold px-2 py-1 rounded-lg"
-                            style={{
-                              color: getMPSColor(row.male.mps),
-                              background: getMPSBg(row.male.mps),
-                            }}
-                          >
-                            {row.male.mps}%
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-500">
-                        {row.male.sd ?? "—"}
-                      </td>
+                          {/* Male */}
+                          <td className="px-4 py-3 text-center">
+                            {a.male.mps ? (
+                              <span
+                                className="text-xs font-semibold px-2 py-1 rounded-lg"
+                                style={{
+                                  color: getMPSColor(a.male.mps),
+                                  background: getMPSBg(a.male.mps),
+                                }}
+                              >
+                                {a.male.mps}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center text-xs text-gray-500">
+                            {a.male.sd ?? "—"}
+                          </td>
 
-                      {/* Female */}
-                      <td className="px-4 py-3 text-center">
-                        {row.female.mps ? (
-                          <span
-                            className="text-xs font-semibold px-2 py-1 rounded-lg"
-                            style={{
-                              color: getMPSColor(row.female.mps),
-                              background: getMPSBg(row.female.mps),
-                            }}
-                          >
-                            {row.female.mps}%
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-500">
-                        {row.female.sd ?? "—"}
-                      </td>
+                          {/* Female */}
+                          <td className="px-4 py-3 text-center">
+                            {a.female.mps ? (
+                              <span
+                                className="text-xs font-semibold px-2 py-1 rounded-lg"
+                                style={{
+                                  color: getMPSColor(a.female.mps),
+                                  background: getMPSBg(a.female.mps),
+                                }}
+                              >
+                                {a.female.mps}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center text-xs text-gray-500">
+                            {a.female.sd ?? "—"}
+                          </td>
 
-                      {/* Class */}
-                      <td className="px-4 py-3 text-center">
-                        {row.class.mps ? (
-                          <span
-                            className="text-xs font-semibold px-2 py-1 rounded-lg"
-                            style={{
-                              color: getMPSColor(row.class.mps),
-                              background: getMPSBg(row.class.mps),
-                            }}
-                          >
-                            {row.class.mps}%
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-500">
-                        {row.class.sd ?? "—"}
-                      </td>
-                    </tr>
+                          {/* Class */}
+                          <td className="px-4 py-3 text-center">
+                            {a.class.mps ? (
+                              <span
+                                className="text-xs font-semibold px-2 py-1 rounded-lg"
+                                style={{
+                                  color: getMPSColor(a.class.mps),
+                                  background: getMPSBg(a.class.mps),
+                                }}
+                              >
+                                {a.class.mps}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center text-xs text-gray-500">
+                            {a.class.sd ?? "—"}
+                          </td>
+                        </tr>
+                      ))}
+
+                      {/* Subject Average sub-row */}
+                      <tr
+                        className="subject-average border-t border-gray-100"
+                        style={{ background: "rgba(0,151,178,0.03)" }}
+                      >
+                        <td className="px-4 py-2 text-xs font-bold text-gray-500">
+                          Subject Average
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {group.average.male.mps ? (
+                            <span
+                              className="text-xs font-bold px-2 py-1 rounded-lg"
+                              style={{
+                                color: getMPSColor(group.average.male.mps),
+                                background: getMPSBg(group.average.male.mps),
+                              }}
+                            >
+                              {group.average.male.mps}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-center text-xs font-semibold text-gray-500">
+                          {group.average.male.sd ?? "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {group.average.female.mps ? (
+                            <span
+                              className="text-xs font-bold px-2 py-1 rounded-lg"
+                              style={{
+                                color: getMPSColor(group.average.female.mps),
+                                background: getMPSBg(group.average.female.mps),
+                              }}
+                            >
+                              {group.average.female.mps}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-center text-xs font-semibold text-gray-500">
+                          {group.average.female.sd ?? "—"}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {group.average.class.mps ? (
+                            <span
+                              className="text-xs font-bold px-2 py-1 rounded-lg"
+                              style={{
+                                color: getMPSColor(group.average.class.mps),
+                                background: getMPSBg(group.average.class.mps),
+                              }}
+                            >
+                              {group.average.class.mps}%
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-center text-xs font-semibold text-gray-500">
+                          {group.average.class.sd ?? "—"}
+                        </td>
+                      </tr>
+                    </Fragment>
                   ))}
 
-                  {/* Average Row */}
+                  {/* Term Average Row */}
                   {averages && (
                     <tr
                       style={{
@@ -501,8 +661,11 @@ const MPSReport = () => {
                         borderTop: "2px solid rgba(0,151,178,0.15)",
                       }}
                     >
-                      <td className="px-4 py-3 font-black text-[#242424] text-sm">
-                        Average
+                      <td
+                        colSpan={2}
+                        className="px-4 py-3 font-black text-[#242424] text-sm"
+                      >
+                        Term Average
                       </td>
 
                       {/* Male Average */}
@@ -615,17 +778,18 @@ const MPSReport = () => {
         </div>
       )}
 
-      {/* Best & Lowest */}
+      {/* Best & Lowest — based on each subject's average across its
+          encoded assessments */}
       {(() => {
-        const withData = selectedQuarter.data.filter(
-          (r) => r.class.mps !== null,
+        const withData = subjectGroups.filter(
+          (g) => g.average.class.mps !== null,
         );
         if (!withData.length) return null;
         const best = withData.reduce((a, b) =>
-          Number(a.class.mps) > Number(b.class.mps) ? a : b,
+          Number(a.average.class.mps) > Number(b.average.class.mps) ? a : b,
         );
         const lowest = withData.reduce((a, b) =>
-          Number(a.class.mps) < Number(b.class.mps) ? a : b,
+          Number(a.average.class.mps) < Number(b.average.class.mps) ? a : b,
         );
         const isSame = best.subject_id === lowest.subject_id;
 
@@ -643,7 +807,7 @@ const MPSReport = () => {
                 <span className="text-xl shrink-0">🏆</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                    Highest MPS
+                    Highest MPS (avg. of encoded assessments)
                   </p>
                   <p className="text-xs font-black text-[#242424] truncate">
                     {best.subject_name}
@@ -654,7 +818,7 @@ const MPSReport = () => {
                   className="text-lg font-black shrink-0"
                   style={{ color: "#10b981" }}
                 >
-                  {best.class.mps}%
+                  {best.average.class.mps}%
                 </p>
               </div>
 
@@ -670,7 +834,7 @@ const MPSReport = () => {
                   <span className="text-xl shrink-0">⚠️</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                      Needs Attention
+                      Needs Attention (avg. of encoded assessments)
                     </p>
                     <p className="text-xs font-black text-[#242424] truncate">
                       {lowest.subject_name}
@@ -683,7 +847,7 @@ const MPSReport = () => {
                     className="text-lg font-black shrink-0"
                     style={{ color: "#ff6b35" }}
                   >
-                    {lowest.class.mps}%
+                    {lowest.average.class.mps}%
                   </p>
                 </div>
               )}

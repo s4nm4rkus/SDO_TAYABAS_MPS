@@ -7,6 +7,7 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
+  ListChecks,
 } from "lucide-react";
 import axios from "axios";
 
@@ -24,6 +25,11 @@ const MPSEncoding = () => {
   const [selectedPeriod, setSelectedPeriod] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [totalItems, setTotalItems] = useState("");
+
+  // Assessment slots (fixed 3 per subject + term: 1st/2nd Summative Test, Term Exam)
+  const [slots, setSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
   // Assessment + scores
   const [assessment, setAssessment] = useState(null);
@@ -61,10 +67,49 @@ const MPSEncoding = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load assessment when subject + period + total_items are set
+  // Whenever term or subject changes, fetch the status of both assessment slots
+  useEffect(() => {
+    setSelectedSlot(null);
+    setSlots([]);
+    setTotalItems("");
+    setError("");
+
+    if (!selectedSubject || !selectedPeriod) return;
+
+    const fetchSlots = async () => {
+      setLoadingSlots(true);
+      try {
+        const res = await axios.get(`${BASE}/slots`, {
+          headers,
+          params: {
+            subject_id: selectedSubject.id,
+            grading_period_id: selectedPeriod.id,
+          },
+        });
+        setSlots(res.data);
+      } catch (err) {
+        console.error("Failed to fetch assessment slots:", err);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+    fetchSlots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSubject, selectedPeriod]);
+
+  const handleSelectSlot = (slot) => {
+    setSelectedSlot(slot.assessment_no);
+    // Prefill total items if this slot already has an assessment
+    setTotalItems(slot.exists ? String(slot.total_items) : "");
+    setError("");
+  };
+
+  // Load assessment when subject + period + slot + total_items are set
   const handleLoadAssessment = async () => {
-    if (!selectedSubject || !selectedPeriod || !totalItems)
-      return setError("Please select subject, term and enter total items.");
+    if (!selectedSubject || !selectedPeriod || !selectedSlot || !totalItems)
+      return setError(
+        "Please select subject, term, assessment and enter total items.",
+      );
     if (Number(totalItems) < 1)
       return setError("Total items must be at least 1.");
 
@@ -76,6 +121,7 @@ const MPSEncoding = () => {
           subject_id: selectedSubject.id,
           grading_period_id: selectedPeriod.id,
           total_items: Number(totalItems),
+          assessment_no: selectedSlot,
         },
         { headers },
       );
@@ -136,6 +182,8 @@ const MPSEncoding = () => {
 
   const handleReset = () => {
     setSelectedSubject(null);
+    setSelectedSlot(null);
+    setSlots([]);
     setTotalItems("");
     setAssessment(null);
     setStudents([]);
@@ -198,6 +246,7 @@ const MPSEncoding = () => {
   const encodedCount = students.filter(
     (s) => scores[s.id] !== "" && scores[s.id] !== undefined,
   ).length;
+  const selectedSlotData = slots.find((s) => s.assessment_no === selectedSlot);
 
   if (loading)
     return (
@@ -243,11 +292,11 @@ const MPSEncoding = () => {
         }}
       />
 
-      {/* Step 1 — Select Term + Subject + Total Items */}
+      {/* Step 1 — Select Term + Subject + Assessment + Total Items */}
       {!assessment ? (
         <div className="flex flex-col gap-5">
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Step 1 — Select Term, Subject and Total Items
+            Step 1 — Select Term, Subject, Assessment and Total Items
           </p>
 
           {/* Term Tabs */}
@@ -354,30 +403,113 @@ const MPSEncoding = () => {
             )}
           </div>
 
+          {/* Assessment Slot Picker — fixed 3 slots per subject/term */}
+          {selectedSubject && selectedPeriod && (
+            <div>
+              <label
+                className="text-xs font-semibold uppercase tracking-wider mb-2 block"
+                style={{ color: "#0097b2" }}
+              >
+                Assessment
+              </label>
+              {loadingSlots ? (
+                <p className="text-xs text-gray-400">
+                  Checking existing assessments...
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.assessment_no}
+                      onClick={() => handleSelectSlot(slot)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
+                      style={
+                        selectedSlot === slot.assessment_no
+                          ? {
+                              background:
+                                "linear-gradient(135deg, #0097b2, #004385)",
+                              color: "white",
+                              boxShadow: "0 4px 12px rgba(0,151,178,0.3)",
+                            }
+                          : {
+                              background: "white",
+                              color: "#242424",
+                              border: "1px solid rgba(0,151,178,0.2)",
+                            }
+                      }
+                    >
+                      <ListChecks size={14} />
+                      {slot.label}
+                      {slot.exists ? (
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded-full"
+                          style={
+                            selectedSlot === slot.assessment_no
+                              ? {
+                                  background: "rgba(255,255,255,0.25)",
+                                  color: "white",
+                                }
+                              : {
+                                  background: "rgba(16,185,129,0.1)",
+                                  color: "#10b981",
+                                }
+                          }
+                        >
+                          {slot.encoded_count} encoded
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded-full"
+                          style={
+                            selectedSlot === slot.assessment_no
+                              ? {
+                                  background: "rgba(255,255,255,0.2)",
+                                  color: "white",
+                                }
+                              : {
+                                  background: "rgba(0,0,0,0.04)",
+                                  color: "#9ca3af",
+                                }
+                          }
+                        >
+                          Not started
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Total Items */}
-          <div className="max-w-xs">
-            <label
-              className="text-xs font-semibold uppercase tracking-wider mb-2 block"
-              style={{ color: "#0097b2" }}
-            >
-              Total Items (Max Score)
-            </label>
-            <input
-              type="number"
-              placeholder="e.g. 60"
-              min="1"
-              value={totalItems}
-              onChange={(e) => setTotalItems(e.target.value)}
-              className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
-              style={{
-                background: "white",
-                border: "1px solid rgba(0,151,178,0.2)",
-              }}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              The maximum possible score for this assessment.
-            </p>
-          </div>
+          {selectedSlot && (
+            <div className="max-w-xs">
+              <label
+                className="text-xs font-semibold uppercase tracking-wider mb-2 block"
+                style={{ color: "#0097b2" }}
+              >
+                Total Items (Max Score)
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 60"
+                min="1"
+                value={totalItems}
+                onChange={(e) => setTotalItems(e.target.value)}
+                className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+                style={{
+                  background: "white",
+                  border: "1px solid rgba(0,151,178,0.2)",
+                }}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                {selectedSlotData?.exists
+                  ? "This assessment already has scores encoded — changing this will rescale the % column."
+                  : "The maximum possible score for this assessment."}
+              </p>
+            </div>
+          )}
 
           {/* Error */}
           {error && (
@@ -397,7 +529,12 @@ const MPSEncoding = () => {
           <div>
             <button
               onClick={handleLoadAssessment}
-              disabled={!selectedPeriod || !selectedSubject || !totalItems}
+              disabled={
+                !selectedPeriod ||
+                !selectedSubject ||
+                !selectedSlot ||
+                !totalItems
+              }
               className="flex items-center gap-2 px-6 py-2.5 text-white text-sm rounded-xl transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(135deg, #0097b2, #004385)",
@@ -428,6 +565,10 @@ const MPSEncoding = () => {
             <span style={{ color: "#0097b2" }}>
               {selectedSubject?.subject_name}
             </span>
+            <ChevronRight size={11} />
+            <span style={{ color: "#0097b2" }}>
+              {assessment?.label || `Assessment ${selectedSlot}`}
+            </span>
           </div>
 
           {/* Assessment Info */}
@@ -435,6 +576,10 @@ const MPSEncoding = () => {
             {[
               { label: "Term", value: selectedPeriod?.period_name },
               { label: "Subject", value: selectedSubject?.subject_name },
+              {
+                label: "Assessment",
+                value: assessment?.label || `Assessment ${selectedSlot}`,
+              },
               { label: "Total Items", value: assessment?.total_items },
               { label: "Students", value: students.length },
               {

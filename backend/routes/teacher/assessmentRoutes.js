@@ -17,6 +17,7 @@ router.post(
   ...teacherOnly,
   assessmentController.getOrCreateAssessment,
 );
+router.get("/slots", ...teacherOnly, assessmentController.getAssessmentSlots);
 router.post("/scores", ...teacherOnly, assessmentController.saveScores);
 router.get(
   "/mps/:grading_period_id",

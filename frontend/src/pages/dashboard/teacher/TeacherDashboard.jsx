@@ -18,6 +18,53 @@ import axios from "axios";
 const STUDENTS_API = API_URL + "/api/students";
 const ASSESSMENTS_API = API_URL + "/api/assessments";
 
+// The backend returns one row per subject PER assessment slot (1st
+// Summative Test / 2nd Summative Test / Term Examination). Group them
+// back into one entry per subject with an averaged MPS across whichever
+// assessments have been encoded, so the chart and Best/Lowest cards still
+// show one bar per subject instead of up to 3 overlapping ones.
+const groupBySubjectAverage = (quarterData) => {
+  const groups = new Map();
+
+  quarterData.forEach((row) => {
+    if (!groups.has(row.subject_id)) {
+      groups.set(row.subject_id, {
+        subject_id: row.subject_id,
+        subject_name: row.subject_name,
+        subject_code: row.subject_code,
+        assessments: [],
+      });
+    }
+    groups.get(row.subject_id).assessments.push(row);
+  });
+
+  return Array.from(groups.values()).map((group) => {
+    const avgFor = (key) => {
+      const valid = group.assessments.filter((a) => a[key].mps !== null);
+      if (!valid.length) return { mps: null, sd: null };
+      const mps = (
+        valid.reduce((sum, a) => sum + Number(a[key].mps), 0) / valid.length
+      ).toFixed(2);
+      const sd = (
+        valid.reduce((sum, a) => sum + Number(a[key].sd || 0), 0) / valid.length
+      ).toFixed(2);
+      return { mps, sd };
+    };
+
+    return {
+      subject_id: group.subject_id,
+      subject_name: group.subject_name,
+      subject_code: group.subject_code,
+      encodedSlots: group.assessments.filter((a) => a.class.mps !== null)
+        .length,
+      totalSlots: group.assessments.length,
+      male: avgFor("male"),
+      female: avgFor("female"),
+      class: avgFor("class"),
+    };
+  });
+};
+
 const TeacherDashboard = () => {
   const [activeYear, setActiveYear] = useState(null);
   const [section, setSection] = useState(null);
@@ -118,17 +165,29 @@ const TeacherDashboard = () => {
     return "#dc2626"; // No Mastery
   };
 
+  // Per-subject averages across whichever of the 3 assessment slots have
+  // been encoded for the active term — used for the chart and Best/Lowest.
+  const subjectAverages = activeReport?.data
+    ? groupBySubjectAverage(activeReport.data)
+    : [];
+
   const encodingStatus = subjects.map((subject) => {
-    const hasData = activeReport?.data?.find(
-      (r) => r.subject_id === subject.id && r.class.mps !== null,
-    );
-    return { ...subject, encoded: !!hasData };
+    const avg = subjectAverages.find((g) => g.subject_id === subject.id);
+    const encodedSlots = avg?.encodedSlots || 0;
+    const totalSlots = avg?.totalSlots || 3; // fixed 3 slots per subject/quarter
+    return {
+      ...subject,
+      encodedSlots,
+      totalSlots,
+      encoded: encodedSlots > 0,
+      fullyEncoded: totalSlots > 0 && encodedSlots === totalSlots,
+    };
   });
 
   const encodedCount = encodingStatus.filter((s) => s.encoded).length;
   const male = students.filter((s) => s.gender === "Male").length;
   const female = students.filter((s) => s.gender === "Female").length;
-  const barData = activeReport?.data?.filter((r) => r.class.mps !== null) || [];
+  const barData = subjectAverages.filter((g) => g.class.mps !== null);
 
   const bestSubject = barData.length
     ? barData.reduce((a, b) =>
@@ -347,9 +406,12 @@ const TeacherDashboard = () => {
             const isActive = !!period.is_active;
             const quarterData = report?.report?.[period.id]?.data || [];
             const hasData = quarterData.some((r) => r.class.mps !== null);
-            const encodedSubjects = quarterData.filter(
+            // Progress is now tracked per assessment slot, not per subject —
+            // each subject has up to 3 slots (1st/2nd Summative, Term Exam).
+            const encodedAssessments = quarterData.filter(
               (r) => r.class.mps !== null,
             ).length;
+            const totalAssessments = quarterData.length || subjects.length * 3;
             const isPast = !isActive && hasData;
             const isUpcoming = !isActive && !hasData;
 
@@ -398,8 +460,8 @@ const TeacherDashboard = () => {
                       className="h-full rounded-full transition-all duration-700"
                       style={{
                         width:
-                          subjects.length > 0
-                            ? `${(encodedSubjects / subjects.length) * 100}%`
+                          totalAssessments > 0
+                            ? `${(encodedAssessments / totalAssessments) * 100}%`
                             : "0%",
                         background: isActive
                           ? "linear-gradient(135deg, #0097b2, #004385)"
@@ -421,7 +483,7 @@ const TeacherDashboard = () => {
                   >
                     {isUpcoming
                       ? "Not started"
-                      : `${encodedSubjects}/${subjects.length} subjects`}
+                      : `${encodedAssessments}/${totalAssessments} assessments`}
                   </p>
                 </div>
               </div>
@@ -446,7 +508,7 @@ const TeacherDashboard = () => {
                 MPS Overview
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                Class MPS per subject —{" "}
+                Class MPS per subject (avg. of encoded assessments) —{" "}
                 {activePeriod?.period_name || "No active term"}
               </p>
             </div>
@@ -526,6 +588,10 @@ const TeacherDashboard = () => {
                                   Female: {femaleMps}%
                                 </span>
                               )}
+                              <span className="text-white/50">
+                                {row.encodedSlots}/{row.totalSlots} assessments
+                                encoded
+                              </span>
                               <div
                                 className="absolute top-full left-1/2 -translate-x-1/2
                                 border-4 border-transparent border-t-[#242424]"
@@ -541,7 +607,7 @@ const TeacherDashboard = () => {
                               className="flex items-end justify-center gap-0.5 w-full"
                               style={{ height: "140px" }}
                             >
-                              {maleMps && (
+                              {/* {maleMps && (
                                 <div
                                   className="flex-1 rounded-t-md transition-all duration-700 min-w-0"
                                   style={{
@@ -550,7 +616,7 @@ const TeacherDashboard = () => {
                                     maxWidth: "15%",
                                   }}
                                 />
-                              )}
+                              )} */}
                               <div
                                 className="rounded-t-md transition-all duration-700 min-w-0"
                                 style={{
@@ -561,7 +627,7 @@ const TeacherDashboard = () => {
                                     maleMps || femaleMps ? "40%" : "60%",
                                 }}
                               />
-                              {femaleMps && (
+                              {/* {femaleMps && (
                                 <div
                                   className="flex-1 rounded-t-md transition-all duration-700 min-w-0"
                                   style={{
@@ -570,7 +636,7 @@ const TeacherDashboard = () => {
                                     maxWidth: "15%",
                                   }}
                                 />
-                              )}
+                              )} */}
                             </div>
                             <span className="text-xs font-semibold text-gray-500 truncate w-full text-center mt-1">
                               {row.subject_code}
@@ -585,13 +651,13 @@ const TeacherDashboard = () => {
 
               {/* Legend */}
               <div className="flex flex-wrap gap-4 pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-1.5">
+                {/* <div className="flex items-center gap-1.5">
                   <div
                     className="w-3 h-3 rounded-sm"
                     style={{ background: "rgba(59,130,246,0.6)" }}
                   />
                   <span className="text-xs text-gray-400">Male</span>
-                </div>
+                </div> */}
                 <div className="flex items-center gap-1.5">
                   <div
                     className="w-3 h-3 rounded-sm"
@@ -599,13 +665,13 @@ const TeacherDashboard = () => {
                   />
                   <span className="text-xs text-gray-400">Class MPS</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                {/* <div className="flex items-center gap-1.5">
                   <div
                     className="w-3 h-3 rounded-sm"
                     style={{ background: "rgba(236,72,153,0.6)" }}
                   />
                   <span className="text-xs text-gray-400">Female</span>
-                </div>
+                </div> */}
                 <div className="ml-auto flex flex-wrap gap-3">
                   {[
                     { label: "High Mastery (90–100%)", color: "#10b981" },
@@ -644,7 +710,7 @@ const TeacherDashboard = () => {
                 Encoding Status
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
-                {encodedCount}/{subjects.length} subjects encoded
+                {encodedCount}/{subjects.length} subjects started
               </p>
             </div>
             <ClipboardList size={18} style={{ color: "#0097b2" }} />
@@ -679,16 +745,27 @@ const TeacherDashboard = () => {
                   key={subject.id}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition"
                   style={{
-                    background: subject.encoded
+                    background: subject.fullyEncoded
                       ? "rgba(16,185,129,0.06)"
-                      : "rgba(248,248,255,0.8)",
-                    border: `1px solid ${subject.encoded ? "rgba(16,185,129,0.2)" : "rgba(0,0,0,0.06)"}`,
+                      : subject.encoded
+                        ? "rgba(245,158,11,0.06)"
+                        : "rgba(248,248,255,0.8)",
+                    border: `1px solid ${
+                      subject.fullyEncoded
+                        ? "rgba(16,185,129,0.2)"
+                        : subject.encoded
+                          ? "rgba(245,158,11,0.2)"
+                          : "rgba(0,0,0,0.06)"
+                    }`,
                   }}
                 >
-                  {subject.encoded ? (
+                  {subject.fullyEncoded ? (
                     <CheckCircle size={15} style={{ color: "#10b981" }} />
                   ) : (
-                    <AlertCircle size={15} className="text-gray-300" />
+                    <AlertCircle
+                      size={15}
+                      style={{ color: subject.encoded ? "#f59e0b" : "#d1d5db" }}
+                    />
                   )}
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-[#242424] leading-none">
@@ -696,9 +773,16 @@ const TeacherDashboard = () => {
                     </p>
                     <p
                       className="text-xs mt-0.5"
-                      style={{ color: subject.encoded ? "#10b981" : "#9ca3af" }}
+                      style={{
+                        color: subject.fullyEncoded
+                          ? "#10b981"
+                          : subject.encoded
+                            ? "#f59e0b"
+                            : "#9ca3af",
+                      }}
                     >
-                      {subject.encoded ? "Scores encoded" : "Not yet encoded"}
+                      {subject.encodedSlots}/{subject.totalSlots} assessments
+                      encoded
                     </p>
                   </div>
                   <span className="text-xs font-bold text-gray-400">
