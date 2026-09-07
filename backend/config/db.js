@@ -10,12 +10,17 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
-// Optional: quick sanity check on startup
+// Sanity check + confirm which DB we're actually connected to
 db.getConnection((err, connection) => {
   if (err) console.error("MySQL Pool Connection Failed:", err);
   else {
-    console.log("MySQL Pool Connected");
-    connection.release();
+    connection.query(
+      "SELECT DATABASE() AS db, @@hostname AS host",
+      (err, rows) => {
+        if (!err) console.log("Connected to DB:", rows[0]);
+        connection.release();
+      },
+    );
   }
 });
 
