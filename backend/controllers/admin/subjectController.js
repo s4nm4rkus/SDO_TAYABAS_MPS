@@ -60,11 +60,30 @@ exports.updateSubject = (req, res) => {
   );
 };
 
-// Delete subject
-exports.deleteSubject = (req, res) => {
+exports.deleteSubject = async (req, res) => {
   const { id } = req.params;
-  db.query("DELETE FROM subjects WHERE id = ?", [id], (err) => {
-    if (err) return res.status(500).json({ message: "DB error", error: err });
-    res.json({ message: "Subject deleted successfully" });
-  });
+  try {
+    const [assessments] = await db
+      .promise()
+      .query("SELECT COUNT(*) AS count FROM assessments WHERE subject_id = ?", [
+        id,
+      ]);
+
+    if (assessments[0].count > 0) {
+      return res.status(400).json({
+        message: `Cannot delete this subject — ${assessments[0].count} assessment record(s) still reference it.`,
+      });
+    }
+
+    const [result] = await db
+      .promise()
+      .query("DELETE FROM subjects WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0)
+      return res.status(404).json({ message: "Subject not found." });
+
+    res.json({ message: "Subject deleted successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
