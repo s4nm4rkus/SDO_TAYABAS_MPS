@@ -62,28 +62,55 @@ exports.updateSubject = (req, res) => {
 
 exports.deleteSubject = async (req, res) => {
   const { id } = req.params;
-  try {
-    const [assessments] = await db
-      .promise()
-      .query("SELECT COUNT(*) AS count FROM assessments WHERE subject_id = ?", [
-        id,
-      ]);
+  const force = req.query.force === "true";
 
-    if (assessments[0].count > 0) {
-      return res.status(400).json({
-        message: `Cannot delete this subject — ${assessments[0].count} assessment record(s) still reference it.`,
+  const connection = await db.promise().getConnection();
+  try {
+    const [assessments] = await connection.query(
+      "SELECT COUNT(*) AS count FROM assessments WHERE subject_id = ?",
+      [id],
+    );
+    const count = assessments[0].count;
+
+    if (count > 0 && !force) {
+      connection.release();
+      return res.status(409).json({
+        message: `This subject has ${count} assessment record(s) linked to it.`,
+        requiresConfirmation: true,
+        dependentCount: count,
       });
     }
 
-    const [result] = await db
-      .promise()
-      .query("DELETE FROM subjects WHERE id = ?", [id]);
+    await connection.beginTransaction();
 
-    if (result.affectedRows === 0)
+    if (count > 0) {
+      await connection.query("DELETE FROM assessments WHERE subject_id = ?", [
+        id,
+      ]);
+    }
+
+    const [result] = await connection.query(
+      "DELETE FROM subjects WHERE id = ?",
+      [id],
+    );
+
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ message: "Subject not found." });
+    }
 
-    res.json({ message: "Subject deleted successfully." });
+    await connection.commit();
+    connection.release();
+    res.json({
+      message:
+        count > 0
+          ? `Subject deleted along with ${count} assessment record(s).`
+          : "Subject deleted successfully.",
+    });
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     res.status(500).json({ message: err.message });
   }
 };

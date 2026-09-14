@@ -95,25 +95,51 @@ exports.updateCluster = async (req, res) => {
 
 exports.deleteCluster = async (req, res) => {
   const { id } = req.params;
-  try {
-    const [users] = await db
-      .promise()
-      .query("SELECT id, fullname, role FROM users WHERE cluster_id = ?", [id]);
+  const force = req.query.force === "true";
 
-    if (users.length) {
-      return res.status(400).json({
-        message: `Cannot delete this cluster — ${users.length} user(s) are still assigned to it. Please reassign them first.`,
+  const connection = await db.promise().getConnection();
+  try {
+    const [users] = await connection.query(
+      "SELECT id, fullname, role FROM users WHERE cluster_id = ?",
+      [id],
+    );
+
+    if (users.length && !force) {
+      connection.release();
+      return res.status(409).json({
+        message: `${users.length} user(s) are still assigned to this cluster.`,
+        requiresConfirmation: true,
         users,
       });
     }
 
-    await db
-      .promise()
-      .query("UPDATE schools SET cluster_id = NULL WHERE cluster_id = ?", [id]);
-    await db.promise().query("DELETE FROM clusters WHERE id = ?", [id]);
+    await connection.beginTransaction();
 
-    res.json({ message: "Cluster deleted successfully." });
+    if (users.length) {
+      // Reassign instead of delete — losing a supervisor account is
+      // destructive in a different way than losing an assessment row.
+      await connection.query(
+        "UPDATE users SET cluster_id = NULL WHERE cluster_id = ?",
+        [id],
+      );
+    }
+
+    await connection.query(
+      "UPDATE schools SET cluster_id = NULL WHERE cluster_id = ?",
+      [id],
+    );
+    await connection.query("DELETE FROM clusters WHERE id = ?", [id]);
+
+    await connection.commit();
+    connection.release();
+    res.json({
+      message: users.length
+        ? `Cluster deleted. ${users.length} user(s) were unassigned from it.`
+        : "Cluster deleted successfully.",
+    });
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     res.status(500).json({ message: err.message });
   }
 };

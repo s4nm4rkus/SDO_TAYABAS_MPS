@@ -82,6 +82,8 @@ const SchoolManagementCards = () => {
   const [schoolRows, setSchoolRows] = useState([emptySchoolRow()]);
   const [clusterConfirm, setClusterConfirm] = useState(false);
   const [deleteClusterModal, setDeleteClusterModal] = useState(null);
+  const [clusterDeleteWarning, setClusterDeleteWarning] = useState(null);
+  const [clusterDeleteLoading, setClusterDeleteLoading] = useState(false);
 
   // School modal
   const [schoolModal, setSchoolModal] = useState(null);
@@ -238,11 +240,13 @@ const SchoolManagementCards = () => {
     }
   };
 
-  const handleDeleteCluster = async () => {
+  const handleDeleteCluster = async (force = false) => {
+    setClusterDeleteLoading(true);
     try {
-      await axios.delete(`${CLUSTERS_API}/${deleteClusterModal.id}`, {
-        headers,
-      });
+      await axios.delete(
+        `${CLUSTERS_API}/${deleteClusterModal.id}${force ? "?force=true" : ""}`,
+        { headers },
+      );
       await fetchClusters();
       await fetchUnassignedCount();
       if (selectedCluster?.id === deleteClusterModal.id) {
@@ -250,9 +254,25 @@ const SchoolManagementCards = () => {
         setSchools([]);
       }
       setDeleteClusterModal(null);
+      setClusterDeleteWarning(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Something went wrong.");
+      if (
+        err.response?.status === 409 &&
+        err.response.data?.requiresConfirmation
+      ) {
+        // Backend says users are still assigned — show warning, let admin force it
+        setClusterDeleteWarning(err.response.data);
+      } else {
+        alert(err.response?.data?.message || "Something went wrong.");
+      }
+    } finally {
+      setClusterDeleteLoading(false);
     }
+  };
+
+  const closeDeleteClusterModal = () => {
+    setDeleteClusterModal(null);
+    setClusterDeleteWarning(null);
   };
 
   // ── Assign Schools to Cluster ──
@@ -1144,36 +1164,83 @@ const SchoolManagementCards = () => {
 
       {/* ── Delete Cluster Modal ── */}
       {deleteClusterModal && (
-        <ModalWrapper
-          title="Delete Cluster"
-          onClose={() => setDeleteClusterModal(null)}
-        >
+        <ModalWrapper title="Delete Cluster" onClose={closeDeleteClusterModal}>
           <p className="text-sm text-gray-500 mb-2">
             You are about to permanently delete:
           </p>
           <p className="font-bold text-[#242424] mb-1">
             {deleteClusterModal.cluster_name}
           </p>
-          <p className="text-xs text-gray-400 mb-1">
-            Schools under this cluster will become unassigned.
-          </p>
-          <p className="text-sm text-red-500 mb-5 mt-2">
-            This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setDeleteClusterModal(null)}
-              className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+
+          {!clusterDeleteWarning ? (
+            <>
+              <p className="text-xs text-gray-400 mb-1">
+                Schools under this cluster will become unassigned.
+              </p>
+              <p className="text-sm text-red-500 mb-5 mt-2">
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={closeDeleteClusterModal}
+                  className="px-4 py-2 text-sm rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteCluster(false)}
+                  disabled={clusterDeleteLoading}
+                  className="px-4 py-2 text-sm rounded-xl bg-red-500 text-white hover:bg-red-600 transition disabled:opacity-50"
+                >
+                  {clusterDeleteLoading ? "Deleting..." : "Yes, Delete"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div
+              className="p-3 rounded-xl text-sm mt-2"
+              style={{
+                background: "rgba(245,158,11,0.08)",
+                border: "1px solid rgba(245,158,11,0.3)",
+              }}
             >
-              Cancel
-            </button>
-            <button
-              onClick={handleDeleteCluster}
-              className="px-4 py-2 text-sm rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
-            >
-              Yes, Delete
-            </button>
-          </div>
+              <p className="mb-2 font-semibold text-yellow-700">
+                {clusterDeleteWarning.message}
+              </p>
+              {clusterDeleteWarning.users?.length > 0 && (
+                <ul className="mb-3 text-xs text-gray-600 list-disc pl-4">
+                  {clusterDeleteWarning.users.map((u) => (
+                    <li key={u.id}>
+                      {u.fullname}{" "}
+                      <span className="text-gray-400">({u.role})</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-gray-500 mb-3">
+                Deleting anyway will unassign{" "}
+                {clusterDeleteWarning.users?.length > 1
+                  ? "these users"
+                  : "this user"}{" "}
+                from the cluster. Their accounts will not be deleted.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={closeDeleteClusterModal}
+                  className="flex-1 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteCluster(true)}
+                  disabled={clusterDeleteLoading}
+                  className="flex-1 px-3 py-1.5 rounded-xl bg-red-500 text-white hover:bg-red-600 transition text-xs disabled:opacity-50"
+                >
+                  {clusterDeleteLoading ? "Deleting..." : "Delete Anyway"}
+                </button>
+              </div>
+            </div>
+          )}
         </ModalWrapper>
       )}
 
