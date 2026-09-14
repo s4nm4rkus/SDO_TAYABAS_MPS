@@ -96,10 +96,22 @@ exports.updateCluster = async (req, res) => {
 exports.deleteCluster = async (req, res) => {
   const { id } = req.params;
   try {
+    const [users] = await db
+      .promise()
+      .query("SELECT id, fullname, role FROM users WHERE cluster_id = ?", [id]);
+
+    if (users.length) {
+      return res.status(400).json({
+        message: `Cannot delete this cluster — ${users.length} user(s) are still assigned to it. Please reassign them first.`,
+        users,
+      });
+    }
+
     await db
       .promise()
       .query("UPDATE schools SET cluster_id = NULL WHERE cluster_id = ?", [id]);
     await db.promise().query("DELETE FROM clusters WHERE id = ?", [id]);
+
     res.json({ message: "Cluster deleted successfully." });
   } catch (err) {
     res.status(500).json({ message: err.message });
