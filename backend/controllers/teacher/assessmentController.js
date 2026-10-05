@@ -134,17 +134,38 @@ exports.getOrCreateAssessment = async (req, res) => {
 exports.saveScores = async (req, res) => {
   try {
     const { assessment_id, scores } = req.body;
-    // scores = [{ student_id, score }, ...]
 
     if (!assessment_id || !scores?.length)
       return res
         .status(400)
         .json({ message: "Assessment ID and scores are required." });
 
+    const [assessmentRows] = await db
+      .promise()
+      .query(
+        "SELECT section_id, school_year_id FROM assessments WHERE id = ?",
+        [assessment_id],
+      );
+    if (!assessmentRows.length)
+      return res.status(404).json({ message: "Assessment not found." });
+
+    const { section_id, school_year_id } = assessmentRows[0];
+
+    const [[{ total_students }]] = await db
+      .promise()
+      .query(
+        "SELECT COUNT(*) AS total_students FROM students WHERE section_id = ? AND school_year_id = ?",
+        [section_id, school_year_id],
+      );
+
+    if (scores.length < total_students) {
+      return res.status(400).json({
+        message: `All students must have a score before saving. (${scores.length}/${total_students} encoded)`,
+      });
+    }
+
     for (const item of scores) {
       const { student_id, score } = item;
-
-      // Check if score exists
       const [existing] = await db
         .promise()
         .query(
@@ -168,6 +189,13 @@ exports.saveScores = async (req, res) => {
           );
       }
     }
+
+    await db
+      .promise()
+      .query(
+        "UPDATE assessments SET updated_at = NOW(), is_complete = 1 WHERE id = ?",
+        [assessment_id],
+      );
 
     res.json({ message: "Scores saved successfully." });
   } catch (err) {
@@ -307,7 +335,6 @@ exports.getFullMPSReport = async (req, res) => {
       const quarterData = [];
 
       for (const subject of subjects) {
-        // Get assessment for this section + subject + quarter
         const [assessments] = await db.promise().query(
           `SELECT id, total_items FROM assessments
            WHERE section_id = ? AND subject_id = ? AND grading_period_id = ? AND school_year_id = ?`,
@@ -328,7 +355,6 @@ exports.getFullMPSReport = async (req, res) => {
 
         const assessment = assessments[0];
 
-        // Get scores with gender
         const [scores] = await db.promise().query(
           `SELECT acs.score, st.gender
            FROM assessment_scores acs
@@ -383,6 +409,61 @@ exports.getFullMPSReport = async (req, res) => {
       subjects,
       report,
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}; // <-- getFullMPSReport closes HERE
+
+// GET all assessments teacher has started, with progress + last update time
+exports.getMyAssessments = async (req, res) => {
+  try {
+    const section = await getTeacherSection(req.user.id);
+    const school_year_id = await getActiveYear();
+
+    const [rows] = await db.promise().query(
+      `SELECT a.id, a.subject_id, s.subject_name, s.subject_code,
+        a.grading_period_id, gp.period_name, gp.order_num,
+        a.total_items, a.updated_at, a.is_complete,
+        (SELECT COUNT(*) FROM assessment_scores WHERE assessment_id = a.id) AS encoded_count,
+        (SELECT COUNT(*) FROM students WHERE section_id = a.section_id AND school_year_id = a.school_year_id) AS total_students
+       FROM assessments a
+       JOIN subjects s ON a.subject_id = s.id
+       JOIN grading_periods gp ON a.grading_period_id = gp.id
+       WHERE a.section_id = ? AND a.school_year_id = ?
+       ORDER BY gp.order_num ASC, s.subject_name ASC`,
+      [section.id, school_year_id],
+    );
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET a single existing assessment + its students/scores (no total_items re-entry)
+exports.getAssessmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await db
+      .promise()
+      .query("SELECT * FROM assessments WHERE id = ?", [id]);
+    if (!rows.length)
+      return res.status(404).json({ message: "Assessment not found." });
+
+    const assessment = rows[0];
+
+    const [students] = await db.promise().query(
+      `SELECT st.id, st.lrn, st.firstname, st.middlename, st.lastname, st.gender,
+        COALESCE(acs.score, NULL) AS score, acs.id AS score_id
+       FROM students st
+       LEFT JOIN assessment_scores acs ON acs.student_id = st.id AND acs.assessment_id = ?
+       WHERE st.section_id = ? AND st.school_year_id = ?
+       ORDER BY st.lastname, st.firstname ASC`,
+      [id, assessment.section_id, assessment.school_year_id],
+    );
+
+    res.json({ assessment, students });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

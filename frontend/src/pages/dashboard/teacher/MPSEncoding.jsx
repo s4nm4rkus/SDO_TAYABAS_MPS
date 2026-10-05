@@ -7,6 +7,7 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
+  History,
 } from "lucide-react";
 import axios from "axios";
 
@@ -33,6 +34,9 @@ const MPSEncoding = () => {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
+  // History of past encodings
+  const [myAssessments, setMyAssessments] = useState([]);
+
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +62,21 @@ const MPSEncoding = () => {
       }
     };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch list of assessments teacher has already started/completed
+  const fetchMyAssessments = async () => {
+    try {
+      const res = await axios.get(`${BASE}/list`, { headers });
+      setMyAssessments(res.data);
+    } catch (err) {
+      console.error("Failed to fetch assessment history:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyAssessments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,6 +114,34 @@ const MPSEncoding = () => {
     }
   };
 
+  // Open an existing assessment directly from the history list
+  const handleContinueAssessment = async (assessmentId) => {
+    setError("");
+    try {
+      const res = await axios.get(`${BASE}/${assessmentId}`, { headers });
+      const { assessment: a, students: s } = res.data;
+
+      setAssessment(a);
+      setStudents(s);
+      setSelectedPeriod(
+        periods.find((p) => p.id === a.grading_period_id) || null,
+      );
+      setSelectedSubject(
+        subjects.find((sub) => sub.id === a.subject_id) || null,
+      );
+      setTotalItems(String(a.total_items));
+
+      const initialScores = {};
+      s.forEach((st) => {
+        initialScores[st.id] = st.score !== null ? String(st.score) : "";
+      });
+      setScores(initialScores);
+      setSaved(false);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load assessment.");
+    }
+  };
+
   const handleScoreChange = (studentId, value) => {
     // Only allow numbers and decimal
     if (value !== "" && !/^\d*\.?\d*$/.test(value)) return;
@@ -127,6 +174,7 @@ const MPSEncoding = () => {
         { headers },
       );
       setSaved(true);
+      fetchMyAssessments(); // refresh history so the status/timestamp updates
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong.");
     } finally {
@@ -242,6 +290,64 @@ const MPSEncoding = () => {
             "linear-gradient(90deg, rgba(0,151,178,0.3), transparent)",
         }}
       />
+
+      {/* History — Your Encoded Assessments */}
+      {!assessment && myAssessments.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+            <History size={13} />
+            Your Encoded Assessments
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {myAssessments.map((a) => {
+              const complete = a.encoded_count >= a.total_students;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => handleContinueAssessment(a.id)}
+                  className="flex flex-col items-start gap-1 px-4 py-3 rounded-xl text-left transition hover:opacity-90"
+                  style={{
+                    background: "white",
+                    border: `1px solid ${
+                      complete ? "rgba(16,185,129,0.3)" : "rgba(255,107,53,0.3)"
+                    }`,
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-black text-[#242424]">
+                      {a.subject_name}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {a.period_name}
+                    </span>
+                    <span
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                      style={
+                        complete
+                          ? {
+                              background: "rgba(16,185,129,0.1)",
+                              color: "#10b981",
+                            }
+                          : {
+                              background: "rgba(255,107,53,0.1)",
+                              color: "#ff6b35",
+                            }
+                      }
+                    >
+                      {complete ? "Complete" : "In Progress"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    {a.encoded_count}/{a.total_students} encoded
+                    {a.updated_at &&
+                      ` · Last updated ${new Date(a.updated_at).toLocaleString()}`}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Step 1 — Select Term + Subject + Total Items */}
       {!assessment ? (
@@ -679,7 +785,7 @@ const MPSEncoding = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleSave}
-              disabled={saving || encodedCount === 0}
+              disabled={saving || encodedCount < students.length}
               className="flex items-center gap-2 px-6 py-2.5 text-white text-sm rounded-xl transition hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
                 background: "linear-gradient(135deg, #0097b2, #004385)",
@@ -687,7 +793,11 @@ const MPSEncoding = () => {
               }}
             >
               <Save size={15} />
-              {saving ? "Saving..." : "Save Scores"}
+              {saving
+                ? "Saving..."
+                : encodedCount < students.length
+                  ? `Encode all students (${encodedCount}/${students.length})`
+                  : "Save Scores"}
             </button>
 
             {saved && (

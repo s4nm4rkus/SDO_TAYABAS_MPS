@@ -270,7 +270,7 @@ const GradeLevelCard = () => {
                       onClick={() =>
                         setExpandedId(isExpanded ? null : grade.id)
                       }
-                      className="text-xs text-white/80 hover:text-white transition flex items-center gap-1 mb-2"
+                      className="text-xs bg-transparent text-white/80 hover:text-white transition flex items-center gap-1 mb-2"
                     >
                       <BookOpen size={11} />
                       {isExpanded ? "Hide subjects" : "View subjects"}

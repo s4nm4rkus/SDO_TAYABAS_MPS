@@ -23,7 +23,8 @@ router.get(
   ...teacherOnly,
   assessmentController.getMPSReport,
 );
-
 router.get("/report", ...teacherOnly, assessmentController.getFullMPSReport);
+router.get("/list", ...teacherOnly, assessmentController.getMyAssessments);
+router.get("/:id", ...teacherOnly, assessmentController.getAssessmentById);
 
 module.exports = router;

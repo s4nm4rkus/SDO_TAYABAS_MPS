@@ -174,7 +174,7 @@ const SideNav = () => {
 
           <button
             onClick={() => setOpen(!open)}
-            className="p-1.5 rounded-lg transition hover:bg-white/10 text-gray-400 hover:text-white ml-auto shrink-0"
+            className="p-1.5 rounded-lg transition bg-transparent hover:bg-white/10 text-gray-400 hover:text-white ml-auto shrink-0"
           >
             <HiMenuAlt3 size={22} />
           </button>

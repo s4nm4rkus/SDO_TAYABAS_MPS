@@ -161,7 +161,7 @@ const SchoolYearCard = () => {
         <div className="relative">
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="p-2 rounded-xl hover:bg-white/20 transition text-white"
+            className="p-2 rounded-xl bg-transparent hover:bg-white/20 transition text-white"
           >
             <MoreVertical size={18} />
           </button>
