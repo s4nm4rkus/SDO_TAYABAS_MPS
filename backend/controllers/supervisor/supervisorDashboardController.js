@@ -24,17 +24,18 @@ const getSupervisorCluster = async (user_id) => {
   return rows[0];
 };
 
-const getSupervisorSubject = async (user_id) => {
+const getSupervisorSubjects = async (user_id) => {
   const [rows] = await db.promise().query(
-    `SELECT u.subject_id, s.subject_name, s.subject_code
-     FROM users u
-     LEFT JOIN subjects s ON u.subject_id = s.id
+    `SELECT sub.id AS subject_id, sub.subject_name, sub.subject_code
+     FROM supervisor_subjects ss
+     JOIN subjects sub ON ss.subject_id = sub.id
+     JOIN users u ON ss.user_id = u.id
      WHERE u.id = ? AND u.role = 'supervisor'`,
     [user_id],
   );
-  if (!rows.length || !rows[0].subject_id)
-    throw new Error("No learning area assigned to this supervisor.");
-  return rows[0];
+  if (!rows.length)
+    throw new Error("No learning areas assigned to this supervisor.");
+  return rows;
 };
 
 const getSubjectGradeLevels = async (subject_id) => {
@@ -221,15 +222,32 @@ exports.getSubjectReport = async (req, res) => {
     const year = await getActiveYear();
     const cluster = await getSupervisorCluster(req.user.id);
     const schools = await getClusterSchools(cluster.cluster_id);
-    const subject = await getSupervisorSubject(req.user.id);
+    const mySubjects = await getSupervisorSubjects(req.user.id);
     const { grading_period_id } = req.params;
-    const { grade_level_id } = req.query; // "all" or a specific grade level id
+    const { subject_id, grade_level_id } = req.query;
 
+    const chosenSubjectId = subject_id
+      ? Number(subject_id)
+      : mySubjects[0].subject_id;
+    const subject = mySubjects.find((s) => s.subject_id === chosenSubjectId);
+    if (!subject) {
+      return res
+        .status(403)
+        .json({ message: "You are not assigned to this learning area." });
+    }
+
+    // ← THIS WAS MISSING — figures out which grades this subject applies to,
+    // and narrows to one grade if the request asked for a specific one
     const eligibleGrades = await getSubjectGradeLevels(subject.subject_id);
     const eligibleGradeIds = eligibleGrades.map((g) => g.id);
 
     if (!eligibleGradeIds.length) {
-      return res.json({ subject, grade_levels: [], schools: [] });
+      return res.json({
+        subject,
+        my_subjects: mySubjects,
+        grade_levels: [],
+        schools: [],
+      });
     }
 
     let gradeFilterIds = eligibleGradeIds;
@@ -324,6 +342,7 @@ exports.getSubjectReport = async (req, res) => {
 
     res.json({
       subject,
+      my_subjects: mySubjects,
       grade_levels: eligibleGrades,
       schools: schoolReports,
     });

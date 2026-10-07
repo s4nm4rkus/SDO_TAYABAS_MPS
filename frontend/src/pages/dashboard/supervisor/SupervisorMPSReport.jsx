@@ -444,6 +444,8 @@ const SupervisorMPSReport = () => {
   const [subjectLoading, setSubjectLoading] = useState(false);
   const [subjectError, setSubjectError] = useState("");
   const [selectedSubjectSchool, setSelectedSubjectSchool] = useState(null);
+  const [subjectId, setSubjectId] = useState(null);
+  const [mySubjects, setMySubjects] = useState([]);
 
   useEffect(() => {
     const fetchInit = async () => {
@@ -497,11 +499,16 @@ const SupervisorMPSReport = () => {
       try {
         const res = await axios.get(
           `${BASE}/subject-report/${selectedPeriodId}`,
-          { headers, params: { grade_level_id: subjectGradeId } },
+          {
+            headers,
+            params: { subject_id: subjectId, grade_level_id: subjectGradeId },
+          },
         );
         setSubjectInfo(res.data.subject);
+        setMySubjects(res.data.my_subjects);
         setSubjectGradeLevels(res.data.grade_levels);
         setSubjectSchools(res.data.schools);
+        if (!subjectId) setSubjectId(res.data.subject.subject_id);
       } catch (err) {
         setSubjectError(
           err.response?.data?.message || "Failed to load learning area report.",
@@ -513,7 +520,7 @@ const SupervisorMPSReport = () => {
     };
     fetchSubjectReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedPeriodId, subjectGradeId]);
+  }, [activeTab, selectedPeriodId, subjectGradeId, subjectId]);
 
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
   const selectedSchoolData = reportData?.find(
@@ -1618,6 +1625,37 @@ const SupervisorMPSReport = () => {
                       <span className="text-xs text-gray-400">
                         ({subjectInfo.subject_code})
                       </span>
+                    </div>
+                  )}
+                  {mySubjects.length > 1 && (
+                    <div className="flex flex-wrap gap-2">
+                      {mySubjects.map((s) => (
+                        <button
+                          key={s.subject_id}
+                          onClick={() => {
+                            setSubjectId(s.subject_id);
+                            setSubjectGradeId("all");
+                            setSelectedSubjectSchool(null);
+                          }}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                          style={
+                            subjectId === s.subject_id
+                              ? {
+                                  background:
+                                    "linear-gradient(135deg, #10b981, #059669)",
+                                  color: "white",
+                                  boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+                                }
+                              : {
+                                  background: "white",
+                                  color: "#242424",
+                                  border: "1px solid rgba(16,185,129,0.2)",
+                                }
+                          }
+                        >
+                          {s.subject_name}
+                        </button>
+                      ))}
                     </div>
                   )}
 
