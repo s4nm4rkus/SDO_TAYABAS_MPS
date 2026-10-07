@@ -8,6 +8,7 @@ import {
   PrinterIcon,
   Download,
   Users,
+  Layers,
 } from "lucide-react";
 import axios from "axios";
 
@@ -17,14 +18,12 @@ const YEARS_API = API_URL + "/api/school-years/active";
 
 const getMPSColor = (mps) => {
   if (mps == null) return "text-gray-300";
-
   const val = Number(mps);
-
-  if (val >= 90) return "#10b981"; // High Mastery
-  if (val >= 70) return "#0097b2"; // Moderately
-  if (val >= 50) return "#f59e0b"; // Average
-  if (val >= 20) return "#ff6b35"; // Low Mastery
-  return "#dc2626"; // No Mastery
+  if (val >= 90) return "#10b981";
+  if (val >= 70) return "#0097b2";
+  if (val >= 50) return "#f59e0b";
+  if (val >= 20) return "#ff6b35";
+  return "#dc2626";
 };
 
 const getMPSBg = (mps) => {
@@ -81,7 +80,7 @@ const MPSCell = ({ val, isSD, bold }) => {
   );
 };
 
-const GradeTable = ({ gradeData, periodName }) => {
+const GradeTable = ({ gradeData, periodName, subtitle }) => {
   const averages = computeAverages(gradeData.subjects);
   const hasData = gradeData.subjects.some((r) => r.class.mps !== null);
 
@@ -90,7 +89,6 @@ const GradeTable = ({ gradeData, periodName }) => {
       className="rounded-2xl overflow-hidden"
       style={{ background: "white", border: "1px solid rgba(0,151,178,0.1)" }}
     >
-      {/* Grade Header */}
       <div
         className="px-5 py-4 border-b border-gray-100"
         style={{ background: "rgba(0,151,178,0.04)" }}
@@ -101,64 +99,60 @@ const GradeTable = ({ gradeData, periodName }) => {
               {gradeData.grade_name}
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              {periodName} · {gradeData.section_count}{" "}
-              {gradeData.section_count === 1 ? "section" : "sections"} combined
+              {periodName} · {subtitle}
             </p>
 
-            {/* Sections + Advisers */}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {gradeData.sections?.map((sec, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                  style={{
-                    background: sec.adviser_name
-                      ? "rgba(0,151,178,0.08)"
-                      : "rgba(249,115,22,0.08)",
-                    border: `1px solid ${
-                      sec.adviser_name
-                        ? "rgba(0,151,178,0.2)"
-                        : "rgba(249,115,22,0.2)"
-                    }`,
-                  }}
-                >
-                  <BookOpen
-                    size={11}
-                    style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
-                  />
-                  {/* <span className="text-xs font-semibold text-[#242424]">
-                    {sec.section_name}
-                  </span> */}
-                  <span className="text-xs font-semibold text-[#242424]">
-                    {sec.section_name}
-                    {sec.school_name && (
-                      <span className="text-gray-400 font-normal">
-                        {" "}
-                        · {sec.school_name}
+            {gradeData.sections && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {gradeData.sections.map((sec, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                    style={{
+                      background: sec.adviser_name
+                        ? "rgba(0,151,178,0.08)"
+                        : "rgba(249,115,22,0.08)",
+                      border: `1px solid ${
+                        sec.adviser_name
+                          ? "rgba(0,151,178,0.2)"
+                          : "rgba(249,115,22,0.2)"
+                      }`,
+                    }}
+                  >
+                    <BookOpen
+                      size={11}
+                      style={{
+                        color: sec.adviser_name ? "#0097b2" : "#ff6b35",
+                      }}
+                    />
+                    <span className="text-xs font-semibold text-[#242424]">
+                      {sec.section_name}
+                    </span>
+                    <span className="text-xs text-gray-300">·</span>
+                    <Users
+                      size={10}
+                      style={{
+                        color: sec.adviser_name ? "#0097b2" : "#ff6b35",
+                      }}
+                    />
+                    {sec.adviser_name ? (
+                      <span className="text-xs" style={{ color: "#0097b2" }}>
+                        {sec.adviser_name}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-orange-400">
+                        No adviser
                       </span>
                     )}
-                  </span>
-                  <span className="text-xs text-gray-300">·</span>
-                  <Users
-                    size={10}
-                    style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
-                  />
-                  {sec.adviser_name ? (
-                    <span className="text-xs" style={{ color: "#0097b2" }}>
-                      {sec.adviser_name}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-orange-400">No adviser</span>
-                  )}
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Class Average */}
           {averages.class.mps && (
             <div className="text-right shrink-0">
-              <p className="text-xs text-gray-400">Class Average</p>
+              <p className="text-xs text-gray-400">Average</p>
               <p
                 className="text-xl font-black"
                 style={{ color: getMPSColor(averages.class.mps) }}
@@ -249,7 +243,6 @@ const GradeTable = ({ gradeData, periodName }) => {
                 </tr>
               ))}
 
-              {/* Average Row */}
               {averages && (
                 <tr
                   style={{
@@ -297,11 +290,13 @@ const SchoolHeadMPSReport = () => {
   const [gradeLevels, setGradeLevels] = useState([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState(null);
   const [selectedGradeId, setSelectedGradeId] = useState("all");
+  const [selectedSectionId, setSelectedSectionId] = useState("all");
+  const [sectionReport, setSectionReport] = useState(null);
+  const [sectionLoading, setSectionLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [activeYear, setActiveYear] = useState(null);
   const [assignedSchools, setAssignedSchools] = useState([]);
-  const [selectedSchoolId, setSelectedSchoolId] = useState("all");
   const printRef = useRef();
 
   useEffect(() => {
@@ -334,11 +329,12 @@ const SchoolHeadMPSReport = () => {
       try {
         const res = await axios.get(`${BASE}/report/${selectedPeriodId}`, {
           headers,
-          params: { school_id: selectedSchoolId },
         });
         setReportData(res.data.report);
         setGradeLevels(res.data.gradeLevels);
         setSelectedGradeId("all");
+        setSelectedSectionId("all");
+        setSectionReport(null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -347,14 +343,49 @@ const SchoolHeadMPSReport = () => {
     };
     fetchReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPeriodId, selectedSchoolId]);
+  }, [selectedPeriodId]);
+
+  // Fetch a single section's report when one is selected
+  useEffect(() => {
+    if (selectedSectionId === "all" || !selectedPeriodId) {
+      setSectionReport(null);
+      return;
+    }
+    const fetchSectionReport = async () => {
+      setSectionLoading(true);
+      try {
+        const res = await axios.get(
+          `${BASE}/section-report/${selectedSectionId}/${selectedPeriodId}`,
+          { headers },
+        );
+        setSectionReport(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSectionLoading(false);
+      }
+    };
+    fetchSectionReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSectionId, selectedPeriodId]);
 
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
+
+  const currentGradeData =
+    selectedGradeId !== "all"
+      ? reportData?.find((g) => g.grade_level_id === selectedGradeId)
+      : null;
 
   const displayData =
     selectedGradeId === "all"
       ? reportData || []
       : reportData?.filter((g) => g.grade_level_id === selectedGradeId) || [];
+
+  const handleSelectGrade = (gradeId) => {
+    setSelectedGradeId(gradeId);
+    setSelectedSectionId("all");
+    setSectionReport(null);
+  };
 
   const handlePrint = () => {
     const content = printRef.current?.innerHTML;
@@ -387,11 +418,7 @@ const SchoolHeadMPSReport = () => {
   };
 
   const handleExportCSV = () => {
-    if (!reportData || !selectedPeriod) return;
-    const gradesToExport =
-      selectedGradeId === "all"
-        ? reportData
-        : reportData.filter((g) => g.grade_level_id === selectedGradeId);
+    if (!selectedPeriod) return;
 
     const rows = [
       [`MPS Report — ${selectedPeriod.period_name}`],
@@ -401,6 +428,24 @@ const SchoolHeadMPSReport = () => {
       ],
       [],
     ];
+
+    const gradesToExport = sectionReport
+      ? [
+          {
+            grade_name: sectionReport.grade_name,
+            subjects: sectionReport.subjects,
+            section_count: 1,
+            sections: [
+              {
+                section_name: sectionReport.section_name,
+                adviser_name: sectionReport.adviser_name,
+              },
+            ],
+          },
+        ]
+      : selectedGradeId === "all"
+        ? reportData || []
+        : reportData?.filter((g) => g.grade_level_id === selectedGradeId) || [];
 
     gradesToExport.forEach((grade) => {
       const avgs = computeAverages(grade.subjects);
@@ -445,11 +490,12 @@ const SchoolHeadMPSReport = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `MPS_Report_${selectedPeriod.period_name}_${
-      selectedSchoolId === "all"
-        ? "All_Schools"
-        : assignedSchools.find((s) => s.id === selectedSchoolId)?.school_name
-    }_${selectedGradeId === "all" ? "All_Grades" : gradeLevels.find((g) => g.id === selectedGradeId)?.grade_name}.csv`;
+    const namePart = sectionReport
+      ? sectionReport.section_name
+      : selectedGradeId === "all"
+        ? "All_Grades"
+        : gradeLevels.find((g) => g.id === selectedGradeId)?.grade_name;
+    a.download = `MPS_Report_${selectedPeriod.period_name}_${namePart}.csv`;
     a.click();
   };
 
@@ -467,7 +513,7 @@ const SchoolHeadMPSReport = () => {
         <div>
           <h1 className="text-2xl font-black text-[#242424]">MPS Report</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Mean Percentage Score by Grade Level — All Sections Combined
+            Mean Percentage Score by Grade Level and Section
           </p>
         </div>
         <div className="flex gap-2">
@@ -599,62 +645,11 @@ const SchoolHeadMPSReport = () => {
         })}
       </div>
 
-      {/* ── School Tabs ── */}
-      {assignedSchools.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedSchoolId("all")}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold transition"
-            style={
-              selectedSchoolId === "all"
-                ? {
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "white",
-                    boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
-                  }
-                : {
-                    background: "white",
-                    color: "#242424",
-                    border: "1px solid rgba(16,185,129,0.2)",
-                  }
-            }
-          >
-            All Schools
-          </button>
-          {assignedSchools.map((school) => {
-            const isSelected = selectedSchoolId === school.id;
-            return (
-              <button
-                key={school.id}
-                onClick={() => setSelectedSchoolId(school.id)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
-                style={
-                  isSelected
-                    ? {
-                        background: "linear-gradient(135deg, #10b981, #059669)",
-                        color: "white",
-                        boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
-                      }
-                    : {
-                        background: "white",
-                        color: "#242424",
-                        border: "1px solid rgba(16,185,129,0.2)",
-                      }
-                }
-              >
-                <School size={13} />
-                {school.school_name}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* ── Grade Level Filter ── */}
       {gradeLevels.length > 0 && (
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setSelectedGradeId("all")}
+            onClick={() => handleSelectGrade("all")}
             className="px-4 py-2 rounded-xl text-sm font-semibold transition"
             style={
               selectedGradeId === "all"
@@ -677,7 +672,7 @@ const SchoolHeadMPSReport = () => {
             return (
               <button
                 key={grade.id}
-                onClick={() => setSelectedGradeId(grade.id)}
+                onClick={() => handleSelectGrade(grade.id)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition"
                 style={
                   isSelected
@@ -701,8 +696,91 @@ const SchoolHeadMPSReport = () => {
         </div>
       )}
 
+      {/* ── Section Filter (only when one grade is selected) ── */}
+      {currentGradeData && currentGradeData.sections?.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => {
+              setSelectedSectionId("all");
+              setSectionReport(null);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition"
+            style={
+              selectedSectionId === "all"
+                ? {
+                    background: "linear-gradient(135deg, #ff6b35, #f59e0b)",
+                    color: "white",
+                    boxShadow: "0 4px 12px rgba(255,107,53,0.3)",
+                  }
+                : {
+                    background: "white",
+                    color: "#242424",
+                    border: "1px solid rgba(255,107,53,0.2)",
+                  }
+            }
+          >
+            <Layers size={13} />
+            All Sections Combined
+          </button>
+          {currentGradeData.sections.map((sec) => {
+            const isSelected = selectedSectionId === sec.id;
+            return (
+              <button
+                key={sec.id}
+                onClick={() => setSelectedSectionId(sec.id)}
+                className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                style={
+                  isSelected
+                    ? {
+                        background: "linear-gradient(135deg, #ff6b35, #f59e0b)",
+                        color: "white",
+                        boxShadow: "0 4px 12px rgba(255,107,53,0.3)",
+                      }
+                    : {
+                        background: "white",
+                        color: "#242424",
+                        border: "1px solid rgba(255,107,53,0.2)",
+                      }
+                }
+              >
+                {sec.section_name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── Report Content ── */}
-      {loading ? (
+      {selectedSectionId !== "all" ? (
+        sectionLoading ? (
+          <div className="text-center py-12 text-gray-400 animate-pulse text-sm">
+            Loading section report...
+          </div>
+        ) : sectionReport ? (
+          <div ref={printRef} className="flex flex-col gap-6">
+            <div className="hidden print:block mb-2">
+              <div className="report-header">
+                <h2>
+                  MPS Report — {sectionReport.section_name} —{" "}
+                  {selectedPeriod?.period_name}
+                </h2>
+                <p>
+                  School: {assignedSchools.map((s) => s.school_name).join(", ")}
+                </p>
+                <p>School Year: SY {activeYear?.year_label}</p>
+              </div>
+            </div>
+            <GradeTable
+              gradeData={{
+                grade_name: `${sectionReport.grade_name} — ${sectionReport.section_name}`,
+                subjects: sectionReport.subjects,
+              }}
+              periodName={selectedPeriod?.period_name}
+              subtitle={`Adviser: ${sectionReport.adviser_name || "No adviser"}`}
+            />
+          </div>
+        ) : null
+      ) : loading ? (
         <div className="text-center py-12 text-gray-400 animate-pulse text-sm">
           Loading report...
         </div>
@@ -720,7 +798,6 @@ const SchoolHeadMPSReport = () => {
         </div>
       ) : (
         <div ref={printRef} className="flex flex-col gap-6">
-          {/* Print header */}
           <div className="hidden print:block mb-2">
             <div className="report-header">
               <h2>MPS Report — {selectedPeriod?.period_name}</h2>
@@ -732,7 +809,6 @@ const SchoolHeadMPSReport = () => {
             </div>
           </div>
 
-          {/* Grade Tables */}
           {displayData.map((gradeData, index) => (
             <div
               key={gradeData.grade_level_id}
@@ -741,11 +817,11 @@ const SchoolHeadMPSReport = () => {
               <GradeTable
                 gradeData={gradeData}
                 periodName={selectedPeriod?.period_name}
+                subtitle={`${gradeData.section_count} ${gradeData.section_count === 1 ? "section" : "sections"} combined`}
               />
             </div>
           ))}
 
-          {/* Legend */}
           <div className="flex flex-wrap gap-4 pt-2 border-t border-gray-100">
             <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
               MPS Legend:

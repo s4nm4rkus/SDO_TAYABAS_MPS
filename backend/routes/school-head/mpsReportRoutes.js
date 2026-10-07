@@ -17,4 +17,10 @@ router.get(
   mpsReportController.getMPSReport,
 );
 
+router.get(
+  "/section-report/:section_id/:grading_period_id",
+  ...schoolHeadOnly,
+  mpsReportController.getSectionMPSReport,
+);
+
 module.exports = router;
