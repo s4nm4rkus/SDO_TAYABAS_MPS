@@ -11,6 +11,8 @@ import {
   Building2,
   ChevronRight,
   ArrowLeft,
+  ArrowUpDown,
+  GraduationCap,
 } from "lucide-react";
 import axios from "axios";
 
@@ -294,6 +296,130 @@ const MPSTable = ({ subjects, title, subtitle, adviser }) => {
   );
 };
 
+const RankedTable = ({ rows, title, subtitle, onRowClick, rowLabel }) => {
+  const [sortDir, setSortDir] = useState("desc");
+
+  const sorted = [...rows].sort((a, b) => {
+    const av = a.class.mps ? Number(a.class.mps) : -1;
+    const bv = b.class.mps ? Number(b.class.mps) : -1;
+    return sortDir === "desc" ? bv - av : av - bv;
+  });
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ background: "white", border: "1px solid rgba(0,151,178,0.1)" }}
+    >
+      <div
+        className="px-5 py-3 border-b border-gray-100 flex items-center justify-between"
+        style={{ background: "rgba(248,248,255,0.8)" }}
+      >
+        <div>
+          <p className="text-sm font-black text-[#242424]">{title}</p>
+          {subtitle && (
+            <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+          )}
+        </div>
+        <button
+          onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-80"
+          style={{
+            background: "rgba(0,151,178,0.08)",
+            color: "#0097b2",
+          }}
+        >
+          <ArrowUpDown size={12} />
+          {sortDir === "desc" ? "Highest first" : "Lowest first"}
+        </button>
+      </div>
+
+      {!sorted.length ? (
+        <div className="px-5 py-8 text-center text-gray-400 text-sm">
+          No data available.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ background: "rgba(248,248,255,0.5)" }}>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 border-b border-gray-100">
+                  #
+                </th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                  {rowLabel}
+                </th>
+                <th
+                  className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wider border-b border-gray-100"
+                  style={{ color: "#3b82f6" }}
+                >
+                  Male
+                </th>
+                <th
+                  className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wider border-b border-gray-100"
+                  style={{ color: "#ec4899" }}
+                >
+                  Female
+                </th>
+                <th
+                  className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wider border-b border-gray-100"
+                  style={{ color: "#0097b2" }}
+                >
+                  Class MPS
+                </th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100">
+                  SD
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((row, i) => (
+                <tr
+                  key={row.school_id || row.section_id}
+                  onClick={() => onRowClick?.(row)}
+                  className={`border-t border-gray-50 ${onRowClick ? "cursor-pointer hover:bg-gray-50/50" : ""} transition`}
+                >
+                  <td className="px-4 py-2.5 text-gray-400 text-xs font-bold">
+                    {i + 1}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <p className="font-semibold text-[#242424] text-sm">
+                      {row.school_name || row.section_name}
+                    </p>
+                    {row.grade_name && (
+                      <p className="text-xs text-gray-400">
+                        {row.grade_name}
+                        {row.adviser_name ? ` · ${row.adviser_name}` : ""}
+                      </p>
+                    )}
+                    {row.section_count !== undefined && (
+                      <p className="text-xs text-gray-400">
+                        {row.section_count}{" "}
+                        {row.section_count === 1 ? "section" : "sections"}
+                      </p>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <MPSCell val={row.male.mps} isSD={false} />
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <MPSCell val={row.female.mps} isSD={false} />
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <MPSCell val={row.class.mps} isSD={false} bold />
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <MPSCell val={row.class.sd} isSD={true} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SupervisorMPSReport = () => {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -310,6 +436,14 @@ const SupervisorMPSReport = () => {
   const [clusterInfo, setClusterInfo] = useState(null);
   const [activeYear, setActiveYear] = useState(null);
   const printRef = useRef();
+
+  const [subjectInfo, setSubjectInfo] = useState(null);
+  const [subjectGradeLevels, setSubjectGradeLevels] = useState([]);
+  const [subjectSchools, setSubjectSchools] = useState([]);
+  const [subjectGradeId, setSubjectGradeId] = useState("all");
+  const [subjectLoading, setSubjectLoading] = useState(false);
+  const [subjectError, setSubjectError] = useState("");
+  const [selectedSubjectSchool, setSelectedSubjectSchool] = useState(null);
 
   useEffect(() => {
     const fetchInit = async () => {
@@ -354,6 +488,32 @@ const SupervisorMPSReport = () => {
     fetchReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriodId]);
+
+  useEffect(() => {
+    if (activeTab !== "subject" || !selectedPeriodId) return;
+    const fetchSubjectReport = async () => {
+      setSubjectLoading(true);
+      setSubjectError("");
+      try {
+        const res = await axios.get(
+          `${BASE}/subject-report/${selectedPeriodId}`,
+          { headers, params: { grade_level_id: subjectGradeId } },
+        );
+        setSubjectInfo(res.data.subject);
+        setSubjectGradeLevels(res.data.grade_levels);
+        setSubjectSchools(res.data.schools);
+      } catch (err) {
+        setSubjectError(
+          err.response?.data?.message || "Failed to load learning area report.",
+        );
+        setSubjectSchools([]);
+      } finally {
+        setSubjectLoading(false);
+      }
+    };
+    fetchSubjectReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedPeriodId, subjectGradeId]);
 
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
   const selectedSchoolData = reportData?.find(
@@ -717,6 +877,11 @@ const SupervisorMPSReport = () => {
                 value: "overview",
                 label: "School Overview",
                 icon: <TrendingUp size={13} />,
+              },
+              {
+                value: "subject",
+                label: "My Learning Area",
+                icon: <GraduationCap size={13} />,
               },
             ].map((tab) => (
               <button
@@ -1416,6 +1581,140 @@ const SupervisorMPSReport = () => {
                     </div>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "subject" && (
+            <div className="flex flex-col gap-5">
+              {subjectError ? (
+                <div
+                  className="text-center py-12 text-gray-400"
+                  style={{
+                    border: "2px dashed rgba(239,68,68,0.2)",
+                    borderRadius: "1rem",
+                  }}
+                >
+                  <GraduationCap
+                    size={28}
+                    className="mx-auto mb-2 opacity-30"
+                  />
+                  <p className="text-sm text-red-500">{subjectError}</p>
+                </div>
+              ) : (
+                <>
+                  {subjectInfo && (
+                    <div
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl w-fit"
+                      style={{
+                        background: "rgba(139,92,246,0.06)",
+                        border: "1px solid rgba(139,92,246,0.2)",
+                      }}
+                    >
+                      <GraduationCap size={14} style={{ color: "#8b5cf6" }} />
+                      <span className="text-sm font-black text-[#242424]">
+                        {subjectInfo.subject_name}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        ({subjectInfo.subject_code})
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Grade Level Filter */}
+                  {subjectGradeLevels.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          setSubjectGradeId("all");
+                          setSelectedSubjectSchool(null);
+                        }}
+                        className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                        style={
+                          subjectGradeId === "all"
+                            ? {
+                                background:
+                                  "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                                color: "white",
+                                boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
+                              }
+                            : {
+                                background: "white",
+                                color: "#242424",
+                                border: "1px solid rgba(139,92,246,0.2)",
+                              }
+                        }
+                      >
+                        Overall (All Grades)
+                      </button>
+                      {subjectGradeLevels.map((grade) => (
+                        <button
+                          key={grade.id}
+                          onClick={() => {
+                            setSubjectGradeId(grade.id);
+                            setSelectedSubjectSchool(null);
+                          }}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                          style={
+                            subjectGradeId === grade.id
+                              ? {
+                                  background:
+                                    "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                                  color: "white",
+                                  boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
+                                }
+                              : {
+                                  background: "white",
+                                  color: "#242424",
+                                  border: "1px solid rgba(139,92,246,0.2)",
+                                }
+                          }
+                        >
+                          {grade.grade_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {subjectLoading ? (
+                    <div className="text-center py-12 text-gray-400 animate-pulse text-sm">
+                      Loading...
+                    </div>
+                  ) : !selectedSubjectSchool ? (
+                    <RankedTable
+                      rows={subjectSchools}
+                      title={`${subjectInfo?.subject_name || "Learning Area"} — Schools Ranked`}
+                      subtitle={`${selectedPeriod?.period_name} · ${subjectGradeId === "all" ? "All eligible grades" : subjectGradeLevels.find((g) => g.id === subjectGradeId)?.grade_name}`}
+                      onRowClick={(row) => setSelectedSubjectSchool(row)}
+                      rowLabel="School"
+                    />
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <button
+                          onClick={() => setSelectedSubjectSchool(null)}
+                          className="hover:text-[#8b5cf6] transition flex items-center gap-1"
+                        >
+                          <ArrowLeft size={11} />
+                          Schools
+                        </button>
+                        <ChevronRight size={11} />
+                        <span
+                          className="font-semibold"
+                          style={{ color: "#8b5cf6" }}
+                        >
+                          {selectedSubjectSchool.school_name}
+                        </span>
+                      </div>
+                      <RankedTable
+                        rows={selectedSubjectSchool.sections}
+                        title={`${selectedSubjectSchool.school_name} — Sections Ranked`}
+                        subtitle={`${subjectInfo?.subject_name} · ${selectedPeriod?.period_name}`}
+                        rowLabel="Section"
+                      />
+                    </>
+                  )}
+                </>
               )}
             </div>
           )}

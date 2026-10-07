@@ -6,11 +6,12 @@ exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.promise().query(
       `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
-        u.school_id, u.cluster_id,
-        s.school_name, c.cluster_name
+        u.school_id, u.cluster_id, u.subject_id,
+        s.school_name, c.cluster_name, sub.subject_name, sub.subject_code
        FROM users u
        LEFT JOIN schools s ON u.school_id = s.id
        LEFT JOIN clusters c ON u.cluster_id = c.id
+       LEFT JOIN subjects sub ON u.subject_id = sub.id
        ORDER BY u.fullname ASC`,
     );
 
@@ -22,12 +23,10 @@ exports.getAllUsers = async (req, res) => {
 
     const result = users.map((user) => {
       if (user.role === "school_head") {
-        // Get from school_head_assignments first
         let schools = assignments
           .filter((a) => a.user_id === user.id)
           .map((a) => ({ id: a.school_id, school_name: a.school_name }));
 
-        // ← Fallback: if no assignments but has school_id, use that
         if (!schools.length && user.school_id && user.school_name) {
           schools = [{ id: user.school_id, school_name: user.school_name }];
         }
@@ -48,11 +47,12 @@ exports.getUserById = (req, res) => {
   const { id } = req.params;
   db.query(
     `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
-      u.school_id, u.cluster_id,
-      s.school_name, c.cluster_name
+      u.school_id, u.cluster_id, u.subject_id,
+      s.school_name, c.cluster_name, sub.subject_name, sub.subject_code
      FROM users u
      LEFT JOIN schools s ON u.school_id = s.id
      LEFT JOIN clusters c ON u.cluster_id = c.id
+     LEFT JOIN subjects sub ON u.subject_id = sub.id
      WHERE u.id = ?`,
     [id],
     (err, results) => {
@@ -74,6 +74,7 @@ exports.createUser = async (req, res) => {
     role,
     school_id,
     cluster_id,
+    subject_id,
     school_ids,
   } = req.body;
 
@@ -83,7 +84,6 @@ exports.createUser = async (req, res) => {
   try {
     const hashed = await bcrypt.hash(password, 10);
 
-    // For school_head — use first school from school_ids as school_id
     const resolvedSchoolId =
       role === "school_head"
         ? school_ids?.[0] || school_id || null
@@ -92,11 +92,12 @@ exports.createUser = async (req, res) => {
           : null;
 
     const resolvedClusterId = role === "supervisor" ? cluster_id || null : null;
+    const resolvedSubjectId = role === "supervisor" ? subject_id || null : null;
 
     const [result] = await db
       .promise()
       .query(
-        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id, must_change_password) VALUES (?,?,?,?,?,?,?,?)",
+        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id, subject_id, must_change_password) VALUES (?,?,?,?,?,?,?,?,?)",
         [
           fullname,
           username,
@@ -105,13 +106,13 @@ exports.createUser = async (req, res) => {
           role,
           resolvedSchoolId,
           resolvedClusterId,
-          1, // ← force password change on first login
+          resolvedSubjectId,
+          1,
         ],
       );
 
     const user_id = result.insertId;
 
-    // Still insert school_head_assignments for admin display
     if (role === "school_head" && school_ids?.length) {
       for (const sid of school_ids) {
         await db
@@ -133,11 +134,10 @@ exports.createUser = async (req, res) => {
 
 // Assign role + school/cluster
 exports.assignUser = async (req, res) => {
-  const { role, school_id, cluster_id, school_ids } = req.body;
+  const { role, school_id, cluster_id, subject_id, school_ids } = req.body;
   const { id } = req.params;
 
   try {
-    // For school_head — use the first selected school as school_id
     const resolvedSchoolId =
       role === "school_head"
         ? school_ids?.[0] || school_id || null
@@ -146,17 +146,15 @@ exports.assignUser = async (req, res) => {
           : null;
 
     const resolvedClusterId = role === "supervisor" ? cluster_id || null : null;
+    const resolvedSubjectId = role === "supervisor" ? subject_id || null : null;
 
     await db
       .promise()
-      .query("UPDATE users SET role=?, school_id=?, cluster_id=? WHERE id=?", [
-        role,
-        resolvedSchoolId,
-        resolvedClusterId,
-        id,
-      ]);
+      .query(
+        "UPDATE users SET role=?, school_id=?, cluster_id=?, subject_id=? WHERE id=?",
+        [role, resolvedSchoolId, resolvedClusterId, resolvedSubjectId, id],
+      );
 
-    // Still maintain school_head_assignments for backward compat
     if (role === "school_head") {
       await db
         .promise()

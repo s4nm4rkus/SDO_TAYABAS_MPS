@@ -24,6 +24,13 @@ router.get(
   ...supervisorOnly,
   supervisorController.getSchoolHeads,
 );
+
+router.get(
+  "/subject-report/:grading_period_id",
+  ...supervisorOnly,
+  supervisorController.getSubjectReport,
+);
+
 router.post(
   "/school-heads",
   ...supervisorOnly,
