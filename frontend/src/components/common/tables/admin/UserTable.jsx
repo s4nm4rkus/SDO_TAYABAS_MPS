@@ -25,6 +25,7 @@ import { API_URL } from "../../../../config/api";
 const API = `${API_URL}/api/users`;
 const SCHOOLS_API = `${API_URL}/api/schools`;
 const CLUSTERS_API = `${API_URL}/api/clusters`;
+const SUBJECTS_API = `${API_URL}/api/subjects`;
 const ITEMS_PER_PAGE = 10;
 
 const roleBadge = {
@@ -68,21 +69,41 @@ const SchoolAssignment = ({ user }) => {
   if (user.role === "admin") return <span className="text-gray-400">—</span>;
 
   if (user.role === "supervisor") {
-    return user.cluster_name ? (
-      <span
-        className="text-xs px-2 py-0.5 rounded-full"
-        style={{
-          background: "rgba(139,92,246,0.08)",
-          border: "1px solid rgba(139,92,246,0.2)",
-          color: "#8b5cf6",
-        }}
-      >
-        {user.cluster_name}
-      </span>
-    ) : (
-      <span className="text-xs flex items-center gap-1 text-orange-400">
-        <AlertCircle size={11} /> No cluster
-      </span>
+    return (
+      <div className="flex flex-col gap-1">
+        {user.cluster_name ? (
+          <span
+            className="text-xs px-2 py-0.5 rounded-full w-fit"
+            style={{
+              background: "rgba(139,92,246,0.08)",
+              border: "1px solid rgba(139,92,246,0.2)",
+              color: "#8b5cf6",
+            }}
+          >
+            {user.cluster_name}
+          </span>
+        ) : (
+          <span className="text-xs flex items-center gap-1 text-orange-400">
+            <AlertCircle size={11} /> No cluster
+          </span>
+        )}
+        {user.subject_name ? (
+          <span
+            className="text-xs px-2 py-0.5 rounded-full w-fit"
+            style={{
+              background: "rgba(16,185,129,0.08)",
+              border: "1px solid rgba(16,185,129,0.2)",
+              color: "#10b981",
+            }}
+          >
+            {user.subject_name}
+          </span>
+        ) : (
+          <span className="text-xs flex items-center gap-1 text-orange-400">
+            <AlertCircle size={11} /> No learning area
+          </span>
+        )}
+      </div>
     );
   }
 
@@ -168,7 +189,7 @@ const SchoolAssignment = ({ user }) => {
 };
 
 // Assignment fields inside modal
-const AssignmentFields = ({ form, setForm, schools, clusters }) => {
+const AssignmentFields = ({ form, setForm, schools, clusters, subjects }) => {
   if (form.role === "teacher")
     return (
       <div>
@@ -233,29 +254,55 @@ const AssignmentFields = ({ form, setForm, schools, clusters }) => {
 
   if (form.role === "supervisor")
     return (
-      <div>
-        <label
-          className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
-          style={{ color: "#0097b2" }}
-        >
-          Assign to Cluster
-        </label>
-        <select
-          value={form.cluster_id}
-          onChange={(e) => setForm({ ...form, cluster_id: e.target.value })}
-          className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
-          style={{
-            background: "rgba(248,248,255,0.8)",
-            border: "1px solid rgba(0,151,178,0.2)",
-          }}
-        >
-          <option value="">Select Cluster</option>
-          {clusters.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.cluster_name}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-col gap-3">
+        <div>
+          <label
+            className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+            style={{ color: "#0097b2" }}
+          >
+            Assign to Cluster
+          </label>
+          <select
+            value={form.cluster_id}
+            onChange={(e) => setForm({ ...form, cluster_id: e.target.value })}
+            className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+            style={{
+              background: "rgba(248,248,255,0.8)",
+              border: "1px solid rgba(0,151,178,0.2)",
+            }}
+          >
+            <option value="">Select Cluster</option>
+            {clusters.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.cluster_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
+            style={{ color: "#0097b2" }}
+          >
+            Assign Learning Area
+          </label>
+          <select
+            value={form.subject_id}
+            onChange={(e) => setForm({ ...form, subject_id: e.target.value })}
+            className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+            style={{
+              background: "rgba(248,248,255,0.8)",
+              border: "1px solid rgba(0,151,178,0.2)",
+            }}
+          >
+            <option value="">Select Learning Area</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.subject_name} ({s.subject_code})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     );
 
@@ -268,6 +315,7 @@ const UserTable = () => {
   const [users, setUsers] = useState([]);
   const [schools, setSchools] = useState([]);
   const [clusters, setClusters] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState("fullname");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -286,6 +334,7 @@ const UserTable = () => {
     role: "",
     school_id: "",
     cluster_id: "",
+    subject_id: "",
     school_ids: [],
   });
   const [addError, setAddError] = useState("");
@@ -299,6 +348,7 @@ const UserTable = () => {
     role: "",
     school_id: "",
     cluster_id: "",
+    subject_id: "",
     school_ids: [],
   });
   const [editConfirm, setEditConfirm] = useState(false);
@@ -341,10 +391,20 @@ const UserTable = () => {
     }
   };
 
+  const fetchSubjects = async () => {
+    try {
+      const res = await axios.get(SUBJECTS_API, { headers });
+      setSubjects(res.data);
+    } catch {
+      setSubjects([]);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchSchools();
     fetchClusters();
+    fetchSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -359,6 +419,7 @@ const UserTable = () => {
       role: "",
       school_id: "",
       cluster_id: "",
+      subject_id: "",
       school_ids: [],
     });
     setAddError("");
@@ -390,6 +451,8 @@ const UserTable = () => {
       return setAddError("Please assign a school.");
     if (role === "supervisor" && !addForm.cluster_id)
       return setAddError("Please assign a cluster.");
+    if (role === "supervisor" && !addForm.subject_id)
+      return setAddError("Please assign a learning area.");
 
     setAddLoading(true);
     try {
@@ -411,6 +474,7 @@ const UserTable = () => {
       role: user.role || "",
       school_id: user.school_id || "",
       cluster_id: user.cluster_id || "",
+      subject_id: user.subject_id || "",
       school_ids: (user.schools || []).map((s) => String(s.id)),
     });
     setEditConfirm(false);
@@ -430,6 +494,8 @@ const UserTable = () => {
       return alert("Please select a school.");
     if (data.role === "supervisor" && !data.cluster_id)
       return alert("Please select a cluster.");
+    if (data.role === "supervisor" && !data.subject_id)
+      return alert("Please select a learning area.");
 
     try {
       await axios.put(`${API}/${editModal.id}/assign`, data, { headers });
@@ -986,6 +1052,7 @@ const UserTable = () => {
                       role: e.target.value,
                       school_id: "",
                       cluster_id: "",
+                      subject_id: "",
                       school_ids: [],
                     })
                   }
@@ -1010,6 +1077,7 @@ const UserTable = () => {
                   setForm={setAddForm}
                   schools={schools}
                   clusters={clusters}
+                  subjects={subjects}
                 />
               )}
 
@@ -1149,6 +1217,7 @@ const UserTable = () => {
                       role: e.target.value,
                       school_id: "",
                       cluster_id: "",
+                      subject_id: "",
                       school_ids: [],
                     })
                   }
@@ -1173,6 +1242,7 @@ const UserTable = () => {
                   setForm={setEditForm}
                   schools={schools}
                   clusters={clusters}
+                  subjects={subjects}
                 />
               )}
             </div>
