@@ -69,6 +69,7 @@ const SchoolAssignment = ({ user }) => {
   if (user.role === "admin") return <span className="text-gray-400">—</span>;
 
   if (user.role === "supervisor") {
+    const subjects = user.subjects || [];
     return (
       <div className="flex flex-col gap-1">
         {user.cluster_name ? (
@@ -87,17 +88,22 @@ const SchoolAssignment = ({ user }) => {
             <AlertCircle size={11} /> No cluster
           </span>
         )}
-        {user.subject_name ? (
-          <span
-            className="text-xs px-2 py-0.5 rounded-full w-fit"
-            style={{
-              background: "rgba(16,185,129,0.08)",
-              border: "1px solid rgba(16,185,129,0.2)",
-              color: "#10b981",
-            }}
-          >
-            {user.subject_name}
-          </span>
+        {subjects.length ? (
+          <div className="flex flex-wrap gap-1">
+            {subjects.map((s) => (
+              <span
+                key={s.id}
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{
+                  background: "rgba(16,185,129,0.08)",
+                  border: "1px solid rgba(16,185,129,0.2)",
+                  color: "#10b981",
+                }}
+              >
+                {s.subject_name}
+              </span>
+            ))}
+          </div>
         ) : (
           <span className="text-xs flex items-center gap-1 text-orange-400">
             <AlertCircle size={11} /> No learning area
@@ -279,29 +285,54 @@ const AssignmentFields = ({ form, setForm, schools, clusters, subjects }) => {
             ))}
           </select>
         </div>
+
         <div>
           <label
             className="text-xs font-semibold uppercase tracking-wider mb-1.5 block"
             style={{ color: "#0097b2" }}
           >
-            Assign Learning Area
+            Assign Learning Area(s)
           </label>
-          <select
-            value={form.subject_id}
-            onChange={(e) => setForm({ ...form, subject_id: e.target.value })}
-            className="w-full rounded-xl px-4 py-2.5 text-sm text-[#242424]"
+          <p className="text-xs text-gray-400 mb-2">
+            Select one or more — e.g. Values Education for Junior High and GMRC
+            for Elementary.
+          </p>
+          <div
+            className="flex flex-col gap-1 max-h-40 overflow-y-auto rounded-xl p-2"
             style={{
               background: "rgba(248,248,255,0.8)",
               border: "1px solid rgba(0,151,178,0.2)",
             }}
           >
-            <option value="">Select Learning Area</option>
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.subject_name} ({s.subject_code})
-              </option>
-            ))}
-          </select>
+            {subjects.map((s) => {
+              const checked = (form.subject_ids || []).includes(String(s.id));
+              return (
+                <label
+                  key={s.id}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm cursor-pointer hover:bg-white transition"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => {
+                      const current = form.subject_ids || [];
+                      const updated = e.target.checked
+                        ? [...current, String(s.id)]
+                        : current.filter((id) => id !== String(s.id));
+                      setForm({ ...form, subject_ids: updated });
+                    }}
+                    className="accent-[#0097b2]"
+                  />
+                  <span className="text-[#242424]">
+                    {s.subject_name}{" "}
+                    <span className="text-xs text-gray-400">
+                      ({s.subject_code})
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -334,7 +365,7 @@ const UserTable = () => {
     role: "",
     school_id: "",
     cluster_id: "",
-    subject_id: "",
+    subject_ids: "",
     school_ids: [],
   });
   const [addError, setAddError] = useState("");
@@ -348,7 +379,7 @@ const UserTable = () => {
     role: "",
     school_id: "",
     cluster_id: "",
-    subject_id: "",
+    subject_ids: "",
     school_ids: [],
   });
   const [editConfirm, setEditConfirm] = useState(false);
@@ -419,7 +450,7 @@ const UserTable = () => {
       role: "",
       school_id: "",
       cluster_id: "",
-      subject_id: "",
+      subject_ids: "",
       school_ids: [],
     });
     setAddError("");
@@ -451,8 +482,8 @@ const UserTable = () => {
       return setAddError("Please assign a school.");
     if (role === "supervisor" && !addForm.cluster_id)
       return setAddError("Please assign a cluster.");
-    if (role === "supervisor" && !addForm.subject_id)
-      return setAddError("Please assign a learning area.");
+    if (role === "supervisor" && !addForm.subject_ids?.length)
+      return setAddError("Please assign at least one learning area.");
 
     setAddLoading(true);
     try {
@@ -474,7 +505,7 @@ const UserTable = () => {
       role: user.role || "",
       school_id: user.school_id || "",
       cluster_id: user.cluster_id || "",
-      subject_id: user.subject_id || "",
+      subject_ids: (user.subjects || []).map((s) => String(s.id)),
       school_ids: (user.schools || []).map((s) => String(s.id)),
     });
     setEditConfirm(false);
@@ -494,8 +525,8 @@ const UserTable = () => {
       return alert("Please select a school.");
     if (data.role === "supervisor" && !data.cluster_id)
       return alert("Please select a cluster.");
-    if (data.role === "supervisor" && !data.subject_id)
-      return alert("Please select a learning area.");
+    if (data.role === "supervisor" && !data.subject_ids?.length)
+      return alert("Please select at least one learning area.");
 
     try {
       await axios.put(`${API}/${editModal.id}/assign`, data, { headers });

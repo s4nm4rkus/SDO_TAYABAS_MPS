@@ -6,24 +6,29 @@ exports.getAllUsers = async (req, res) => {
   try {
     const [users] = await db.promise().query(
       `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
-        u.school_id, u.cluster_id, u.subject_id,
-        s.school_name, c.cluster_name, sub.subject_name, sub.subject_code
+        u.school_id, u.cluster_id,
+        s.school_name, c.cluster_name
        FROM users u
        LEFT JOIN schools s ON u.school_id = s.id
        LEFT JOIN clusters c ON u.cluster_id = c.id
-       LEFT JOIN subjects sub ON u.subject_id = sub.id
        ORDER BY u.fullname ASC`,
     );
 
-    const [assignments] = await db.promise().query(
+    const [schoolAssignments] = await db.promise().query(
       `SELECT sha.user_id, s.id AS school_id, s.school_name
        FROM school_head_assignments sha
        JOIN schools s ON sha.school_id = s.id`,
     );
 
+    const [subjectAssignments] = await db.promise().query(
+      `SELECT ss.user_id, sub.id AS subject_id, sub.subject_name, sub.subject_code
+       FROM supervisor_subjects ss
+       JOIN subjects sub ON ss.subject_id = sub.id`,
+    );
+
     const result = users.map((user) => {
       if (user.role === "school_head") {
-        let schools = assignments
+        let schools = schoolAssignments
           .filter((a) => a.user_id === user.id)
           .map((a) => ({ id: a.school_id, school_name: a.school_name }));
 
@@ -33,6 +38,17 @@ exports.getAllUsers = async (req, res) => {
 
         user.schools = schools;
       }
+
+      if (user.role === "supervisor") {
+        user.subjects = subjectAssignments
+          .filter((a) => a.user_id === user.id)
+          .map((a) => ({
+            id: a.subject_id,
+            subject_name: a.subject_name,
+            subject_code: a.subject_code,
+          }));
+      }
+
       return user;
     });
 
@@ -43,25 +59,39 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // Get user by ID
-exports.getUserById = (req, res) => {
+exports.getUserById = async (req, res) => {
   const { id } = req.params;
-  db.query(
-    `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
-      u.school_id, u.cluster_id, u.subject_id,
-      s.school_name, c.cluster_name, sub.subject_name, sub.subject_code
-     FROM users u
-     LEFT JOIN schools s ON u.school_id = s.id
-     LEFT JOIN clusters c ON u.cluster_id = c.id
-     LEFT JOIN subjects sub ON u.subject_id = sub.id
-     WHERE u.id = ?`,
-    [id],
-    (err, results) => {
-      if (err) return res.status(500).json({ message: "DB error", error: err });
-      if (results.length === 0)
-        return res.status(404).json({ message: "User not found" });
-      res.json(results[0]);
-    },
-  );
+  try {
+    const [results] = await db.promise().query(
+      `SELECT u.id, u.fullname, u.username, u.email, u.role, u.is_active,
+        u.school_id, u.cluster_id,
+        s.school_name, c.cluster_name
+       FROM users u
+       LEFT JOIN schools s ON u.school_id = s.id
+       LEFT JOIN clusters c ON u.cluster_id = c.id
+       WHERE u.id = ?`,
+      [id],
+    );
+    if (!results.length)
+      return res.status(404).json({ message: "User not found" });
+
+    const user = results[0];
+
+    if (user.role === "supervisor") {
+      const [subjects] = await db.promise().query(
+        `SELECT sub.id, sub.subject_name, sub.subject_code
+         FROM supervisor_subjects ss
+         JOIN subjects sub ON ss.subject_id = sub.id
+         WHERE ss.user_id = ?`,
+        [id],
+      );
+      user.subjects = subjects;
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "DB error", error: err.message });
+  }
 };
 
 // Create user (admin creates on behalf)
@@ -74,7 +104,7 @@ exports.createUser = async (req, res) => {
     role,
     school_id,
     cluster_id,
-    subject_id,
+    subject_ids,
     school_ids,
   } = req.body;
 
@@ -92,12 +122,11 @@ exports.createUser = async (req, res) => {
           : null;
 
     const resolvedClusterId = role === "supervisor" ? cluster_id || null : null;
-    const resolvedSubjectId = role === "supervisor" ? subject_id || null : null;
 
     const [result] = await db
       .promise()
       .query(
-        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id, subject_id, must_change_password) VALUES (?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO users (fullname, username, email, password, role, school_id, cluster_id, must_change_password) VALUES (?,?,?,?,?,?,?,?)",
         [
           fullname,
           username,
@@ -106,7 +135,6 @@ exports.createUser = async (req, res) => {
           role,
           resolvedSchoolId,
           resolvedClusterId,
-          resolvedSubjectId,
           1,
         ],
       );
@@ -124,6 +152,17 @@ exports.createUser = async (req, res) => {
       }
     }
 
+    if (role === "supervisor" && subject_ids?.length) {
+      for (const subid of subject_ids) {
+        await db
+          .promise()
+          .query(
+            "INSERT INTO supervisor_subjects (user_id, subject_id) VALUES (?,?)",
+            [user_id, subid],
+          );
+      }
+    }
+
     res.json({ message: "User created successfully.", id: user_id });
   } catch (err) {
     if (err.code === "ER_DUP_ENTRY")
@@ -134,7 +173,7 @@ exports.createUser = async (req, res) => {
 
 // Assign role + school/cluster
 exports.assignUser = async (req, res) => {
-  const { role, school_id, cluster_id, subject_id, school_ids } = req.body;
+  const { role, school_id, cluster_id, subject_ids, school_ids } = req.body;
   const { id } = req.params;
 
   try {
@@ -146,14 +185,15 @@ exports.assignUser = async (req, res) => {
           : null;
 
     const resolvedClusterId = role === "supervisor" ? cluster_id || null : null;
-    const resolvedSubjectId = role === "supervisor" ? subject_id || null : null;
 
     await db
       .promise()
-      .query(
-        "UPDATE users SET role=?, school_id=?, cluster_id=?, subject_id=? WHERE id=?",
-        [role, resolvedSchoolId, resolvedClusterId, resolvedSubjectId, id],
-      );
+      .query("UPDATE users SET role=?, school_id=?, cluster_id=? WHERE id=?", [
+        role,
+        resolvedSchoolId,
+        resolvedClusterId,
+        id,
+      ]);
 
     if (role === "school_head") {
       await db
@@ -166,6 +206,22 @@ exports.assignUser = async (req, res) => {
             .query(
               "INSERT INTO school_head_assignments (user_id, school_id) VALUES (?,?)",
               [id, sid],
+            );
+        }
+      }
+    }
+
+    if (role === "supervisor") {
+      await db
+        .promise()
+        .query("DELETE FROM supervisor_subjects WHERE user_id=?", [id]);
+      if (subject_ids?.length) {
+        for (const subid of subject_ids) {
+          await db
+            .promise()
+            .query(
+              "INSERT INTO supervisor_subjects (user_id, subject_id) VALUES (?,?)",
+              [id, subid],
             );
         }
       }
