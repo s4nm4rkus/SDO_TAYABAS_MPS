@@ -126,8 +126,17 @@ const GradeTable = ({ gradeData, periodName }) => {
                     size={11}
                     style={{ color: sec.adviser_name ? "#0097b2" : "#ff6b35" }}
                   />
+                  {/* <span className="text-xs font-semibold text-[#242424]">
+                    {sec.section_name}
+                  </span> */}
                   <span className="text-xs font-semibold text-[#242424]">
                     {sec.section_name}
+                    {sec.school_name && (
+                      <span className="text-gray-400 font-normal">
+                        {" "}
+                        · {sec.school_name}
+                      </span>
+                    )}
                   </span>
                   <span className="text-xs text-gray-300">·</span>
                   <Users
@@ -292,6 +301,7 @@ const SchoolHeadMPSReport = () => {
   const [initLoading, setInitLoading] = useState(true);
   const [activeYear, setActiveYear] = useState(null);
   const [assignedSchools, setAssignedSchools] = useState([]);
+  const [selectedSchoolId, setSelectedSchoolId] = useState("all");
   const printRef = useRef();
 
   useEffect(() => {
@@ -324,6 +334,7 @@ const SchoolHeadMPSReport = () => {
       try {
         const res = await axios.get(`${BASE}/report/${selectedPeriodId}`, {
           headers,
+          params: { school_id: selectedSchoolId },
         });
         setReportData(res.data.report);
         setGradeLevels(res.data.gradeLevels);
@@ -336,7 +347,7 @@ const SchoolHeadMPSReport = () => {
     };
     fetchReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPeriodId]);
+  }, [selectedPeriodId, selectedSchoolId]);
 
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
 
@@ -434,7 +445,11 @@ const SchoolHeadMPSReport = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `MPS_Report_${selectedPeriod.period_name}_${selectedGradeId === "all" ? "All_Grades" : gradeLevels.find((g) => g.id === selectedGradeId)?.grade_name}.csv`;
+    a.download = `MPS_Report_${selectedPeriod.period_name}_${
+      selectedSchoolId === "all"
+        ? "All_Schools"
+        : assignedSchools.find((s) => s.id === selectedSchoolId)?.school_name
+    }_${selectedGradeId === "all" ? "All_Grades" : gradeLevels.find((g) => g.id === selectedGradeId)?.grade_name}.csv`;
     a.click();
   };
 
@@ -583,6 +598,57 @@ const SchoolHeadMPSReport = () => {
           );
         })}
       </div>
+
+      {/* ── School Tabs ── */}
+      {assignedSchools.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedSchoolId("all")}
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold transition"
+            style={
+              selectedSchoolId === "all"
+                ? {
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "white",
+                    boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+                  }
+                : {
+                    background: "white",
+                    color: "#242424",
+                    border: "1px solid rgba(16,185,129,0.2)",
+                  }
+            }
+          >
+            All Schools
+          </button>
+          {assignedSchools.map((school) => {
+            const isSelected = selectedSchoolId === school.id;
+            return (
+              <button
+                key={school.id}
+                onClick={() => setSelectedSchoolId(school.id)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition"
+                style={
+                  isSelected
+                    ? {
+                        background: "linear-gradient(135deg, #10b981, #059669)",
+                        color: "white",
+                        boxShadow: "0 4px 12px rgba(16,185,129,0.3)",
+                      }
+                    : {
+                        background: "white",
+                        color: "#242424",
+                        border: "1px solid rgba(16,185,129,0.2)",
+                      }
+                }
+              >
+                <School size={13} />
+                {school.school_name}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Grade Level Filter ── */}
       {gradeLevels.length > 0 && (
