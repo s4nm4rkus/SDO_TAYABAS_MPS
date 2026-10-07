@@ -37,8 +37,22 @@ exports.getGradingPeriods = async (req, res) => {
 exports.getMPSReport = async (req, res) => {
   try {
     const school_year_id = await getActiveYear();
-    const school_ids = await getSchoolHeadSchools(req.user.id);
+    const assignedSchoolIds = await getSchoolHeadSchools(req.user.id);
     const { grading_period_id } = req.params;
+    const { school_id } = req.query; // "all" or a specific school id
+
+    let school_ids;
+    if (!school_id || school_id === "all") {
+      school_ids = assignedSchoolIds;
+    } else {
+      const sid = Number(school_id);
+      if (!assignedSchoolIds.includes(sid)) {
+        return res
+          .status(403)
+          .json({ message: "You are not assigned to this school." });
+      }
+      school_ids = [sid];
+    }
 
     const [gradeLevels] = await db.promise().query(
       `SELECT DISTINCT gl.id, gl.grade_name
@@ -68,11 +82,13 @@ exports.getMPSReport = async (req, res) => {
 
     for (const grade of gradeLevels) {
       const [sections] = await db.promise().query(
-        `SELECT s.id, s.section_name, u.fullname AS adviser_name
+        `SELECT s.id, s.section_name, s.school_id, sc.school_name,
+          u.fullname AS adviser_name
          FROM sections s
          LEFT JOIN users u ON s.adviser_id = u.id
+         LEFT JOIN schools sc ON s.school_id = sc.id
          WHERE s.grade_level_id = ? AND s.school_id IN (?) AND s.school_year_id = ?
-         ORDER BY s.section_name ASC`,
+         ORDER BY sc.school_name ASC, s.section_name ASC`,
         [grade.id, school_ids, school_year_id],
       );
 
@@ -147,6 +163,8 @@ exports.getMPSReport = async (req, res) => {
         sections: sections.map((s) => ({
           section_name: s.section_name,
           adviser_name: s.adviser_name,
+          school_id: s.school_id,
+          school_name: s.school_name,
         })),
         subjects: subjectRows,
       });
