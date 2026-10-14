@@ -385,6 +385,11 @@ const RankedTable = ({ rows, title, subtitle, onRowClick, rowLabel }) => {
                     <p className="font-semibold text-[#242424] text-sm">
                       {row.school_name || row.section_name}
                     </p>
+                    {row.cluster_name && (
+                      <p className="text-xs text-gray-400">
+                        {row.cluster_name}
+                      </p>
+                    )}
                     {row.grade_name && (
                       <p className="text-xs text-gray-400">
                         {row.grade_name}
@@ -446,6 +451,7 @@ const SupervisorMPSReport = () => {
   const [selectedSubjectSchool, setSelectedSubjectSchool] = useState(null);
   const [subjectId, setSubjectId] = useState(null);
   const [mySubjects, setMySubjects] = useState([]);
+  const [subjectClusterId, setSubjectClusterId] = useState("all");
 
   useEffect(() => {
     const fetchInit = async () => {
@@ -677,6 +683,27 @@ const SupervisorMPSReport = () => {
     a.download = `MPS_${selectedSchool?.school_name}_${selectedGrade.grade_level_id === "all" ? "All_Grades" : selectedGrade.grade_name}_${selectedPeriod.period_name}.csv`;
     a.click();
   };
+
+  const clusterOptions = Array.from(
+    new Map(
+      subjectSchools
+        .filter((s) => s.cluster_id)
+        .map((s) => [
+          s.cluster_id,
+          { id: s.cluster_id, cluster_name: s.cluster_name },
+        ]),
+    ).values(),
+  ).sort((a, b) => a.cluster_name.localeCompare(b.cluster_name));
+
+  const filteredSubjectSchools =
+    subjectClusterId === "all"
+      ? subjectSchools
+      : subjectSchools.filter((s) => s.cluster_id === subjectClusterId);
+
+  const selectedClusterName =
+    subjectClusterId === "all"
+      ? "All Clusters"
+      : clusterOptions.find((c) => c.id === subjectClusterId)?.cluster_name;
 
   if (initLoading)
     return (
@@ -1635,6 +1662,7 @@ const SupervisorMPSReport = () => {
                           onClick={() => {
                             setSubjectId(s.subject_id);
                             setSubjectGradeId("all");
+                            setSubjectClusterId("all");
                             setSelectedSubjectSchool(null);
                           }}
                           className="px-4 py-2 rounded-xl text-sm font-semibold transition"
@@ -1654,6 +1682,62 @@ const SupervisorMPSReport = () => {
                           }
                         >
                           {s.subject_name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Cluster Filter */}
+                  {clusterOptions.length > 1 && (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => {
+                          setSubjectClusterId("all");
+                          setSelectedSubjectSchool(null);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition"
+                        style={
+                          subjectClusterId === "all"
+                            ? {
+                                background:
+                                  "linear-gradient(135deg, #0097b2, #004385)",
+                                color: "white",
+                                boxShadow: "0 4px 12px rgba(0,151,178,0.3)",
+                              }
+                            : {
+                                background: "white",
+                                color: "#242424",
+                                border: "1px solid rgba(0,151,178,0.2)",
+                              }
+                        }
+                      >
+                        <Building2 size={13} />
+                        All Clusters
+                      </button>
+                      {clusterOptions.map((cluster) => (
+                        <button
+                          key={cluster.id}
+                          onClick={() => {
+                            setSubjectClusterId(cluster.id);
+                            setSelectedSubjectSchool(null);
+                          }}
+                          className="px-4 py-2 rounded-xl text-sm font-semibold transition"
+                          style={
+                            subjectClusterId === cluster.id
+                              ? {
+                                  background:
+                                    "linear-gradient(135deg, #0097b2, #004385)",
+                                  color: "white",
+                                  boxShadow: "0 4px 12px rgba(0,151,178,0.3)",
+                                }
+                              : {
+                                  background: "white",
+                                  color: "#242424",
+                                  border: "1px solid rgba(0,151,178,0.2)",
+                                }
+                          }
+                        >
+                          {cluster.cluster_name}
                         </button>
                       ))}
                     </div>
@@ -1720,9 +1804,15 @@ const SupervisorMPSReport = () => {
                     </div>
                   ) : !selectedSubjectSchool ? (
                     <RankedTable
-                      rows={subjectSchools}
+                      rows={filteredSubjectSchools}
                       title={`${subjectInfo?.subject_name || "Learning Area"} — Schools Ranked`}
-                      subtitle={`${selectedPeriod?.period_name} · ${subjectGradeId === "all" ? "All eligible grades" : subjectGradeLevels.find((g) => g.id === subjectGradeId)?.grade_name}`}
+                      subtitle={`${selectedPeriod?.period_name} · ${selectedClusterName} · ${
+                        subjectGradeId === "all"
+                          ? "All eligible grades"
+                          : subjectGradeLevels.find(
+                              (g) => g.id === subjectGradeId,
+                            )?.grade_name
+                      }`}
                       onRowClick={(row) => setSelectedSubjectSchool(row)}
                       rowLabel="School"
                     />

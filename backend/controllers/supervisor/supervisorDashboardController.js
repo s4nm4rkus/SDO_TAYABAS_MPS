@@ -220,8 +220,7 @@ exports.getDashboard = async (req, res) => {
 exports.getSubjectReport = async (req, res) => {
   try {
     const year = await getActiveYear();
-    const cluster = await getSupervisorCluster(req.user.id);
-    const schools = await getClusterSchools(cluster.cluster_id);
+    const schools = await getAllSchools();
     const mySubjects = await getSupervisorSubjects(req.user.id);
     const { grading_period_id } = req.params;
     const { subject_id, grade_level_id } = req.query;
@@ -334,6 +333,8 @@ exports.getSubjectReport = async (req, res) => {
       schoolReports.push({
         school_id: school.id,
         school_name: school.school_name,
+        cluster_id: school.cluster_id,
+        cluster_name: school.cluster_name,
         section_count: sections.length,
         ...schoolStats,
         sections: sectionReports,
@@ -501,6 +502,16 @@ exports.getMPSReport = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+const getAllSchools = async () => {
+  const [rows] = await db.promise().query(
+    `SELECT s.id, s.school_name, s.cluster_id, c.cluster_name
+     FROM schools s
+     LEFT JOIN clusters c ON s.cluster_id = c.id
+     ORDER BY s.school_name ASC`,
+  );
+  return rows;
 };
 
 // ── GET school heads in cluster ──
