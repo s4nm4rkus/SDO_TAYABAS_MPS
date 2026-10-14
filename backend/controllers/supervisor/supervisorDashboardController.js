@@ -38,6 +38,9 @@ const getSupervisorSubjects = async (user_id) => {
   return rows;
 };
 
+// Learning Area MPS only applies from this grade level up
+const MIN_LEARNING_AREA_GRADE = 4;
+
 const getSubjectGradeLevels = async (subject_id) => {
   const [rows] = await db.promise().query(
     `SELECT DISTINCT gl.id, gl.grade_name
@@ -47,7 +50,12 @@ const getSubjectGradeLevels = async (subject_id) => {
      ORDER BY gl.id ASC`,
     [subject_id],
   );
-  return rows;
+
+  // Pull the grade number out of the name ("Grade 4" -> 4) and keep Grade 4+
+  return rows.filter((g) => {
+    const match = String(g.grade_name).match(/\d+/);
+    return match && Number(match[0]) >= MIN_LEARNING_AREA_GRADE;
+  });
 };
 
 const getClusterSchools = async (cluster_id) => {
